@@ -37,9 +37,8 @@ def get_time():
 
 
 def bell():
-    while True:
-        subprocess.call(["ffplay", "-nodisp", "-autoexit", '/usr/share/sounds/ubuntu/stereo/bell.ogg'])
-        sleep(0.5)
+    subprocess.call(["bell.sh", "2>>/dev/null"])
+
 
 
 def run_monitor(trade_list):
