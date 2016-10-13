@@ -5,7 +5,7 @@ import subprocess
 from time import sleep
 import time
 from datetime import datetime
-
+from termcolor import colored
 import pytz  # $ pip install pytz
 import sys
 
@@ -109,8 +109,11 @@ def print_trade(trade):
 
 
 def print_gain_of_trade(trade):
-    print('Code: %s, Name: %s, Quantity: %d, Expect: %.2f, Current Gain: %.2f' % (
-        trade.code, trade.name, trade.quantity, trade.expect, trade.gain * trade.quantity))
+    color = 'green'
+    if trade.gain > 0:
+        color = 'red'
+    print(colored('[ %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f' % (
+        trade.code, trade.name, trade.cost,trade.cost + trade.gain, trade.quantity,  trade.gain * trade.quantity), color))
 
 
 def update_current_price(trade_list):
