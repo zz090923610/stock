@@ -112,8 +112,8 @@ def print_gain_of_trade(trade):
     color = 'green'
     if trade.gain > 0:
         color = 'red'
-    print(colored('[ %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f' % (
-        trade.code, trade.name, trade.cost,trade.cost + trade.gain, trade.quantity,  trade.gain * trade.quantity), color))
+    print(colored('[ %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f/%.02f' % (
+        trade.code, trade.name, trade.cost,trade.cost + trade.gain, trade.quantity,  trade.gain * trade.quantity,trade.gain * trade.quantity - 5 - .001 * (trade.cost + trade.gain) * trade.quantity), color))
 
 
 def update_current_price(trade_list):
