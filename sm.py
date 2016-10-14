@@ -233,10 +233,15 @@ if __name__ == "__main__":
                 sale_trade = True
                 code = sys.argv[loop + 1]
             if sys.argv[loop] == '-m':
-                sale_trade = True
+                modify_trade = True
                 code = sys.argv[loop + 1]
             if sys.argv[loop] == '-r':
                 remove(sys.argv[loop + 1])
+            if sys.argv[loop] == '-l':
+                for trade in trade_list:
+                    print_trade(trade)
+                exit()
+                code = sys.argv[loop + 1]
             if sys.argv[loop] == '-p':
                 price = sys.argv[loop + 1]
             if sys.argv[loop] == '-c':
@@ -268,9 +273,12 @@ if __name__ == "__main__":
         if modify_trade:
             for trade in trade_list:
                 if trade.code == code:
-                    trade.quantity = quantity
-                    trade.cost = cost
-                    trade.expect = expect
+                    if quantity is not '':
+                        trade.quantity = int(quantity)
+                    if cost is not '':
+                        trade.cost = float(cost)
+                    if expect is not '':
+                        trade.expect = float(expect)
                     trade.gain = 0
                     save_trade(trade_list)
                     print_trade(trade)
