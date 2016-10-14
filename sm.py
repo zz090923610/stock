@@ -40,7 +40,6 @@ def bell():
     subprocess.call(["bell.sh", "2>>/dev/null"])
 
 
-
 def run_monitor(trade_list):
     while True:
         show_gain(trade_list, cls=True)
@@ -113,7 +112,8 @@ def print_gain_of_trade(trade):
     if trade.gain > 0:
         color = 'red'
     print(colored('[ %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f/%.02f' % (
-        trade.code, trade.name, trade.cost,trade.cost + trade.gain, trade.quantity,  trade.gain * trade.quantity,trade.gain * trade.quantity - 5 - .001 * (trade.cost + trade.gain) * trade.quantity), color))
+        trade.code, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity, trade.gain * trade.quantity,
+        trade.gain * trade.quantity - 5 - .001 * (trade.cost + trade.gain) * trade.quantity), color))
 
 
 def update_current_price(trade_list):
@@ -139,7 +139,7 @@ def show_gain(trade_list, cls=False):
     if cls:
         os.system('clear')
     print('Current Time %s, Current Net Gain: %.02f, Current Float Gain: %.02f, Clearall Gain: %.02f' % (
-    get_time(), netgain.val, totalfloatgain, totalcleargain))
+        get_time(), netgain.val, totalfloatgain, totalcleargain))
     for trade in trade_list:
         print_gain_of_trade(trade)
 
@@ -182,6 +182,12 @@ def sell(trade_list, code, price, quantity):
         net_gain.val, sell_fee, gain_of_trans))
 
 
+def modify_net_gain(new_val):
+    net_gain = NetGain()
+    net_gain.val = new_val
+    net_gain.save_net_gain()
+
+
 def calculate_current_sell_fee(trade_list, code):
     sell_fee = 0
     for trade in trade_list:
@@ -213,6 +219,7 @@ if __name__ == "__main__":
     else:
         add_trade = False
         sale_trade = False
+        modify_trade = False
         price = ''
         code = ''
         cost = ''
@@ -223,6 +230,9 @@ if __name__ == "__main__":
                 add_trade = True
                 code = sys.argv[loop + 1]
             if sys.argv[loop] == '-s':
+                sale_trade = True
+                code = sys.argv[loop + 1]
+            if sys.argv[loop] == '-m':
                 sale_trade = True
                 code = sys.argv[loop + 1]
             if sys.argv[loop] == '-r':
@@ -246,19 +256,8 @@ if __name__ == "__main__":
             except:
                 trade_list = []
             new_trade = create_trade(code, cost, quantity, expect)
-            exist_trade = False
-            for trade in trade_list:
-                if trade.code == new_trade.code:
-                    total_quantity = new_trade.quantity + trade.cost * trade.quantity
-                    total_cost = (
-                                     new_trade.cost * new_trade.quantity + trade.cost * trade.quantity) / total_quantity
-                    trade.cost = total_cost
-                    trade.quantity = total_quantity
-                    exist_trade = True
 
-            print_trade(new_trade)
-            if not exist_trade:
-                trade_list.append(new_trade)
+            trade_list.append(new_trade)
             save_trade(trade_list)
         if sale_trade:
             try:
@@ -266,3 +265,13 @@ if __name__ == "__main__":
             except:
                 trade_list = []
             sell(trade_list, code, price, quantity)
+        if modify_trade:
+            for trade in trade_list:
+                if trade.code == code:
+                    trade.quantity = quantity
+                    trade.cost = cost
+                    trade.expect = expect
+                    trade.gain = 0
+                    save_trade(trade_list)
+                    print_trade(trade)
+                    exit()
