@@ -47,6 +47,20 @@ def run_monitor(trade_list):
         sleep(2)
 
 
+def check_belonging_market(code):
+    file = 'shanghai_list.txt'
+    with open(file, 'rb') as f:
+        sh_data =str(f.readlines()).strip()
+    file = 'shenzhen_list.txt'
+    with open(file, 'rb') as f:
+        sz_data = str(f.readlines()).strip()
+    if code in sh_data:
+        return 'H'
+    elif code in sz_data:
+        return 'S'
+    else:
+        return 'N'
+
 def check_gain(trade_list):
     for trade in trade_list:
         if int(trade.gain * 1000) == int((trade.expect - 1) * 1000):
@@ -111,9 +125,16 @@ def print_gain_of_trade(trade):
     color = 'green'
     if trade.gain > 0:
         color = 'red'
-    print(colored('[ %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f/%.02f' % (
-        trade.code, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity, trade.gain * trade.quantity,
-        trade.gain * trade.quantity - 5 - .001 * (trade.cost + trade.gain) * trade.quantity), color))
+    market = check_belonging_market(trade.code)
+
+    if market == 'H':
+        guo_hu_fee = .001 * (trade.cost + trade.gain) * trade.quantity
+    else:
+        guo_hu_fee = 0
+    sell_fee = 5 + guo_hu_fee
+    print(colored('[ %s %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f/%.02f' % (
+        trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity, trade.gain * trade.quantity,
+        trade.gain * trade.quantity - sell_fee), color))
 
 
 def update_current_price(trade_list):
@@ -191,8 +212,13 @@ def modify_net_gain(new_val):
 def calculate_current_sell_fee(trade_list, code):
     sell_fee = 0
     for trade in trade_list:
+        market = check_belonging_market(code)
         if trade.code == code:
-            sell_fee = 5 + .001 * (trade.cost + trade.gain) * trade.quantity
+            if market == 'H':
+                guo_hu_fee = .001 * (trade.cost + trade.gain) * trade.quantity
+            else:
+                guo_hu_fee = 0
+            sell_fee = 5 + guo_hu_fee
     return sell_fee
 
 
@@ -229,6 +255,8 @@ if __name__ == "__main__":
             if sys.argv[loop] == '-a':
                 add_trade = True
                 code = sys.argv[loop + 1]
+            if sys.argv[loop] == 'check':
+                print(check_belonging_market(sys.argv[loop + 1]))
             if sys.argv[loop] == '-s':
                 sale_trade = True
                 code = sys.argv[loop + 1]

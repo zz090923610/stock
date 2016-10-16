@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="58640f17-f94c-46fc-917a-70c4ed97ebed" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trades.pickle" afterPath="$PROJECT_DIR$/trades.pickle" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sm.py" afterPath="$PROJECT_DIR$/sm.py" />
     </list>
     <ignored path="stock.iws" />
@@ -27,27 +26,9 @@
       <file leaf-file-name="sm.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/sm.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="807">
-              <caret line="280" column="52" selection-start-line="280" selection-start-column="52" selection-end-line="280" selection-end-column="52" />
-              <folding>
-                <element signature="e#23#32#0" expanded="true" />
-                <element signature="e#433#473#0" expanded="false" />
-                <element signature="e#543#826#0" expanded="false" />
-                <element signature="e#925#1024#0" expanded="false" />
-                <element signature="e#1059#1212#0" expanded="false" />
-                <element signature="e#1555#1914#0" expanded="false" />
-                <element signature="e#1949#2042#0" expanded="false" />
-                <element signature="e#2087#2172#0" expanded="false" />
-                <element signature="e#2227#2460#0" expanded="false" />
-                <element signature="e#2750#3098#0" expanded="false" />
-                <element signature="e#3143#3528#0" expanded="false" />
-                <element signature="e#3573#4044#0" expanded="false" />
-                <element signature="e#4089#4222#0" expanded="false" />
-                <element signature="e#4271#4483#0" expanded="false" />
-                <element signature="e#4535#5261#0" expanded="false" />
-                <element signature="e#5431#5600#0" expanded="false" />
-                <element signature="e#5625#5828#0" expanded="false" />
-              </folding>
+            <state relative-caret-position="576">
+              <caret line="61" column="17" selection-start-line="61" selection-start-column="17" selection-end-line="61" selection-end-column="17" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -78,10 +59,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="65" />
-    <option name="y" value="24" />
+    <option name="x" value="14" />
+    <option name="y" value="30" />
     <option name="width" value="1855" />
-    <option name="height" value="1056" />
+    <option name="height" value="1050" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -108,6 +89,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -128,8 +111,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -151,7 +132,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="24" width="1855" height="1056" extended-state="6" />
+    <frame x="14" y="30" width="1855" height="1050" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24959569" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -194,25 +175,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#433#473#0" expanded="false" />
-            <element signature="e#543#826#0" expanded="false" />
-            <element signature="e#925#1024#0" expanded="false" />
-            <element signature="e#1059#1212#0" expanded="false" />
-            <element signature="e#1555#1914#0" expanded="false" />
-            <element signature="e#1949#2042#0" expanded="false" />
-            <element signature="e#2087#2172#0" expanded="false" />
-            <element signature="e#2227#2460#0" expanded="false" />
-            <element signature="e#2750#3098#0" expanded="false" />
-            <element signature="e#3143#3528#0" expanded="false" />
-            <element signature="e#3573#4044#0" expanded="false" />
-            <element signature="e#4089#4222#0" expanded="false" />
-            <element signature="e#4271#4483#0" expanded="false" />
-            <element signature="e#4535#5261#0" expanded="false" />
-            <element signature="e#5431#5600#0" expanded="false" />
-            <element signature="e#5625#5828#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -220,51 +183,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#433#473#0" expanded="false" />
-            <element signature="e#543#826#0" expanded="false" />
-            <element signature="e#925#1024#0" expanded="false" />
-            <element signature="e#1059#1212#0" expanded="false" />
-            <element signature="e#1555#1914#0" expanded="false" />
-            <element signature="e#1949#2042#0" expanded="false" />
-            <element signature="e#2087#2172#0" expanded="false" />
-            <element signature="e#2227#2460#0" expanded="false" />
-            <element signature="e#2750#3098#0" expanded="false" />
-            <element signature="e#3143#3528#0" expanded="false" />
-            <element signature="e#3573#4044#0" expanded="false" />
-            <element signature="e#4089#4222#0" expanded="false" />
-            <element signature="e#4271#4483#0" expanded="false" />
-            <element signature="e#4535#5261#0" expanded="false" />
-            <element signature="e#5431#5600#0" expanded="false" />
-            <element signature="e#5625#5828#0" expanded="false" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/sm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="807">
-          <caret line="280" column="52" selection-start-line="280" selection-start-column="52" selection-end-line="280" selection-end-column="52" />
-          <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#433#473#0" expanded="false" />
-            <element signature="e#543#826#0" expanded="false" />
-            <element signature="e#925#1024#0" expanded="false" />
-            <element signature="e#1059#1212#0" expanded="false" />
-            <element signature="e#1555#1914#0" expanded="false" />
-            <element signature="e#1949#2042#0" expanded="false" />
-            <element signature="e#2087#2172#0" expanded="false" />
-            <element signature="e#2227#2460#0" expanded="false" />
-            <element signature="e#2750#3098#0" expanded="false" />
-            <element signature="e#3143#3528#0" expanded="false" />
-            <element signature="e#3573#4044#0" expanded="false" />
-            <element signature="e#4089#4222#0" expanded="false" />
-            <element signature="e#4271#4483#0" expanded="false" />
-            <element signature="e#4535#5261#0" expanded="false" />
-            <element signature="e#5431#5600#0" expanded="false" />
-            <element signature="e#5625#5828#0" expanded="false" />
-          </folding>
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sm.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="576">
+          <caret line="61" column="17" selection-start-line="61" selection-start-column="17" selection-end-line="61" selection-end-column="17" />
+          <folding />
         </state>
       </provider>
     </entry>
