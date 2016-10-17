@@ -42,9 +42,11 @@ def bell():
 
 def run_monitor(trade_list):
     while True:
+
         show_gain(trade_list, cls=True)
         check_gain(trade_list)
-        sleep(2)
+        sleep(1)
+
 
 
 def check_belonging_market(code):
@@ -157,6 +159,7 @@ def show_gain(trade_list, cls=False):
     netgain.load_net_gain()
     totalfloatgain = calculate_float_gain(trade_list)
     totalcleargain = calculate_clear_all_gain(trade_list)
+    trade_list.sort(key=lambda x: x.gain * x.quantity, reverse=True)
     if cls:
         os.system('clear')
     print('Current Time %s, Current Net Gain: %.02f, Current Float Gain: %.02f, Clearall Gain: %.02f' % (
