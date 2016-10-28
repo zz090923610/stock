@@ -20,7 +20,7 @@ import tushare as ts
 
 
 def signal_handler(signal, frame):
-    print('You pressed Ctrl+C!')
+    print('Ctrl+C detected, exiting')
     exit(0)
 
 
@@ -42,17 +42,15 @@ def bell():
 
 def run_monitor(trade_list):
     while True:
-
         show_gain(trade_list, cls=True)
         check_gain(trade_list)
         sleep(1)
 
 
-
 def check_belonging_market(code):
     file = 'shanghai_list.txt'
     with open(file, 'rb') as f:
-        sh_data =str(f.readlines()).strip()
+        sh_data = str(f.readlines()).strip()
     file = 'shenzhen_list.txt'
     with open(file, 'rb') as f:
         sz_data = str(f.readlines()).strip()
@@ -63,11 +61,12 @@ def check_belonging_market(code):
     else:
         return 'N'
 
+
 def check_gain(trade_list):
     for trade in trade_list:
-        if int(trade.gain * 1000) == int((trade.expect - 1) * 1000):
+        if int(trade.gain * 1000) >= int((trade.expect - 1) * 1000):
             print('!!!!' + trade.name)
-            # bell()
+            bell()
 
 
 class Trade(object):
@@ -123,19 +122,34 @@ def print_trade(trade):
         (trade.expect - 1) * trade.cost * trade.quantity))
 
 
+def calculate_sell_fee(code, quantity, price):
+    market = check_belonging_market(code)
+    gain_before_fee = quantity * price
+    if market == 'H':
+        guo_hu_fee = .001 * gain_before_fee
+    else:
+        guo_hu_fee = 0
+    brokerage = max(.0021 * gain_before_fee, 5)
+    tax = .001 * gain_before_fee
+    return brokerage + guo_hu_fee + tax
+
+
+def calculate_current_sell_fee(code):
+    for trade in trade_list:
+        if trade.code == code:
+            return calculate_sell_fee(code, trade.quantity, trade.cost + trade.gain)
+    return 0
+
+
 def print_gain_of_trade(trade):
     color = 'green'
     if trade.gain > 0:
         color = 'red'
     market = check_belonging_market(trade.code)
-
-    if market == 'H':
-        guo_hu_fee = .001 * (trade.cost + trade.gain) * trade.quantity
-    else:
-        guo_hu_fee = 0
-    sell_fee = 5 + guo_hu_fee
-    print(colored('[ %s %s ] %s\tC/P:%.2f/%.2f\t%d,  Gain: %.2f/%.02f' % (
-        trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity, trade.gain * trade.quantity,
+    sell_fee = calculate_sell_fee(trade.code, trade.quantity, trade.cost + trade.gain)
+    print(colored('[ %s %s ] %s\t成本/现价:%.2f/%.2f 量: %04d\t浮动/清仓: %.2f/%.02f' % (
+        trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity,
+        trade.gain * trade.quantity,
         trade.gain * trade.quantity - sell_fee), color))
 
 
@@ -162,10 +176,14 @@ def show_gain(trade_list, cls=False):
     trade_list.sort(key=lambda x: x.gain * x.quantity, reverse=True)
     if cls:
         os.system('clear')
-    print('Current Time %s, Current Net Gain: %.02f, Current Float Gain: %.02f, Clearall Gain: %.02f' % (
+    print('%s, 已成交净收益: %.02f, 当前浮动收益: %.02f, 当前清仓收益: %.02f' % (
         get_time(), netgain.val, totalfloatgain, totalcleargain))
     for trade in trade_list:
-        print_gain_of_trade(trade)
+        if trade.quantity > 100:
+            print_gain_of_trade(trade)
+    for trade in trade_list:
+        if trade.quantity == 100:
+            print_gain_of_trade(trade)
 
 
 def calculate_float_gain(trade_list):
@@ -179,7 +197,7 @@ def calculate_clear_all_gain(trade_list):
     total_clear_gain = 0
     for trade in trade_list:
         total_clear_gain += trade.gain * trade.quantity
-        total_clear_gain -= calculate_current_sell_fee(trade_list, trade.code)
+        total_clear_gain -= calculate_current_sell_fee(trade.code)
     return total_clear_gain
 
 
@@ -188,7 +206,7 @@ def sell(trade_list, code, price, quantity):
     quantity = int(quantity)
     net_gain = NetGain()
     net_gain.load_net_gain()
-    sell_fee = 5 + .001 * price * quantity
+    sell_fee = calculate_sell_fee(code, quantity, price)
     gain_of_trans = 0
     for trade in trade_list:
         if trade.code == code:
@@ -212,17 +230,9 @@ def modify_net_gain(new_val):
     net_gain.save_net_gain()
 
 
-def calculate_current_sell_fee(trade_list, code):
-    sell_fee = 0
+def reset_expectation(trade_list, expect):
     for trade in trade_list:
-        market = check_belonging_market(code)
-        if trade.code == code:
-            if market == 'H':
-                guo_hu_fee = .001 * (trade.cost + trade.gain) * trade.quantity
-            else:
-                guo_hu_fee = 0
-            sell_fee = 5 + guo_hu_fee
-    return sell_fee
+        trade.expect = expect
 
 
 def remove(code):
@@ -260,6 +270,11 @@ if __name__ == "__main__":
                 code = sys.argv[loop + 1]
             if sys.argv[loop] == 'check':
                 print(check_belonging_market(sys.argv[loop + 1]))
+            if sys.argv[loop] == 'reset':
+                if sys.argv[loop + 1] == '-e':
+                    reset_expectation(trade_list, float(sys.argv[loop + 2]))
+                    save_trade(trade_list)
+                    exit()
             if sys.argv[loop] == '-s':
                 sale_trade = True
                 code = sys.argv[loop + 1]
