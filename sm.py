@@ -64,7 +64,7 @@ def check_belonging_market(code):
 
 def check_gain(trade_list):
     for trade in trade_list:
-        if int(trade.gain * 1000) >= int((trade.expect - 1) * 1000):
+        if trade.expect * trade.cost <= (trade.cost + trade.gain):
             print('!!!!' + trade.name)
             bell()
 
