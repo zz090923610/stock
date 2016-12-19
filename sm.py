@@ -145,9 +145,14 @@ def print_gain_of_trade(trade):
     color = 'green'
     if trade.gain > 0:
         color = 'red'
+    elif trade.gain + trade.cost == 0:
+        color = 'grey'
     market = check_belonging_market(trade.code)
     sell_fee = calculate_sell_fee(trade.code, trade.quantity, trade.cost + trade.gain)
-    print(colored('[ %s %s ] %s\t成本/现价:%.2f/%.2f 量: %04d\t浮动/清仓: %.2f/%.02f' % (
+    if trade.cost + trade.gain == 0:
+        print(colored('[ %s %s ] %s\t成本/现价:%.2f/停牌 量: %04d\t浮动/清仓: 停牌/停牌' % (trade.code, market, trade.name, trade.cost,  trade.quantity), color))
+    else:
+        print(colored('[ %s %s ] %s\t成本/现价:%.2f/%.2f 量: %04d\t浮动/清仓: %.2f/%.02f' % (
         trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity,
         trade.gain * trade.quantity,
         trade.gain * trade.quantity - sell_fee), color))
@@ -189,6 +194,8 @@ def show_gain(trade_list, cls=False):
 def calculate_float_gain(trade_list):
     total_float_gain = 0
     for trade in trade_list:
+        if trade.cost + trade.gain == 0:
+            continue
         total_float_gain += trade.gain * trade.quantity
     return total_float_gain
 
@@ -196,6 +203,8 @@ def calculate_float_gain(trade_list):
 def calculate_clear_all_gain(trade_list):
     total_clear_gain = 0
     for trade in trade_list:
+        if trade.cost + trade.gain == 0:
+            continue
         total_clear_gain += trade.gain * trade.quantity
         total_clear_gain -= calculate_current_sell_fee(trade.code)
     return total_clear_gain
