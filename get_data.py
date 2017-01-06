@@ -23,24 +23,25 @@ china_tz = pytz.timezone('Asia/Shanghai')
 
 def get_one(stock):
     print('getting %s' %stock)
-    my_file = Path('./data/%s.csv' % stock)
+    my_file = Path('../stock_data/data/%s.csv' % stock)
     if my_file.is_file():
         return
     data = ts.get_h_data(stock)
-    data.to_csv('./data/%s.csv' % stock)
+    data.to_csv('../stock_data/data/%s.csv' % stock)
 
 #print("Fetching Basic Info")
 #df = ts.get_stock_basics()
-#df.to_csv('./basic_info.csv')
+#df.to_csv('../stock_data/basic_info.csv')
 #symbol_list = df.index.values
 #
 symbol_list = []
-with open('basic_info.csv') as csvfile:
+with open('../stock_data/basic_info.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         symbol_list.append(row['code'])
 
 symbol_len = len(symbol_list)
+
 
 
 p = Pool()
