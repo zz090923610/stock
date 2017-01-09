@@ -1,4 +1,5 @@
 import csv
+import os
 import time
 
 import pytz
@@ -14,7 +15,7 @@ START_DATE = '2008-01-01'
 local_tz = get_localzone()
 china_tz = pytz.timezone('Asia/Shanghai')
 AGENT = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'}
-
+POOL_SIZE =512
 
 def get_today():
     return time.strftime("%Y-%m-%d")
@@ -26,6 +27,9 @@ def check_weekday(date_str):
         return True
     else:
         return False
+def update_basic_info():
+    bi = ts.get_stock_basics()
+    bi.to_csv('../stock_data/basic_info.csv')
 
 
 def str2date(str_date):
@@ -35,6 +39,8 @@ def str2date(str_date):
 
 def load_time_to_market_list():
     symbol_dict = {}
+    if not os.path.isfile('../stock_data/basic_info.csv'):
+        update_basic_info()
     with open('../stock_data/basic_info.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -48,6 +54,8 @@ IPO_DATE_LIST = load_time_to_market_list()
 
 def load_symbol_list(symbol_file):
     symbol_list = []
+    if not os.path.isfile(symbol_file):
+        update_basic_info()
     with open(symbol_file) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -56,6 +64,8 @@ def load_symbol_list(symbol_file):
 
 
 SYMBOL_LIST = load_symbol_list('../stock_data/basic_info.csv')
+
+
 
 
 def update_market_open_date_list():
@@ -122,3 +132,16 @@ def load_stock_date_list_from_daily_data(stock):
         for row in reader:
             date_list.append(row['date'])
     return date_list
+
+
+def mkdirs(symbol_list):
+    try:
+        if not os.path.isdir('../stock_data/tick_data'):
+            os.mkdir('../stock_data/tick_data', mode=0o777)
+        for s_code in symbol_list:
+            if not os.path.isdir('../stock_data/tick_data/%s' % s_code):
+                os.mkdir('../stock_data/tick_data/%s' % s_code, mode=0o777)
+    except KeyboardInterrupt:
+        exit(0)
+    except:
+        pass

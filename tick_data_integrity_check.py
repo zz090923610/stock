@@ -68,18 +68,31 @@ def qq_csv_format_correction(csv_file):
         writer.writerows(a)
 
 
+def tick_data_content_check_one_stock_one_day(stock, day):
+    data_list = []
+    with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            data_list.append(row)
+    if len(data_list) == 1:
+        print("Repair %s %s" % (stock, day))
+        os.remove('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day))
+        download_one_stock_one_day_from_qq(stock, day)
+
+
 def check_one_stock_integrity(stock):
     daily_date_list = load_stock_date_list_from_daily_data(stock)
     tick_date_list = load_stock_date_list_from_tick_files(stock)
     for daily_day in daily_date_list:
         if daily_day in tick_date_list:
+            tick_data_content_check_one_stock_one_day(stock, daily_day)
             continue
         else:
             download_one_stock_one_day_from_qq(stock, daily_day)
 
 
 if __name__ == "__main__":
-    p = Pool(64)
+    p = Pool(POOL_SIZE)
     rs = p.imap_unordered(check_one_stock_integrity, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)

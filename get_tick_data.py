@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import os
 import sys
+from multiprocessing.pool import Pool
 from pathlib import Path
 from commom_func import *
+
 
 def download_stock(s_code):
     finished = False
@@ -21,17 +23,6 @@ def download_stock(s_code):
             exit(0)
         except:
             finished = False
-
-
-def mkdirs(symbol_list):
-    try:
-        os.mkdir('../stock_data/tick_data', mode=0o777)
-        for s_code in symbol_list:
-            os.mkdir('../stock_data/tick_data/%s' % s_code, mode=0o777)
-    except KeyboardInterrupt:
-        exit(0)
-    except:
-        pass
 
 
 def _download_one_stock_one_day(scode, a_day):
@@ -75,12 +66,27 @@ def save_finished_stock_list(f_s_list, group):
 
 
 if __name__ == "__main__":
-    group = sys.argv[1]
-    finished_stock_list = load_finished_stock_list(group)
-    symbol_list_group = load_symbol_list('../stock_data/basic_info_%s.csv' % group)
-    for stock in symbol_list_group:
-        if stock in finished_stock_list:
-            continue
-        download_stock(stock)
-        finished_stock_list.append(stock)
-        save_finished_stock_list(finished_stock_list, group)
+    p = Pool(POOL_SIZE)
+    rs = p.imap_unordered(download_stock, SYMBOL_LIST)
+    p.close()  # No more work
+    list_len = len(SYMBOL_LIST)
+    while True:
+        completed = rs._index
+        if completed == list_len:
+            break
+        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
+        sys.stdout.flush()
+        time.sleep(2)
+    sys.stdout.write('Getting 1.000\n')
+    sys.stdout.flush()
+
+
+    # group = sys.argv[1]
+    # finished_stock_list = load_finished_stock_list(group)
+    # symbol_list_group = load_symbol_list('../stock_data/basic_info_%s.csv' % group)
+    # for stock in symbol_list_group:
+    #    if stock in finished_stock_list:
+    #        continue
+    #    download_stock(stock)
+    #    finished_stock_list.append(stock)
+    #    save_finished_stock_list(finished_stock_list, group)

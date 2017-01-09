@@ -22,7 +22,7 @@ def get_all_data_for_one_stock(stock):
 
 
 def get_all_data_for_all_stock():
-    p = Pool(64)
+    p = Pool(POOL_SIZE)
     rs = p.imap_unordered(get_all_data_for_one_stock, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
@@ -74,7 +74,7 @@ def get_update_for_one_stock(stock):
 
 
 def get_update_for_all_stock():
-    p = Pool(64)
+    p = Pool(POOL_SIZE)
     rs = p.imap_unordered(get_update_for_one_stock, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
