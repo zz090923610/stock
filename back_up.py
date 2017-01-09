@@ -7,6 +7,8 @@ from multiprocessing.pool import Pool
 
 import sys
 
+import shutil
+
 from commom_func import *
 
 
@@ -70,9 +72,12 @@ def backup_tick_data():
 
 
 def _restore_tick_data_for_stock(stock):
-    os.rename('../stock_data/back_up/tick_data/%s.tar.pylzma' % stock, '../stock_data/tick_data/%s.tar.pylzma' % stock)
+    shutil.copy2('../stock_data/back_up/tick_data/%s.tar.pylzma' % stock,
+                 '../stock_data/tick_data/%s.tar.pylzma' % stock)
     uncompress_pylzma_file('../stock_data/tick_data/%s.tar.pylzma' % stock)
+    os.remove('../stock_data/tick_data/%s.tar.pylzma')
     extract_directory_from_tar('../stock_data/tick_data/%s.tar' % stock, '../stock_data/tick_data/%s' % stock)
+    os.remove('../stock_data/tick_data/%s.tar' % stock)
 
 
 def restore_tick_data():
@@ -92,8 +97,25 @@ def restore_tick_data():
     sys.stdout.flush()
 
 
+def back_up_daily_data():
+    create_tar_file_of('../stock_data/data')
+    create_pylzma_file('../stock_data/data.tar')
+    os.rename('../stock_data/data.tar.pylzma', '../stock_data/back_up/data.tar.pylzma')
+    os.remove('../stock_data/data.tar')
+
+
+def restore_daily_data():
+    shutil.copy2('../stock_data/back_up/data.tar.pylzma', '../stock_data/data.tar.pylzma')
+    uncompress_pylzma_file('../stock_data/back_up/data.tar.pylzma')
+    os.remove('../stock_data/data.tar.pylzma')
+    extract_directory_from_tar('../stock_data/back_up/data.tar', '../stock_data/data')
+    os.remove('../stock_data/back_up/data.tar')
+
+
 if __name__ == '__main__':
     if sys.argv[1] == '-b':
+        back_up_daily_data()
         backup_tick_data()
     elif sys.argv[1] == '-r':
+        restore_daily_data()
         restore_tick_data()

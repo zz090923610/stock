@@ -2,18 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="58640f17-f94c-46fc-917a-70c4ed97ebed" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/get_data.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/zhangzhao.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/zhangzhao.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/update_market_open_date_list.py" afterPath="$PROJECT_DIR$/daily_update.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/check_download.py" afterPath="$PROJECT_DIR$/check_download.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/commom_func.py" afterPath="$PROJECT_DIR$/commom_func.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/fetch_tick.sh" afterPath="$PROJECT_DIR$/fetch_tick.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/get_daily_data.py" afterPath="$PROJECT_DIR$/get_daily_data.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/get_tick_data.py" afterPath="$PROJECT_DIR$/get_tick_data.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/quantity_analysis.py" afterPath="$PROJECT_DIR$/quantity_analysis.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tick_data_integrity_check.py" afterPath="$PROJECT_DIR$/tick_data_integrity_check.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/update_market_open_date_list.py" afterPath="$PROJECT_DIR$/update_market_open_date_list.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/back_up.py" afterPath="$PROJECT_DIR$/back_up.py" />
     </list>
     <ignored path="stock.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -49,7 +40,7 @@
       <file leaf-file-name="tick_data_integrity_check.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tick_data_integrity_check.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1584">
+            <state relative-caret-position="573">
               <caret line="94" column="22" lean-forward="false" selection-start-line="94" selection-start-column="22" selection-end-line="94" selection-end-column="22" />
               <folding />
             </state>
@@ -69,12 +60,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="update_market_open_date_list.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/update_market_open_date_list.py">
+      <file leaf-file-name="daily_update.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/daily_update.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="8" column="34" lean-forward="false" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
-              <folding />
+            <state relative-caret-position="180">
+              <caret line="10" column="74" lean-forward="false" selection-start-line="10" selection-start-column="74" selection-end-line="10" selection-end-column="74" />
+              <folding>
+                <element signature="e#20#117#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -109,11 +102,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="back_up.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="back_up.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/back_up.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
-              <caret line="16" column="34" lean-forward="true" selection-start-line="16" selection-start-column="34" selection-end-line="16" selection-end-column="34" />
+            <state relative-caret-position="375">
+              <caret line="93" column="26" lean-forward="true" selection-start-line="93" selection-start-column="26" selection-end-line="93" selection-end-column="26" />
               <folding>
                 <element signature="e#19#28#0" expanded="true" />
               </folding>
@@ -175,6 +168,7 @@
         <option value="$PROJECT_DIR$/quantity_analysis.py" />
         <option value="$PROJECT_DIR$/compression.py" />
         <option value="$PROJECT_DIR$/back_up.py" />
+        <option value="$PROJECT_DIR$/daily_update.py" />
       </list>
     </option>
   </component>
@@ -714,14 +708,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tick_data_integrity_check.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1584">
-          <caret line="94" column="22" lean-forward="false" selection-start-line="94" selection-start-column="22" selection-end-line="94" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/quantity_analysis.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1151">
@@ -730,14 +716,6 @@
             <element signature="e#43#63#0" expanded="true" />
             <element signature="e#2261#3485#0" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/update_market_open_date_list.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="8" column="34" lean-forward="false" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -765,6 +743,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/back_up.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="93" column="26" lean-forward="true" selection-start-line="93" selection-start-column="26" selection-end-line="93" selection-end-column="26" />
+          <folding>
+            <element signature="e#19#28#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/get_daily_data.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="591">
@@ -773,12 +761,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/back_up.py">
+    <entry file="file://$PROJECT_DIR$/tick_data_integrity_check.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="16" column="34" lean-forward="true" selection-start-line="16" selection-start-column="34" selection-end-line="16" selection-end-column="34" />
+        <state relative-caret-position="573">
+          <caret line="94" column="22" lean-forward="false" selection-start-line="94" selection-start-column="22" selection-end-line="94" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/daily_update.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="10" column="74" lean-forward="false" selection-start-line="10" selection-start-column="74" selection-end-line="10" selection-end-column="74" />
           <folding>
-            <element signature="e#19#28#0" expanded="true" />
+            <element signature="e#20#117#0" expanded="true" />
           </folding>
         </state>
       </provider>
