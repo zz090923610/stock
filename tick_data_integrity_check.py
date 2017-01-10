@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import os
+import re
 import sys
 from multiprocessing import Pool
 from time import sleep
 
 import requests
-from commom_func import *
+from common_func import *
+from get_tick_data import download_stock
 
 
 def load_stock_date_list_from_tick_files(stock):
@@ -77,13 +79,32 @@ def tick_data_content_check_one_stock_one_day(stock, day):
     if len(data_list) == 1:
         print("Repair %s %s" % (stock, day))
         os.remove('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day))
+        failed_list = load_fail_to_repair_list(stock)
         download_one_stock_one_day_from_qq(stock, day)
+        failed_list.append(day)
+        save_fail_to_repair_list(stock, failed_list)
+
+
+def load_fail_to_repair_list(stock):
+    try:
+        with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'rb') as f:
+            return pickle.load(f)
+    except:
+        return []
+
+
+def save_fail_to_repair_list(stock, f_list):
+    with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'wb') as f:
+        pickle.dump(f_list, f, -1)
 
 
 def check_one_stock_integrity(stock):
+    failed_list = load_fail_to_repair_list(stock)
     daily_date_list = load_stock_date_list_from_daily_data(stock)
     tick_date_list = load_stock_date_list_from_tick_files(stock)
     for daily_day in daily_date_list:
+        if daily_day in failed_list:
+            continue
         if daily_day in tick_date_list:
             tick_data_content_check_one_stock_one_day(stock, daily_day)
             continue
@@ -91,19 +112,42 @@ def check_one_stock_integrity(stock):
             download_one_stock_one_day_from_qq(stock, daily_day)
 
 
+def handle_check_one(stock):
+    try:
+        check_one_stock_integrity(stock)
+    except:
+        download_stock(stock)
+
+
+def print_repaired_list():
+    result_list = []
+    file_list = os.listdir('../stock_data/failed_downloaded_tick')
+    stock_list = []
+    for f in file_list:
+        stock_list.append(re.sub('.pickle$', '', f))
+    for s in stock_list:
+        date_list = load_fail_to_repair_list(s)
+        for d in date_list:
+            result_list.append('%s_%s' % (s, d))
+    for r in result_list:
+        print(r)
+    print(len(result_list))
+
+
 if __name__ == "__main__":
-    p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(check_one_stock_integrity, SYMBOL_LIST)
-    p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
+    if sys.argv[1] == '-p':
+        print_repaired_list()
+    else:
+        p = Pool(8)
+        rs = p.imap_unordered(handle_check_one, SYMBOL_LIST)
+        p.close()  # No more work
+        list_len = len(SYMBOL_LIST)
+        while True:
+            completed = rs._index
+            if completed == list_len:
+                break
+            sys.stdout.write('%d/%d\r' % (completed, list_len))
+            sys.stdout.flush()
+            sleep(2)
+        sys.stdout.write('Getting 1.000\n')
         sys.stdout.flush()
-        sleep(2)
-    sys.stdout.write('Getting 1.000\n')
-    sys.stdout.flush()
-    # for stock in SYMBOL_LIST:
-    #    check_one_stock_integrity(stock)

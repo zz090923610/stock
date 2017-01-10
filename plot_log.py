@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 from tick_data_integrity_check import *
-from quantity_analysis import *
+from qa_log_quantity import *
 
 stock=sys.argv[1]
 check_one_stock_integrity(stock)

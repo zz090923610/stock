@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 # implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
 
-from quantity_analysis import *
+from qa_log_quantity import *
 from matplotlib.figure import Figure
 
 import sys
@@ -143,7 +143,11 @@ if __name__ == '__main__':
             type += 'sell_small'
         if chk_var_kline.get() == 1:
             type += 'kline'
-        plot_log_quantity_idx_tk(fig, stock_code, .5, type)
+        try:
+            plot_log_quantity_idx_tk(fig, stock_code, .5, type)
+        except:
+            calculate_detailed_trade_quantity_for_stock(stock_code)
+            plot_log_quantity_idx_tk(fig, stock_code, .5, type)
         fig.canvas.draw()
 
 

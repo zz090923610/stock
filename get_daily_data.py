@@ -7,7 +7,7 @@ import sys
 import os.path
 from multiprocessing import Pool
 from operator import itemgetter
-from commom_func import *
+from common_func import *
 
 
 def get_all_data_for_one_stock(stock):
@@ -52,13 +52,12 @@ def get_update_for_one_stock(stock):
             continue
         elif day in trade_pause_list:
             continue
-        elif day in trade_pause_list:
-            continue
         else:
             print('Missing day %s for %s' % (day, stock))
             data = ts.get_h_data(stock, autype='qfq', start=day, end=day)
             if data is None:
                 trade_pause_list.append(day)
+                save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
                 continue
             data.to_csv('../stock_data/data/tmp_%s.csv' % stock)
             with open('../stock_data/data/tmp_%s.csv' % stock) as csvfile:
@@ -70,12 +69,19 @@ def get_update_for_one_stock(stock):
             column_order = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount']
             b[column_order].to_csv('../stock_data/data/%s.csv' % stock, index=False)
             os.remove('../stock_data/data/tmp_%s.csv' % stock)
-    save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
+
+
+
+def handle_update_one(stock):
+    try:
+        get_update_for_one_stock(stock)
+    except:
+        get_all_data_for_one_stock(stock)
 
 
 def get_update_for_all_stock():
     p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(get_update_for_one_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(handle_update_one, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
     while True:
@@ -87,7 +93,6 @@ def get_update_for_all_stock():
         sleep(2)
     sys.stdout.write('Getting 1.000\n')
     sys.stdout.flush()
-
 
 if __name__ == "__main__":
     fetch_type = 'all'

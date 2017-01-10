@@ -9,7 +9,7 @@ import sys
 
 import shutil
 
-from commom_func import *
+from common_func import *
 
 
 def create_tar_file_of(folder):

@@ -15,7 +15,7 @@ START_DATE = '2008-01-01'
 local_tz = get_localzone()
 china_tz = pytz.timezone('Asia/Shanghai')
 AGENT = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'}
-POOL_SIZE =512
+POOL_SIZE =128
 
 def get_today():
     return time.strftime("%Y-%m-%d")
@@ -59,7 +59,8 @@ def load_symbol_list(symbol_file):
     with open(symbol_file) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            symbol_list.append(row['code'])
+            if row['timeToMarket'] != '0':
+                symbol_list.append(row['code'])
     return symbol_list
 
 

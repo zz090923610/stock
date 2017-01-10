@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from commom_func import update_market_open_date_list, update_basic_info, mkdirs, load_symbol_list
+from common_func import update_market_open_date_list, update_basic_info, mkdirs, load_symbol_list
 import subprocess
 
 if __name__ == "__main__":
@@ -9,4 +9,4 @@ if __name__ == "__main__":
     mkdirs(SYMBOL_LIST)
     update_market_open_date_list()
     subprocess.call("cd ~/stock;./get_daily_data.py --update", shell=True)
-    subprocess.call("cd ~/stock;./tick_data_integrity_check.py", shell=True)
+    subprocess.call("cd ~/stock;./get_tick_data.py", shell=True)

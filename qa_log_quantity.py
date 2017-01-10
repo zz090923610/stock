@@ -7,15 +7,11 @@ import matplotlib
 import pandas as pd
 import sys
 
-from commom_func import *
+from common_func import *
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.finance as plfin
-import matplotlib.mlab as mlab
-import matplotlib.cbook as cbook
 import matplotlib.ticker as ticker
-
-plt.ion()
 
 
 def load_tick_data(stock, day):
@@ -241,8 +237,8 @@ if __name__ == '__main__':
         completed = rs._index
         if completed == list_len:
             break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
+        sys.stdout.write('%d/%d\r' % (completed, list_len))
         sys.stdout.flush()
         time.sleep(2)
-    sys.stdout.write('Getting 1.000\n')
+    sys.stdout.write('%d/%d\r' % (completed, list_len))
     sys.stdout.flush()

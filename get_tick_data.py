@@ -3,13 +3,21 @@ import os
 import sys
 from multiprocessing.pool import Pool
 from pathlib import Path
-from commom_func import *
+from common_func import *
+
+
+def load_fail_to_repair_list(stock):
+    try:
+        with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'rb') as f:
+            return pickle.load(f)
+    except:
+        return []
 
 
 def download_stock(s_code):
     finished = False
     while not finished:
-        current_file_date = get_lastest_date(s_code)
+        current_file_date = get_last_date(s_code)
         start = max(IPO_DATE_LIST[s_code], '2008-01-01')
 
         if current_file_date is not None:
@@ -25,7 +33,31 @@ def download_stock(s_code):
             finished = False
 
 
-def _download_one_stock_one_day(scode, a_day):
+def generate_day_list_for_stock(s_code):
+    failed_loaded_list = load_fail_to_repair_list(s_code)
+    current_file_date = get_last_date(s_code)
+    start = max(IPO_DATE_LIST[s_code], '2008-01-01')
+    all_date_list = get_stock_open_date_list(start)
+    if current_file_date is None:
+        return all_date_list
+    date_list = []
+    for day in all_date_list:
+        if day in failed_loaded_list:
+            continue
+        if day >= current_file_date:
+            date_list.append(day)
+    return date_list
+
+
+def generate_work_list(s_code, date_list):
+    result = []
+    for day in date_list:
+        result.append('%s+%s' % (s_code, day))
+    return result
+
+
+def _download_one_stock_one_day(scode_a_day):
+    (scode, a_day) = scode_a_day.split('+')[0], scode_a_day.split('+')[1]
     if Path('../stock_data/tick_data/%s/%s_%s.csv' % (scode, scode, a_day)).is_file():
         print('Exist %s %s' % (scode, a_day), file=sys.stderr)
         return
@@ -40,7 +72,7 @@ def _download_one_stock_one_day(scode, a_day):
         print('ERROR Get %s %s' % (scode, a_day), file=sys.stderr)
 
 
-def get_lastest_date(s_code):
+def get_last_date(s_code):
     file_list = os.listdir('../stock_data/tick_data/%s' % s_code)
     if len(file_list) == 0:
         return None
@@ -52,24 +84,16 @@ def get_lastest_date(s_code):
     return max(date_list).strftime("%Y-%m-%d")
 
 
-def load_finished_stock_list(group):
-    try:
-        with open('../stock_data/finished_group_%s.pickle' % group, 'rb') as f:
-            return pickle.load(f)
-    except:
-        return []
-
-
-def save_finished_stock_list(f_s_list, group):
-    with open('../stock_data/finished_group_%s.pickle' % group, 'wb') as f:
-        pickle.dump(f_s_list, f, -1)
-
-
 if __name__ == "__main__":
+    all_work_list = []
+    for stock in SYMBOL_LIST:
+        date_list = generate_day_list_for_stock(stock)
+        all_work_list += generate_work_list(stock, date_list)
+
     p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(download_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(_download_one_stock_one_day, all_work_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(all_work_list)
     while True:
         completed = rs._index
         if completed == list_len:
@@ -79,14 +103,3 @@ if __name__ == "__main__":
         time.sleep(2)
     sys.stdout.write('Getting 1.000\n')
     sys.stdout.flush()
-
-
-    # group = sys.argv[1]
-    # finished_stock_list = load_finished_stock_list(group)
-    # symbol_list_group = load_symbol_list('../stock_data/basic_info_%s.csv' % group)
-    # for stock in symbol_list_group:
-    #    if stock in finished_stock_list:
-    #        continue
-    #    download_stock(stock)
-    #    finished_stock_list.append(stock)
-    #    save_finished_stock_list(finished_stock_list, group)
