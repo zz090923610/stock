@@ -17,11 +17,14 @@ def get_all_data_for_one_stock(stock):
     if my_file.is_file():
         get_update_for_one_stock(stock)
         return
-    data = ts.get_h_data(stock, autype='qfq', start=start, end=get_today())
-    data.to_csv('../stock_data/data/%s.csv' % stock)
+    data = ts.get_k_data(stock, autype='qfq', start=start, end=get_today())
+    data= data.reindex(index=data.index[::-1])
+    cols = ['date', 'open', 'high', 'close', 'low', 'volume']
+    data[cols].to_csv('../stock_data/data/%s.csv' % stock, index=False)
 
 
 def get_all_data_for_all_stock():
+    print('here')
     p = Pool(POOL_SIZE)
     rs = p.imap_unordered(get_all_data_for_one_stock, SYMBOL_LIST)
     p.close()  # No more work
@@ -54,22 +57,23 @@ def get_update_for_one_stock(stock):
             continue
         else:
             print('Missing day %s for %s' % (day, stock))
-            data = ts.get_h_data(stock, autype='qfq', start=day, end=day)
+            data = ts.get_k_data(stock, autype='qfq', start=day, end=day)
             if data is None:
                 trade_pause_list.append(day)
                 save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
                 continue
-            data.to_csv('../stock_data/data/tmp_%s.csv' % stock)
+            cols = ['date', 'open', 'high', 'close', 'low', 'volume']
+            data = data.reindex(index=data.index[::-1])
+            data[cols].to_csv('../stock_data/data/tmp_%s.csv' % stock, index=False)
             with open('../stock_data/data/tmp_%s.csv' % stock) as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     data_already_have.append(row)
             data_new_sorted = sorted(data_already_have, key=itemgetter('date'), reverse=True)
             b = pd.DataFrame(data_new_sorted)
-            column_order = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount']
+            column_order = ['date', 'open', 'high', 'close', 'low', 'volume']
             b[column_order].to_csv('../stock_data/data/%s.csv' % stock, index=False)
             os.remove('../stock_data/data/tmp_%s.csv' % stock)
-
 
 
 def handle_update_one(stock):
@@ -94,6 +98,7 @@ def get_update_for_all_stock():
     sys.stdout.write('Getting 1.000\n')
     sys.stdout.flush()
 
+
 if __name__ == "__main__":
     fetch_type = 'all'
     for loop in range(1, len(sys.argv)):
@@ -101,7 +106,7 @@ if __name__ == "__main__":
             fetch_type = 'all'
         elif sys.argv[loop] == '--update':
             fetch_type = 'update'
-    if fetch_type == all:
+    if fetch_type == 'all':
         get_all_data_for_all_stock()
     elif fetch_type == 'update':
         get_update_for_all_stock()

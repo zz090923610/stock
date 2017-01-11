@@ -25,7 +25,7 @@ def download_stock(s_code):
         date_list = get_date_list(start, get_today(), timedelta(days=1))
         try:
             for a_day in date_list:
-                _download_one_stock_one_day(s_code, a_day)
+                _download_one_stock_one_day("%s+%s" % (s_code, a_day))
             finished = True
         except KeyboardInterrupt:
             exit(0)
@@ -62,7 +62,10 @@ def _download_one_stock_one_day(scode_a_day):
         print('Exist %s %s' % (scode, a_day), file=sys.stderr)
         return
     print("Get %s %s" % (scode, a_day))
-    data = ts.get_tick_data(scode, date=a_day)
+    try:
+        data = ts.get_tick_data(scode, date=a_day)
+    except:
+        return
     try:
         if data.iloc[0]['time'].find("当天没有数据") == -1:
             data.to_csv('../stock_data/tick_data/%s/%s_%s.csv' % (scode, scode, a_day))
@@ -84,11 +87,22 @@ def get_last_date(s_code):
     return max(date_list).strftime("%Y-%m-%d")
 
 
+def align_tick_data_stock(stock):
+    date_list = load_stock_date_list_from_daily_data(stock)
+
+
 if __name__ == "__main__":
     all_work_list = []
-    for stock in SYMBOL_LIST:
-        date_list = generate_day_list_for_stock(stock)
-        all_work_list += generate_work_list(stock, date_list)
+    if sys.argv[1] == '--day':
+        day = sys.argv[2]
+        for stock in SYMBOL_LIST:
+            date_list = [day]
+            all_work_list += generate_work_list(stock, date_list)
+    else:
+
+        for stock in SYMBOL_LIST:
+            date_list = generate_day_list_for_stock(stock)
+            all_work_list += generate_work_list(stock, date_list)
 
     p = Pool(POOL_SIZE)
     rs = p.imap_unordered(_download_one_stock_one_day, all_work_list)

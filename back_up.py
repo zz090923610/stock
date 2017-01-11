@@ -13,7 +13,9 @@ from common_func import *
 
 
 def create_tar_file_of(folder):
+    folder = os.path.abspath(folder)
     folder = re.sub('/*$', '', folder)
+    cwd = os.getcwd()
     basename_of_dir = os.path.basename(folder)
     os.chdir("%s/.." % folder)
     file_list = os.listdir(folder)
@@ -22,6 +24,7 @@ def create_tar_file_of(folder):
     for name in file_list:
         tar.add('%s' % name)
     tar.close()
+    os.chdir(cwd)
 
 
 def extract_directory_from_tar(f, out_dir):
@@ -49,25 +52,26 @@ def uncompress_pylzma_file(i_file):
         oFile.write(oData)
 
 
-def _backup_tick_data_for_stock(stock):
+def backup_tick_data_for_stock(stock):
     create_tar_file_of('../stock_data/tick_data/%s' % stock)
     create_pylzma_file('../stock_data/tick_data/%s.tar' % stock)
     os.rename('../stock_data/tick_data/%s.tar.pylzma' % stock, '../stock_data/back_up/tick_data/%s.tar.pylzma' % stock)
+    os.remove('../stock_data/tick_data/%s.tar' % stock)
 
 
 def backup_tick_data():
-    p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(_backup_tick_data_for_stock, SYMBOL_LIST)
+    p = Pool(8)
+    rs = p.imap_unordered(backup_tick_data_for_stock, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
     while True:
         completed = rs._index
         if completed == list_len:
             break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
+        sys.stdout.write('%d/%d\r' % (completed, list_len))
         sys.stdout.flush()
         time.sleep(2)
-    sys.stdout.write('Getting 1.000\n')
+    sys.stdout.write('%d/%d\r' % (completed, list_len))
     sys.stdout.flush()
 
 
@@ -98,7 +102,9 @@ def restore_tick_data():
 
 
 def back_up_daily_data():
+    print('backup daily data')
     create_tar_file_of('../stock_data/data')
+    print('compressing')
     create_pylzma_file('../stock_data/data.tar')
     os.rename('../stock_data/data.tar.pylzma', '../stock_data/back_up/data.tar.pylzma')
     os.remove('../stock_data/data.tar')
@@ -114,7 +120,7 @@ def restore_daily_data():
 
 if __name__ == '__main__':
     if sys.argv[1] == '-b':
-        back_up_daily_data()
+        #back_up_daily_data()
         backup_tick_data()
     elif sys.argv[1] == '-r':
         restore_daily_data()
