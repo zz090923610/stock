@@ -11,16 +11,7 @@ from common_func import *
 from get_tick_data import download_stock
 
 
-def load_stock_date_list_from_tick_files(stock):
-    file_list = os.listdir('../stock_data/tick_data/%s' % stock)
-    if len(file_list) == 0:
-        return None
-    date_list = []
-    for f in file_list:
-        day = f.split('_')[1].split('.')[0]
-        (y, m, d) = int(day.split('-')[0]), int(day.split('-')[1]), int(day.split('-')[2])
-        date_list.append(datetime.datetime(y, m, d).strftime("%Y-%m-%d"))
-    return date_list
+
 
 
 def download_one_stock_one_day_from_qq(stock, a_day):

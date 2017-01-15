@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
+from math import floor
 from multiprocessing.pool import Pool
 from pathlib import Path
 from common_func import *
+from qa_tick_lms import calculate_lms_for_stock_one_day, load_tick_data
+import pandas as pd
 
 
 def load_fail_to_repair_list(stock):
@@ -12,6 +15,16 @@ def load_fail_to_repair_list(stock):
             return pickle.load(f)
     except:
         return []
+
+
+def load_something_for_stock_one_day(stock, day, something):
+    volume = 0
+    with open('../stock_data/data/%s.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['date'] == day:
+                volume = float(row[something])
+    return volume
 
 
 def download_stock(s_code):
@@ -88,7 +101,32 @@ def get_last_date(s_code):
 
 
 def align_tick_data_stock(stock):
-    date_list = load_stock_date_list_from_daily_data(stock)
+    daily_date_list = load_stock_date_list_from_daily_data(stock)
+    tick_date_list = load_stock_date_list_from_tick_files(stock)
+    for (idx, day) in enumerate(daily_date_list):
+        if day not in tick_date_list:
+            if idx > 0:
+
+                _download_one_stock_one_day('%s+%s' % (stock, day))
+                if os.path.isfile('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)):
+                    continue
+                print('Still missing tick data for %s %s' % (stock, day))
+                (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
+                 undirected_trade) = calculate_lms_for_stock_one_day(stock, daily_date_list[idx - 1])
+                yesterday_volume = buy_large + sell_large + buy_mid + sell_mid + buy_small + sell_small + undirected_trade
+                today_volume = load_something_for_stock_one_day(stock, day, 'volume')
+                today_price = load_something_for_stock_one_day(stock, day, 'close')
+                yesterday_tick = load_tick_data(stock, daily_date_list[idx - 1])
+                for row in yesterday_tick:
+                    row['price'] = today_price
+                    row['volume'] = round(row['volume'] * (yesterday_volume / today_volume))
+                    row['amount'] = round(row['price'] * row['volume'] * 100)
+                yesterday_tick.append(
+                    {'': len(yesterday_tick), 'time': '08:00:00', 'price': today_price, 'change': 0, 'volume': 0,
+                     'amount': 0, 'type': '中性盘'})
+                b = pd.DataFrame(yesterday_tick)
+                column_order = ['time', 'price', 'change', 'volume', 'amount', 'type']
+                b[column_order].to_csv('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day))
 
 
 if __name__ == "__main__":
@@ -98,6 +136,21 @@ if __name__ == "__main__":
         for stock in SYMBOL_LIST:
             date_list = [day]
             all_work_list += generate_work_list(stock, date_list)
+    elif sys.argv[1] == '--align':
+        p = Pool(POOL_SIZE)
+        rs = p.imap_unordered(align_tick_data_stock, SYMBOL_LIST)
+        p.close()  # No more work
+        list_len = len(SYMBOL_LIST)
+        while True:
+            completed = rs._index
+            if completed == list_len:
+                break
+            sys.stdout.write('%d/%d\r' % (completed, list_len))
+            sys.stdout.flush()
+            time.sleep(2)
+        sys.stdout.write('%d/%d\r' % (completed, list_len))
+        sys.stdout.flush()
+        exit()
     else:
 
         for stock in SYMBOL_LIST:
@@ -112,8 +165,8 @@ if __name__ == "__main__":
         completed = rs._index
         if completed == list_len:
             break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
+        sys.stdout.write('%d/%d\r' % (completed, list_len))
         sys.stdout.flush()
         time.sleep(2)
-    sys.stdout.write('Getting 1.000\n')
+    sys.stdout.write('%d/%d\r' % (completed, list_len))
     sys.stdout.flush()

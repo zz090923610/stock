@@ -15,10 +15,23 @@ START_DATE = '2008-01-01'
 local_tz = get_localzone()
 china_tz = pytz.timezone('Asia/Shanghai')
 AGENT = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'}
-POOL_SIZE =128
+POOL_SIZE = 128
+
 
 def get_today():
     return time.strftime("%Y-%m-%d")
+
+
+def load_stock_date_list_from_tick_files(stock):
+    file_list = os.listdir('../stock_data/tick_data/%s' % stock)
+    if len(file_list) == 0:
+        return None
+    date_list = []
+    for f in file_list:
+        day = f.split('_')[1].split('.')[0]
+        (y, m, d) = int(day.split('-')[0]), int(day.split('-')[1]), int(day.split('-')[2])
+        date_list.append(datetime.datetime(y, m, d).strftime("%Y-%m-%d"))
+    return date_list
 
 
 def check_weekday(date_str):
@@ -27,6 +40,8 @@ def check_weekday(date_str):
         return True
     else:
         return False
+
+
 def update_basic_info():
     bi = ts.get_stock_basics()
     bi.to_csv('../stock_data/basic_info.csv')
@@ -65,8 +80,6 @@ def load_symbol_list(symbol_file):
 
 
 SYMBOL_LIST = load_symbol_list('../stock_data/basic_info.csv')
-
-
 
 
 def update_market_open_date_list():

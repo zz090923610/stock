@@ -23,6 +23,7 @@ def load_tick_data(stock, day):
             for row in reader:
                 row['price'] = float(row['price'])
                 row['volume'] = int(row['volume'])
+                row['amount'] = int(row['amount'])
                 data_list.append(row)
         except:
             return []
