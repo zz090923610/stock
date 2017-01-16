@@ -18,14 +18,14 @@ def get_all_data_for_one_stock(stock):
         get_update_for_one_stock(stock)
         return
     data = ts.get_k_data(stock, autype='qfq', start=start, end=get_today())
-    data= data.reindex(index=data.index[::-1])
+    data = data.reindex(index=data.index[::-1])
     cols = ['date', 'open', 'high', 'close', 'low', 'volume']
     data[cols].to_csv('../stock_data/data/%s.csv' % stock, index=False)
 
 
 def get_all_data_for_all_stock():
     print('here')
-    p = Pool(POOL_SIZE)
+    p = Pool(64)
     rs = p.imap_unordered(get_all_data_for_one_stock, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
@@ -58,7 +58,7 @@ def get_update_for_one_stock(stock):
         else:
             print('Missing day %s for %s' % (day, stock))
             data = ts.get_k_data(stock, autype='qfq', start=day, end=day)
-            if data is None:
+            if data.empty:
                 trade_pause_list.append(day)
                 save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
                 continue
@@ -84,7 +84,7 @@ def handle_update_one(stock):
 
 
 def get_update_for_all_stock():
-    p = Pool(POOL_SIZE)
+    p = Pool(64)
     rs = p.imap_unordered(handle_update_one, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)

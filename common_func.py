@@ -10,7 +10,7 @@ import datetime
 
 from tzlocal import get_localzone
 
-START_DATE = '2008-01-01'
+START_DATE = '2012-01-01'
 # get local timezone
 local_tz = get_localzone()
 china_tz = pytz.timezone('Asia/Shanghai')
@@ -98,6 +98,18 @@ def load_market_open_date_list():
             return pickle.load(f)
     except:
         return update_market_open_date_list()
+
+def load_market_open_date_list_from(given_day):
+    try:
+        with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
+            raw_date = pickle.load(f)
+    except:
+        raw_date = update_market_open_date_list()
+    result_list = []
+    for day in raw_date:
+        if day >= given_day:
+            result_list.append(day)
+    return result_list
 
 
 def save_market_open_date_list(market_open_date_list):

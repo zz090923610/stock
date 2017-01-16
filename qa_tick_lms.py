@@ -119,7 +119,7 @@ def calculate_lms_for_stock_one_day(stock, day):
 
 def load_lms(stock):
     lms_data = []
-    with open('../stock_data/lms/%s.csv' % stock) as csvfile:
+    with open('../stock_data/qa/lms/%s.csv' % stock) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             row['buy_large']= int(row['buy_large'])
@@ -151,11 +151,11 @@ def generated_lms_trade_for_stock(stock):
     b = pd.DataFrame(sorted_lms)
     column_order = ['date', 'buy_large', 'sell_large', 'buy_mid', 'sell_mid', 'buy_small', 'sell_small',
                     'undirected_trade']
-    b[column_order].to_csv('../stock_data/lms/%s.csv' % stock, index=False)
+    b[column_order].to_csv('../stock_data/qa/lms/%s.csv' % stock, index=False)
 
 
 def update_lms_trade_for_stock_for_day(stock, day):
-    if not os.path.exists('../stock_data/lms/%s.csv' % stock):
+    if not os.path.exists('../stock_data/qa/lms/%s.csv' % stock):
         generated_lms_trade_for_stock(stock)
     if not os.path.exists('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)):
         return
@@ -177,7 +177,7 @@ def update_lms_trade_for_stock_for_day(stock, day):
     b = pd.DataFrame(sorted_lms)
     column_order = ['date', 'buy_large', 'sell_large', 'buy_mid', 'sell_mid', 'buy_small', 'sell_small',
                     'undirected_trade']
-    b[column_order].to_csv('../stock_data/lms/%s.csv' % stock, index=False)
+    b[column_order].to_csv('../stock_data/qa/lms/%s.csv' % stock, index=False)
 
 
 if __name__ == '__main__':

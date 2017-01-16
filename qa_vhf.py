@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.finance as plfin
 import matplotlib.ticker as ticker
+import multiprocessing as mp
 
 
 def load_daily_data(stock):
@@ -60,21 +61,12 @@ def calculate_vhf(stock, n):
             data_for_day['vhf'] = vhf
     b = pd.DataFrame(daily_data)
     column_order = ['date', 'close', 'vhf']
-    b[column_order].to_csv('../stock_data/qa_vhf/%s.csv' % stock, index=False)
+    b[column_order].to_csv('../stock_data/qa/vhf/%s.csv' % stock, index=False)
 
 
 if __name__ == '__main__':
-    pass
-    # p = Pool(8)
-    # rs = p.imap_unordered(calculate_detailed_trade_quantity_for_stock, SYMBOL_LIST)
-    # p.close()  # No more work
-    # list_len = len(SYMBOL_LIST)
-    # while True:
-    #    completed = rs._index
-    #    if completed == list_len:
-    #        break
-    #    sys.stdout.write('%d/%d\r' % (completed, list_len))
-    #    sys.stdout.flush()
-    #    time.sleep(2)
-    # sys.stdout.write('%d/%d\r' % (completed, list_len))
-    # sys.stdout.flush()
+    pool = mp.Pool()
+    for i in SYMBOL_LIST:
+        pool.apply_async(calculate_vhf, args=(i, 5))
+    pool.close()
+    pool.join()

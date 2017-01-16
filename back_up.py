@@ -120,7 +120,7 @@ def restore_daily_data():
 
 if __name__ == '__main__':
     if sys.argv[1] == '-b':
-        #back_up_daily_data()
+        back_up_daily_data()
         backup_tick_data()
     elif sys.argv[1] == '-r':
         restore_daily_data()
