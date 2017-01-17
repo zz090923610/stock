@@ -60,7 +60,7 @@ def calculate_udr_for_day(day):
         elif (line['close'] - line['open']) < 0:
             declining_volume += line['volume']
 
-    return {'date': date, 'advancing_volume': advancing_volume, 'declining_volume': declining_volume,
+    return {'date': day, 'advancing_volume': advancing_volume, 'declining_volume': declining_volume,
             'udr': advancing_volume / declining_volume}
 
 
@@ -96,6 +96,7 @@ def update_udr():
         pool.apply_async(calculate_udr_for_day, args=(i,), callback=udr.append)
     pool.close()
     pool.join()
+    udr_sorted = sorted(udr, key=itemgetter('date'))
     b = pd.DataFrame(udr)
     column_order = ['date', 'advancing_volume', 'declining_volume', 'udr']
     b[column_order].to_csv('../stock_data/qa/udr.csv', index=False)

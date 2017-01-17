@@ -4,13 +4,10 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 
-from numpy import arange, sin, pi
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-# implement the default mpl key bindings
 from matplotlib.backend_bases import key_press_handler
 import numpy as np
 from qa_tick_lms import load_lms, load_basic_info_for_stock, load_daily_data
-from matplotlib.figure import Figure
 
 import sys
 
