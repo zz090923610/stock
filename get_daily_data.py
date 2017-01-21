@@ -41,6 +41,8 @@ def get_all_data_for_all_stock():
 
 
 def get_update_for_one_stock(stock):
+    if not os.path.isfile('../stock_data/data/%s.csv' % stock):
+        get_all_data_for_one_stock(stock)
     start = max(IPO_DATE_LIST[stock], START_DATE)
     all_date_list = get_stock_open_date_list(start)
     date_list_already_have = load_stock_date_list_from_daily_data(stock)
@@ -50,6 +52,7 @@ def get_update_for_one_stock(stock):
         reader = csv.DictReader(csvfile)
         for row in reader:
             data_already_have.append(row)
+
     for day in all_date_list:
         if day in date_list_already_have:
             continue
