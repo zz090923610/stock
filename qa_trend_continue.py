@@ -115,6 +115,13 @@ def calc_atpdr_for_stock(stock):
     column_order = ['date', 'atpd_ratio']
     b[column_order].to_csv('../stock_data/qa/atpdr/%s.csv' % stock, index=False)
 
+def calc_atpdr_for_all_stock():
+    pool = mp.Pool()
+    for i in SYMBOL_LIST:
+        pool.apply_async(calc_atpdr_for_stock, args=(i))
+    pool.close()
+    pool.join()
+
 
 def load_atpdr_data(stock):
     """
@@ -157,9 +164,8 @@ def recent_trend_stat(stock, trade_days):
 def sort_trend(trade_days):
     up_list = []
     down_list = []
-    today =get_today()
+    today = get_today()
     for s in SYMBOL_LIST:
-        calc_atpdr_for_stock(s)
         (trend, continue_day, last_day) = recent_trend_stat(s, trade_days)
         if (trend == 'up') & (last_day == today):
             up_list.append({'code': s, 'trend': trend, 'continue_days': continue_day})
@@ -214,6 +220,6 @@ def generate_trend_report(trade_days, continue_days):
 
 
 if __name__ == '__main__':
-    # calc_atpd_for_all_stock()
-    sort_trend(int(sys.argv[1]))
+    calc_atpd_for_all_stock()
+    calc_atpdr_for_all_stock()
     generate_trend_report(int(sys.argv[1]), int(sys.argv[2]))

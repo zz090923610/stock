@@ -20,8 +20,6 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
-
-
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
 SCOPES = 'https://mail.google.com/'
@@ -149,7 +147,6 @@ def send_message(service, user_id, message):
         print('An error occurred: %s' % error)
 
 
-
 if __name__ == '__main__':
     """Shows basic usage of the Gmail API.
 
@@ -158,12 +155,12 @@ if __name__ == '__main__':
         """
     try_login = False
     try_send = False
-    recipient =''
+    recipient = ''
     title = ''
     content_file = ''
     data = ''
-    for (idx,arg) in enumerate(sys.argv):
-        if arg =='-l':
+    for (idx, arg) in enumerate(sys.argv):
+        if arg == '-l':
             try_login = True
         elif arg == '-s':
             try_login = True
@@ -174,7 +171,8 @@ if __name__ == '__main__':
             with open(content_file, 'r') as myfile:
                 data = myfile.read()
     if try_login:
-        flags= argparse.Namespace(auth_host_name='localhost', auth_host_port=[8080, 8090], logging_level='ERROR', noauth_local_webserver=False)
+        flags = argparse.Namespace(auth_host_name='localhost', auth_host_port=[8080, 8090], logging_level='ERROR',
+                                   noauth_local_webserver=False)
         credentials = get_credentials()
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('gmail', 'v1', http=http)

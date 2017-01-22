@@ -99,6 +99,7 @@ def load_market_open_date_list():
     except:
         return update_market_open_date_list()
 
+
 def load_market_open_date_list_from(given_day):
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
@@ -110,6 +111,14 @@ def load_market_open_date_list_from(given_day):
         if day >= given_day:
             result_list.append(day)
     return result_list
+
+
+def load_market_close_days_for_year(year):
+    try:
+        with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'rb') as f:
+            return pickle.load(f)
+    except:
+        return []
 
 
 def save_market_open_date_list(market_open_date_list):
