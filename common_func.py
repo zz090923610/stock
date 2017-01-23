@@ -15,8 +15,7 @@ def get_today():
     ts = time.time()
     utc_now, now = datetime.utcfromtimestamp(ts), datetime.fromtimestamp(ts)
     local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    #return local_now.strftime("%Y-%m-%d")
-    return '2017-01-23'
+    return local_now.strftime("%Y-%m-%d")
 
 
 def get_time():
