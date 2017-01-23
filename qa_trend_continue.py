@@ -137,40 +137,42 @@ def load_atpdr_data(stock):
         return []
 
 
-def recent_trend_stat(stock, trade_days):
-    atpdr_list = load_atpdr_data(stock)
+def recent_trend_stat(stock, trade_days, last_day):
+    atpdr_list_raw = load_atpdr_data(stock)
+    atpdr_list = [i for i in atpdr_list_raw if i['date'] <= last_day]
     if len(atpdr_list) < trade_days:
         select_list = atpdr_list
     else:
         select_list = atpdr_list[len(atpdr_list) - trade_days: len(atpdr_list)]
-    trend_days = 0
+    td = 0
+    if len(atpdr_list) < trade_days:
+        return 'up', 0, '1970-01-01'
     for i in range(trade_days):
         if (select_list[-1 - i]['atpd_ratio'] - 1) * (select_list[-1]['atpd_ratio'] - 1) > 0:
-            trend_days += 1
+            td += 1
             continue
         else:
             break
     if select_list[-1]['atpd_ratio'] > 1:
-        return 'up', trend_days, select_list[-1]['date']
+        return 'up', td, select_list[-1]['date']
     else:
-        return 'down', trend_days, select_list[-1]['date']
+        return 'down', td, select_list[-1]['date']
 
 
-def sort_trend(trade_days):
+def sort_trend(trade_days, end_day):
     up_list = []
     down_list = []
-    today = get_today()
     for s in SYMBOL_LIST:
-        (trend, continue_day, last_day) = recent_trend_stat(s, trade_days)
-        if (trend == 'up') & (last_day == today):
+        (trend, continue_day, last_day) = recent_trend_stat(s, trade_days, end_day)
+        if (trend == 'up') & (last_day == end_day):
             up_list.append({'code': s, 'trend': trend, 'continue_days': continue_day})
-        elif (trend == 'down') & (last_day == today):
+        elif (trend == 'down') & (last_day == end_day):
             down_list.append({'code': s, 'trend': trend, 'continue_days': continue_day})
     return up_list, down_list
 
 
-def print_trend(trade_days, continue_days):
-    u, d = sort_trend(trade_days)
+def print_trend(trade_days, continue_days, end_day):
+    u, d = sort_trend(trade_days, end_day)
     for l in u:
         if l['continue_days'] >= continue_days:
             print(l)
@@ -191,10 +193,10 @@ def load_basic_info_list():
     return symbol_dict
 
 
-def generate_trend_report(trade_days, continue_days):
+def generate_trend_report(trade_days, continue_days, end_day):
     basic_info_list = load_basic_info_list()
-    msg = u'%s\n连续五日日平均交易价格上涨股票\n' % get_today()
-    u, d = sort_trend(trade_days)
+    msg = u'%s\n连续五日日平均交易价格上涨股票\n' % end_day
+    u, d = sort_trend(trade_days, end_day)
     for l in u:
         l['timeToMarket'] = basic_info_list[l['code']]['timeToMarket']
     for l in d:
@@ -210,11 +212,11 @@ def generate_trend_report(trade_days, continue_days):
         if l['continue_days'] >= continue_days:
             msg += u'连续 %s 天下跌 [%s] %s %s 上市\n' % (l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
                                                    basic_info_list[l['code']]['timeToMarket'])
-    with open('../stock_data/report/five_days_trend/%s.txt' % get_today(), 'wb') as myfile:
+    with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(msg, encoding='utf-8'))
 
 
 if __name__ == '__main__':
-    calc_atpd_for_all_stock()
-    calc_atpdr_for_all_stock()
-    generate_trend_report(int(sys.argv[1]), int(sys.argv[2]))
+    #calc_atpd_for_all_stock()
+    #calc_atpdr_for_all_stock()
+    generate_trend_report(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3])
