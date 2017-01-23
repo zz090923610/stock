@@ -3,18 +3,12 @@ import os
 import pickle
 import subprocess
 from time import sleep
-import time
-from datetime import datetime
+
 from termcolor import colored
-import pytz  # $ pip install pytz
 import sys
 
 import signal
-from tzlocal import get_localzone  # $ pip install tzlocal
-
-# get local timezone
-local_tz = get_localzone()
-china_tz = pytz.timezone('Asia/Shanghai')
+from  common_func import get_time
 
 import tushare as ts
 
@@ -27,13 +21,7 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def get_time():
-    # test it
-    # utc_now, now = datetime.utcnow(), datetime.now()
-    ts = time.time()
-    utc_now, now = datetime.utcfromtimestamp(ts), datetime.fromtimestamp(ts)
-    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    return local_now.strftime("%Y-%m-%d %H:%M:%S")
+
 
 
 def bell():

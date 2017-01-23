@@ -95,11 +95,8 @@ def calc_average_trade_price_for_stock(stock):
 
 
 def calc_atpd_for_all_stock():
-    pool = mp.Pool()
     for i in SYMBOL_LIST:
-        pool.apply_async(calc_average_trade_price_for_stock, args=(i))
-    pool.close()
-    pool.join()
+        calc_average_trade_price_for_stock(i)
 
 
 def calc_atpdr_for_stock(stock):
@@ -115,12 +112,10 @@ def calc_atpdr_for_stock(stock):
     column_order = ['date', 'atpd_ratio']
     b[column_order].to_csv('../stock_data/qa/atpdr/%s.csv' % stock, index=False)
 
+
 def calc_atpdr_for_all_stock():
-    pool = mp.Pool()
     for i in SYMBOL_LIST:
-        pool.apply_async(calc_atpdr_for_stock, args=(i))
-    pool.close()
-    pool.join()
+        calc_atpdr_for_stock(i)
 
 
 def load_atpdr_data(stock):

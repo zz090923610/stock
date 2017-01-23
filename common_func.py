@@ -2,24 +2,37 @@ import csv
 import os
 import time
 
-import pytz
 import tushare as ts
 import pickle
 from datetime import date, datetime, timedelta
 import datetime
 
-from tzlocal import get_localzone
-
-START_DATE = '2012-01-01'
-# get local timezone
-local_tz = get_localzone()
-china_tz = pytz.timezone('Asia/Shanghai')
-AGENT = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'}
-POOL_SIZE = 128
+from variables import *
 
 
 def get_today():
-    return time.strftime("%Y-%m-%d")
+    from datetime import datetime
+    ts = time.time()
+    utc_now, now = datetime.utcfromtimestamp(ts), datetime.fromtimestamp(ts)
+    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
+    #return local_now.strftime("%Y-%m-%d")
+    return '2017-01-23'
+
+
+def get_time():
+    from datetime import datetime
+    ts = time.time()
+    utc_now, now = datetime.utcfromtimestamp(ts), datetime.fromtimestamp(ts)
+    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
+    return local_now.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_time_of_a_day():
+    from datetime import datetime
+    ts = time.time()
+    utc_now, now = datetime.utcfromtimestamp(ts), datetime.fromtimestamp(ts)
+    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
+    return local_now.strftime("%H:%M:%S")
 
 
 def load_stock_date_list_from_tick_files(stock):
@@ -40,6 +53,28 @@ def check_weekday(date_str):
         return True
     else:
         return False
+
+
+def get_weekends_of_a_year(year):
+    d1 = date(int(year), 1, 1)
+    d2 = date(int(year), 12, 31)
+    days = []
+    delta = d2 - d1
+    from datetime import timedelta as td
+    for i in range(delta.days + 1):
+        if not check_weekday((d1 + td(days=i)).strftime('%Y-%m-%d')):
+            days.append((d1 + td(days=i)).strftime('%Y-%m-%d'))
+    return days
+
+
+def create_market_close_days_for_year(year, other_close_dates_list):
+    weekends_list = get_weekends_of_a_year(year)
+    for d in other_close_dates_list:
+        if d not in weekends_list:
+            weekends_list.append(d)
+    weekends_list.sort()
+    with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'wb') as f:
+        pickle.dump(weekends_list, f)
 
 
 def update_basic_info():
