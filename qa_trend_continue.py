@@ -217,6 +217,6 @@ def generate_trend_report(trade_days, continue_days, end_day):
 
 
 if __name__ == '__main__':
-    #calc_atpd_for_all_stock()
-    #calc_atpdr_for_all_stock()
+    calc_atpd_for_all_stock()
+    calc_atpdr_for_all_stock()
     generate_trend_report(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3])

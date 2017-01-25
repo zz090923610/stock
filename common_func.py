@@ -117,7 +117,7 @@ SYMBOL_LIST = load_symbol_list('../stock_data/basic_info.csv')
 
 
 def update_market_open_date_list():
-    b = ts.get_h_data('000001', index=True, start='2008-01-01')
+    b = ts.get_h_data('000001', index=True, start=START_DATE)
     days_cnt = len(b.index)
     days_list = []
     for idx in range(0, days_cnt):

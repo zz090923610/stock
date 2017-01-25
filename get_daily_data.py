@@ -62,8 +62,11 @@ def get_update_for_one_stock(stock):
             print('Missing day %s for %s' % (day, stock))
             data = ts.get_k_data(stock, autype='qfq', start=day, end=day)
             if data.empty:
-                trade_pause_list.append(day)
-                save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
+                if (max(MARKET_OPEN_DATE_LIST) != get_today()) & (day == get_today()):
+                    pass
+                else:
+                    trade_pause_list.append(day)
+                    save_trade_pause_date_date_list_for_stock(stock, trade_pause_list)
                 continue
             cols = ['date', 'open', 'high', 'close', 'low', 'volume']
             data = data.reindex(index=data.index[::-1])
