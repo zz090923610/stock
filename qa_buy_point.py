@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import pickle
 import subprocess
 import multiprocessing as mp
 
