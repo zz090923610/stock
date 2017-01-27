@@ -11,20 +11,28 @@ from variables import *
 
 
 class ma_align:
-    def __init__(self, stock, ma_select=None):
-        if ma_select is None:
-            ma_select = ['day_long', 'quarter_short', 'quarter_long']
-        self.ma_select = ma_select
-        self.ma_day_short = (6, 'atpd')
-        self.ma_day_long = (13, 'atpd')
-        self.ma_quarter_short = (27, 'atpd')
-        self.ma_quarter_long = (73, 'atpd')
-        self.ma_year_short = (140, 'atpd')
-        self.ma_year_long = (260, 'atpd')
-        self.stock=stock
-        self.
+    def __init__(self, stock, short, mid, long, type='atpd'):
+        self.stock = stock
+        self.ma_short = calc_ma_for_stock(stock, short, type=type)
+        self.ma_mid = calc_ma_for_stock(stock, mid, type=type)
+        self.ma_long = calc_ma_for_stock(stock, long, type=type)
+        self.s = short
+        self.m = mid
+        self.l = long
 
+    def get_ma_for_day(self, day):
+        ma_for_day = {'ma%s' % self.s: [i['ma%s' % self.s] for i in self.ma_short if i['date'] == day][0],
+                      'ma%s' % self.m: [i['ma%s' % self.m] for i in self.ma_mid if i['date'] == day][0],
+                      'ma%s' % self.l: [i['ma%s' % self.l] for i in self.ma_long if i['date'] == day][0]}
+        return ma_for_day
 
+    def analysis_align_for_day(self, day):
+        ma_day = self.get_ma_for_day(day)
+        align= sorted(ma_day.keys(), key=ma_day.get, reverse=True)
+        if (align[0]== 'ma%s' % self.s) & (align[1]== 'ma%s' % self.m) & (align[2]== 'ma%s' % self.l):
+            print('%s 均线多头排列' % day)
+        elif (align[2]== 'ma%s' % self.s) & (align[1]== 'ma%s' % self.m) & (align[0]== 'ma%s' % self.l):
+            print('%s 均线空头排列' % day)
 
 def save_ma_for_stock(stock, ma_list, ma_params):
     subprocess.call("mkdir -p %s/qa/ma/%s" % (stock_data_root, ma_params), shell=True)
@@ -68,9 +76,6 @@ def calc_ma_for_all_stock(days, type='atpd'):
         pool.apply_async(calc_ma_for_stock, args=(i, days, type))
     pool.close()
     pool.join()
-
-
-
 
 
 if __name__ == '__main__':
