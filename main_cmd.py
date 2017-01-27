@@ -4,6 +4,7 @@ from cmd import Cmd
 from common_func import *
 from get_tick_data import align_tick_data_stock
 from qa_buy_point import get_buy_point_for_stock
+from qa_ma import calc_ma_for_stock
 from qa_trend_continue import calc_average_trade_price_for_stock
 from variables import *
 import os.path
@@ -186,6 +187,28 @@ class MyPrompt(Cmd):
             retract = False
         buy_point_list = get_buy_point_for_stock(stock, pre_days, future_days, scale, retract=retract)
         print(buy_point_list)
+
+    def do_qa_ma(self, args):
+        args = _cvt_args_to_list(args)
+        if len(args) == 0:
+            return
+        stock =None
+        days=None
+        type='atpd'
+        try:
+            for loop in range(len(args)):
+                if args[loop] == '-s':
+                    stock = args[loop + 1]
+                elif args[loop] == '-d':
+                    days = int(args[loop + 1])
+                elif args[loop] == '-t':
+                    type = args[loop + 1]
+
+            calc_ma_for_stock(stock, days, type)
+        except Exception as e:
+            print("Error : %s" % e)
+            print('用法: qa_ma 股票代码 天数 [数据类型(close, atpd)]')
+            print("示例: qa_ma 5 atpd")
 
 if __name__ == '__main__':
     prompt = MyPrompt('%s >>> ' % get_time_of_a_day())

@@ -1,6 +1,7 @@
 import csv
 import os
 import time
+from operator import itemgetter
 
 import tushare as ts
 import pickle
@@ -214,3 +215,18 @@ def mkdirs(symbol_list):
         exit(0)
     except:
         pass
+
+
+def load_daily_data(stock):
+    data_list = []
+    with open('../stock_data/data/%s.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            row['open'] = float(row['open'])
+            row['high'] = float(row['high'])
+            row['close'] = float(row['close'])
+            row['low'] = float(row['low'])
+            row['volume'] = round(float(row['volume']))
+            data_list.append(row)
+    data_new_sorted = sorted(data_list, key=itemgetter('date'))
+    return data_new_sorted
