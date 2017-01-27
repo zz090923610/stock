@@ -123,7 +123,7 @@ def align_tick_data_stock(stock):
                     row['amount'] = round(row['price'] * row['volume'] * 100)
                 yesterday_tick.append(
                     {'': len(yesterday_tick), 'time': '08:00:00', 'price': today_price, 'change': 0, 'volume': 0,
-                     'amount': 0, 'type': '中性盘'})
+                     'amount': 0, 'type': '买盘'})
                 b = pd.DataFrame(yesterday_tick)
                 column_order = ['time', 'price', 'change', 'volume', 'amount', 'type']
                 b[column_order].to_csv('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day))

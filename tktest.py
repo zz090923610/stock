@@ -186,6 +186,12 @@ if __name__ == '__main__':
     button = Tk.Button(master=frame, text=u'退出', command=_quit)
     button.pack(side=Tk.RIGHT)
 
+    termf = Tk.Frame(root, height=400, width=1024)
+    termf.pack(fill=Tk.BOTH,side=Tk.BOTTOM)
+    wid = termf.winfo_id()
+    os.system('xterm -into %d -geometry 80x20 -sb &' % wid)
+
+
     Tk.mainloop()
     # If you put root.destroy() here, it will cause an error if
     # the window is closed with the window manager.
