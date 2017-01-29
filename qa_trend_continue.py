@@ -10,8 +10,7 @@ from common_func import *
 import numpy as np
 import multiprocessing as mp
 
-
-
+from qa_ma import ma_align
 
 
 def load_tick_data(stock, day):
@@ -44,26 +43,15 @@ def calc_average_trade_price_for_stock_one_day(stock, day):
     return {'date': day, 'atpd': result}
 
 
-def load_atpd_data(stock):
-    """
-    Average Trade Price daily.
-    :param stock:
-    :return:
-    """
-    data_list = []
-    try:
-        with open('../stock_data/qa/atpd/%s.csv' % stock) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                row['atpd'] = float(row['atpd'])
-                data_list.append(row)
-        data_new_sorted = sorted(data_list, key=itemgetter('date'))
-        return data_new_sorted
-    except:
-        return []
-
+def calc_atpd_for_all_stock_fast():
+    pool = mp.Pool()
+    for i in SYMBOL_LIST:
+        pool.apply_async(calc_average_trade_price_for_stock, args=i)
+    pool.close()
+    pool.join()
 
 def calc_average_trade_price_for_stock(stock):
+    print('calc atpd for %s' % stock)
     date_list = load_stock_date_list_from_tick_files(stock)
     atpd_list = load_atpd_data(stock)
     atpd_calced_date_list = [d['date'] for d in atpd_list]
@@ -195,11 +183,20 @@ def generate_trend_report(trade_days, continue_days, end_day):
         if l['continue_days'] >= continue_days:
             msg += u'连续 %s 天上涨 [%s] %s %s 上市\n' % (l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
                                                    basic_info_list[l['code']]['timeToMarket'])
+            a = ma_align(l['code'], 10, 20, 40)
+            r, out = a.analysis_align_for_day(end_day)
+            if len(out) > 0:
+                msg += u'%s\n' % out
     msg += u'\n连续五日日平均交易价格下跌股票\n'
     for l in d:
         if l['continue_days'] >= continue_days:
             msg += u'连续 %s 天下跌 [%s] %s %s 上市\n' % (l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
                                                    basic_info_list[l['code']]['timeToMarket'])
+            a = ma_align(l['code'], 10, 20, 40)
+            r, out = a.analysis_align_for_day(end_day)
+            if len(out) > 0:
+                msg += u'%s\n' % out
+            msg += u'%s\n' % out
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(msg, encoding='utf-8'))
 

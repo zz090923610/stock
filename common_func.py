@@ -203,6 +203,23 @@ def load_stock_date_list_from_daily_data(stock):
             date_list.append(row['date'])
     return date_list
 
+def load_atpd_data(stock):
+    """
+    Average Trade Price daily.
+    :param stock:
+    :return:
+    """
+    data_list = []
+    try:
+        with open('../stock_data/qa/atpd/%s.csv' % stock) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                row['atpd'] = float(row['atpd'])
+                data_list.append(row)
+        data_new_sorted = sorted(data_list, key=itemgetter('date'))
+        return data_new_sorted
+    except:
+        return []
 
 def mkdirs(symbol_list):
     try:

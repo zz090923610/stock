@@ -210,6 +210,74 @@ class MyPrompt(Cmd):
             print('用法: qa_ma 股票代码 天数 [数据类型(close, atpd)]')
             print("示例: qa_ma 5 atpd")
 
+    def do_qa_moving_average(self, args):
+        from qa_ma import ma_align
+        args = _cvt_args_to_list(args)
+        if len(args) == 0:
+            return
+        stock = None
+        day = None
+        short= None
+        mid=None
+        long=None
+        calc_type = 'atpd'
+        try:
+            for loop in range(len(args)):
+                if args[loop] == '-s':
+                    stock = args[loop + 1]
+                elif args[loop] == '-d':
+                    day = args[loop + 1]
+                elif args[loop] == '--map':
+                    short = int(args[loop + 1])
+                    mid = int(args[loop + 2])
+                    long = int(args[loop + 3])
+                elif args[loop] == '-t':
+                    calc_type = args[loop + 1]
+            a=ma_align(stock, short, mid, long, calc_type=calc_type)
+            r,out=a.analysis_align_for_day(day)
+            if len(out) > 0:
+                print(out)
+            else:
+                print(r)
+        except Exception as e:
+            print("Error : %s" % e)
+            print('用法: qa_moving_average -s 股票代码 --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
+            print("示例: qa_moving_average -s 002263 --map 10 20 40 -d 2017-01-20 -t atpd")
+
+    def do_qa_ma_all_stock(self, args):
+        from qa_ma import ma_align
+        args = _cvt_args_to_list(args)
+        if len(args) == 0:
+            return
+        day = None
+        short = None
+        mid = None
+        long = None
+        calc_type = 'atpd'
+        try:
+            for loop in range(len(args)):
+                if args[loop] == '-s':
+                    stock = args[loop + 1]
+                elif args[loop] == '-d':
+                    day = args[loop + 1]
+                elif args[loop] == '--map':
+                    short = int(args[loop + 1])
+                    mid = int(args[loop + 2])
+                    long = int(args[loop + 3])
+                elif args[loop] == '-t':
+                    calc_type = args[loop + 1]
+            for stock in SYMBOL_LIST:
+                try:
+                    a = ma_align(stock, short, mid, long, calc_type=calc_type)
+                    r, out = a.analysis_align_for_day(day)
+                    if len(out) > 0:
+                        print(stock, day, out)
+                except Exception as e:
+                    print(stock, day, '并无足够数据')
+        except Exception as e:
+            print("Error : %s" % e)
+            print('用法: qa_moving_average --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
+            print("示例: qa_moving_average --map 10 20 40 -d 2017-01-20 -t atpd")
 if __name__ == '__main__':
     prompt = MyPrompt('%s >>> ' % get_time_of_a_day())
     prompt.cmdloop('加载股票分析系统...')
