@@ -142,8 +142,12 @@ class ma_align:
 
     def analysis_align_for_day(self, day):
         if day not in self.dates:
-            return {}, '该日无交易或并无足够数据'
+            return {}, '该日无交易'
         self.align_type = []
+        for line in self.ma_long:
+            if line['date'] == day:
+                if line ['ma%s' % self.l] is None:
+                    return {}, '并无足够数据'
         ma_day = self.get_ma_for_day(day)
         align = sorted(ma_day.keys(), key=ma_day.get, reverse=True)
         (ma_slope, ma_slope_norm) = self.calc_ma_slope(day)
@@ -166,6 +170,20 @@ class ma_align:
         result.update(ma_slope)
         result.update(ma_slope_norm)
         return result, align_output
+
+    def generate_ma_data_for_all_day(self):
+        strict_dates=[]
+        for line in self.ma_long:
+            if line['ma%s' % self.l] is not None:
+                strict_dates.append(line['date'])
+        result=[]
+        for d in strict_dates:
+            try:
+                r,a = self.analysis_align_for_day(d)
+                result.append(r)
+            except:
+                print("error:", d)
+        return result
 
 
 def save_ma_for_stock(stock, ma_list, ma_params):
@@ -197,6 +215,7 @@ def calc_ma_for_stock(stock: str, days: int, calc_type: str = 'atpd') -> list:
     for (idx, line) in enumerate(data_list):
         if idx < days - 1:
             ma_list.append({'date': line['date'], 'ma%d' % days: None})
+            continue
         ma5 = sum(float(i[calc_type]) for i in data_list[idx - days + 1: idx + 1]) / days
         ma_list.append({'date': line['date'], 'ma%d' % days: '%.3f' % ma5})
     save_ma_for_stock(stock, ma_list, '%s_%d' % (calc_type, days))

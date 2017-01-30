@@ -21,6 +21,10 @@ def get_all_data_for_one_stock(stock):
     data = data.reindex(index=data.index[::-1])
     cols = ['date', 'open', 'high', 'close', 'low', 'volume']
     data[cols].to_csv('../stock_data/data/%s.csv' % stock, index=False)
+    data_non_fq = ts.get_k_data(stock, autype='None', start=start, end=get_today())
+    data_non_fq = data_non_fq.reindex(index=data.index[::-1])
+    data_non_fq[cols].to_csv('../stock_data/data/%s_non_fq.csv' % stock, index=False)
+
 
 
 def get_all_data_for_all_stock():
@@ -48,11 +52,15 @@ def get_update_for_one_stock(stock):
     date_list_already_have = load_stock_date_list_from_daily_data(stock)
     trade_pause_list = load_trade_pause_date_list_for_stock(stock)
     data_already_have = []
+    data_non_fq_already_have = []
     with open('../stock_data/data/%s.csv' % stock) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             data_already_have.append(row)
-
+    with open('../stock_data/data/%s_non_fq.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            data_non_fq_already_have.append(row)
     for day in all_date_list:
         if day in date_list_already_have:
             continue
@@ -61,6 +69,7 @@ def get_update_for_one_stock(stock):
         else:
             print('Missing day %s for %s' % (day, stock))
             data = ts.get_k_data(stock, autype='qfq', start=day, end=day)
+            data_non_fq = ts.get_k_data(stock, autype='None', start=day, end=day)
             if data.empty:
                 if (max(MARKET_OPEN_DATE_LIST) != get_today()) & (day == get_today()):
                     pass
@@ -80,6 +89,18 @@ def get_update_for_one_stock(stock):
             column_order = ['date', 'open', 'high', 'close', 'low', 'volume']
             b[column_order].to_csv('../stock_data/data/%s.csv' % stock, index=False)
             os.remove('../stock_data/data/tmp_%s.csv' % stock)
+
+            data_non_fq = data_non_fq.reindex(index=data.index[::-1])
+            data_non_fq[cols].to_csv('../stock_data/data/tmp_non_fq_%s.csv' % stock, index=False)
+            with open('../stock_data/data/tmp_non_fq_%s.csv' % stock) as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    data_non_fq_already_have.append(row)
+            data_non_fq_already_have_sorted = sorted(data_non_fq_already_have, key=itemgetter('date'), reverse=True)
+            b = pd.DataFrame(data_non_fq_already_have_sorted)
+            column_order = ['date', 'open', 'high', 'close', 'low', 'volume']
+            b[column_order].to_csv('../stock_data/data/%s_non_fq.csv' % stock, index=False)
+            os.remove('../stock_data/data/tmp_non_fq_%s.csv' % stock)
 
 
 def handle_update_one(stock):

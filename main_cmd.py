@@ -278,6 +278,18 @@ class MyPrompt(Cmd):
             print("Error : %s" % e)
             print('用法: qa_moving_average --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
             print("示例: qa_moving_average --map 10 20 40 -d 2017-01-20 -t atpd")
+
+    def do_load_ma(self, args):
+        args = _cvt_args_to_list(args)
+        if len(args) == 0:
+            return
+        stock = args[0]
+        params = args[1]
+        print(load_ma_for_stock(stock, params))
+
+
+
+
 if __name__ == '__main__':
     prompt = MyPrompt('%s >>> ' % get_time_of_a_day())
     prompt.cmdloop('加载股票分析系统...')

@@ -135,6 +135,42 @@ def load_market_open_date_list():
         return update_market_open_date_list()
 
 
+def get_au_scaler_of_stock(stock, day):
+    qfq = load_daily_data(stock)
+    nonfq = load_daily_data(stock, autype='non_fq')
+    price_qfq = 1
+    price_non_fq = 1
+
+    for line in qfq:
+        if line['date'] == day:
+            price_qfq = line['close']
+            break
+    for line in nonfq:
+        if line['date'] == day:
+            price_non_fq = line['close']
+            break
+    return price_qfq / price_non_fq
+
+
+def load_tick_data(stock, day, autype='qfq'):
+    data_list = []
+    if autype == 'qfq':
+        scaler = get_au_scaler_of_stock(stock, day)
+    else:
+        scaler = 1
+    with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
+        reader = csv.DictReader(csvfile)
+        try:
+            for row in reader:
+                row['price'] = float('%.2f' % (float(row['price']) * scaler))
+                row['volume'] = int(row['volume'])
+                row['amount'] = float(row['amount'])
+                data_list.append(row)
+        except:
+            return []
+    return data_list
+
+
 def load_market_open_date_list_from(given_day):
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
@@ -151,6 +187,14 @@ def load_market_open_date_list_from(given_day):
 def load_market_close_days_for_year(year):
     try:
         with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'rb') as f:
+            return pickle.load(f)
+    except:
+        return []
+
+
+def load_ma_for_stock(stock, ma_params):
+    try:
+        with open("%s/qa/ma/%s/%s.pickle" % (stock_data_root, ma_params, stock), 'rb') as f:
             return pickle.load(f)
     except:
         return []
@@ -203,6 +247,7 @@ def load_stock_date_list_from_daily_data(stock):
             date_list.append(row['date'])
     return date_list
 
+
 def load_atpd_data(stock):
     """
     Average Trade Price daily.
@@ -221,6 +266,7 @@ def load_atpd_data(stock):
     except:
         return []
 
+
 def mkdirs(symbol_list):
     try:
         if not os.path.isdir('../stock_data/tick_data'):
@@ -234,16 +280,27 @@ def mkdirs(symbol_list):
         pass
 
 
-def load_daily_data(stock):
+def load_daily_data(stock, autype='qfq'):
     data_list = []
-    with open('../stock_data/data/%s.csv' % stock) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            row['open'] = float(row['open'])
-            row['high'] = float(row['high'])
-            row['close'] = float(row['close'])
-            row['low'] = float(row['low'])
-            row['volume'] = round(float(row['volume']))
-            data_list.append(row)
+    if autype == 'qfq':
+        with open('../stock_data/data/%s.csv' % stock) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                row['open'] = float(row['open'])
+                row['high'] = float(row['high'])
+                row['close'] = float(row['close'])
+                row['low'] = float(row['low'])
+                row['volume'] = round(float(row['volume']))
+                data_list.append(row)
+    elif autype == 'non_fq':
+        with open('../stock_data/data/%s_non_fq.csv' % stock) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                row['open'] = float(row['open'])
+                row['high'] = float(row['high'])
+                row['close'] = float(row['close'])
+                row['low'] = float(row['low'])
+                row['volume'] = round(float(row['volume']))
+                data_list.append(row)
     data_new_sorted = sorted(data_list, key=itemgetter('date'))
     return data_new_sorted

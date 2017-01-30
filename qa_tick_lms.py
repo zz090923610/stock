@@ -15,20 +15,6 @@ import matplotlib.finance as plfin
 import matplotlib.ticker as ticker
 
 
-def load_tick_data(stock, day):
-    data_list = []
-    with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
-        reader = csv.DictReader(csvfile)
-        try:
-            for row in reader:
-                row['price'] = float(row['price'])
-                row['volume'] = int(row['volume'])
-                row['amount'] = int(row['amount'])
-                data_list.append(row)
-        except:
-            return []
-    return data_list
-
 
 def load_daily_data(stock):
     data_list = []

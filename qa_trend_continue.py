@@ -13,21 +13,6 @@ import multiprocessing as mp
 from qa_ma import ma_align
 
 
-def load_tick_data(stock, day):
-    data_list = []
-    with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
-        reader = csv.DictReader(csvfile)
-        try:
-            for row in reader:
-                row['price'] = float(row['price'])
-                row['volume'] = round(float(row['volume']))
-                row['amount'] = round(float(row['amount']))
-                data_list.append(row)
-        except:
-            return []
-    return data_list
-
-
 def calc_average_trade_price_for_stock_one_day(stock, day):
     print('calc ATPD for %s %s' % (stock, day))
     tick_day = load_tick_data(stock, day)
@@ -49,6 +34,7 @@ def calc_atpd_for_all_stock_fast():
         pool.apply_async(calc_average_trade_price_for_stock, args=i)
     pool.close()
     pool.join()
+
 
 def calc_average_trade_price_for_stock(stock):
     print('calc atpd for %s' % stock)
