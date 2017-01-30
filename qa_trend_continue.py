@@ -36,10 +36,13 @@ def calc_atpd_for_all_stock_fast():
     pool.join()
 
 
-def calc_average_trade_price_for_stock(stock):
+def calc_average_trade_price_for_stock(stock, refresh=False):
     print('calc atpd for %s' % stock)
     date_list = load_stock_date_list_from_tick_files(stock)
-    atpd_list = load_atpd_data(stock)
+    if refresh:
+        atpd_list = []
+    else:
+        atpd_list = load_atpd_data(stock)
     atpd_calced_date_list = [d['date'] for d in atpd_list]
     to_do_date_list = []
     for d in date_list:

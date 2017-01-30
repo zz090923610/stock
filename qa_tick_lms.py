@@ -75,7 +75,7 @@ def print_basic_info(stock):
                   basic_info['holders']))
 
 
-def calculate_lms_for_stock_one_day(stock, day):
+def calculate_lms_for_stock_one_day(stock, day, normalize=False):
     basic_info = load_basic_info_for_stock(stock)
     outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
     large_threshold = outstanding / 3600000
@@ -100,8 +100,20 @@ def calculate_lms_for_stock_one_day(stock, day):
                 sell_mid += row['volume']
             else:
                 sell_small += row['volume']
-    return buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small, undirected_trade
+    if normalize:
 
+        return buy_large/outstanding, sell_large/outstanding, buy_mid/outstanding, sell_mid/outstanding, \
+               buy_small/outstanding, sell_small/outstanding, undirected_trade/outstanding
+    else:
+        return buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small, undirected_trade
+
+
+def calc_lms_for_stocK_one_day_dict_wrap(stock, day, normalize=True):
+    print('calc lms for %s %s', stock,day)
+    (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
+     undirected_trade) = calculate_lms_for_stock_one_day(stock, day, normalize)
+    return dict(buy_large=buy_large, sell_large=sell_large, buy_mid=buy_mid, sell_mid=sell_mid,
+                buy_small=buy_small, sell_small=sell_small, undirected_trade=undirected_trade)
 
 def load_lms(stock):
     lms_data = []

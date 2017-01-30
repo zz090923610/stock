@@ -52,6 +52,17 @@ class ma_align:
                          trend_change_long_up='%s日线转升' % long,
                          trend_change_long_down='%s日线转降' % long, )
         self.align_type = []
+        self.date_valid = self.get_valid_date_list()
+
+    def get_valid_date_list(self):
+        vdl = []
+        for line in self.ma_long:
+            if line['ma%s' % self.l] is not None:
+                vdl.append(line['date'])
+        for d in vdl:
+            if None in self.get_ma_for_yesterday(d).values():
+                vdl.remove(d)
+        return vdl
 
     def get_ma_for_day(self, day):
         ma_short = [i['ma%s' % self.s] for i in self.ma_short if i['date'] == day][0]
@@ -116,6 +127,8 @@ class ma_align:
     def intersection_check(self, day):
         ma_day = self.get_ma_for_day(day)
         ma_yesterday = self.get_ma_for_yesterday(day)
+        if None in ma_yesterday.values():
+            return []
         ls = line([0, ma_yesterday['ma%s' % self.s]], [1, ma_day['ma%s' % self.s]])
         lm = line([0, ma_yesterday['ma%s' % self.m]], [1, ma_day['ma%s' % self.m]])
         ll = line([0, ma_yesterday['ma%s' % self.l]], [1, ma_day['ma%s' % self.l]])
@@ -146,9 +159,12 @@ class ma_align:
         self.align_type = []
         for line in self.ma_long:
             if line['date'] == day:
-                if line ['ma%s' % self.l] is None:
+                if line['ma%s' % self.l] is None:
                     return {}, '并无足够数据'
         ma_day = self.get_ma_for_day(day)
+        ma_yesterday = self.get_ma_for_yesterday(day)
+        if None in ma_yesterday.values():
+            return {}, '并无足够数据'
         align = sorted(ma_day.keys(), key=ma_day.get, reverse=True)
         (ma_slope, ma_slope_norm) = self.calc_ma_slope(day)
         if (align[0] == 'ma%s' % self.s) & (align[1] == 'ma%s' % self.m) & (align[2] == 'ma%s' % self.l):
@@ -169,17 +185,18 @@ class ma_align:
                 result[k] = '1'
         result.update(ma_slope)
         result.update(ma_slope_norm)
+        result['date'] = day
         return result, align_output
 
     def generate_ma_data_for_all_day(self):
-        strict_dates=[]
+        strict_dates = []
         for line in self.ma_long:
             if line['ma%s' % self.l] is not None:
                 strict_dates.append(line['date'])
-        result=[]
+        result = []
         for d in strict_dates:
             try:
-                r,a = self.analysis_align_for_day(d)
+                r, a = self.analysis_align_for_day(d)
                 result.append(r)
             except:
                 print("error:", d)
