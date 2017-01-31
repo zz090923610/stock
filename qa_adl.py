@@ -6,6 +6,8 @@ from operator import itemgetter
 import pandas as pd
 import sys
 
+import subprocess
+
 from common_func import *
 import numpy as np
 import multiprocessing as mp
@@ -55,6 +57,7 @@ def load_basic_info_for_stock(stock):
 
 
 def calculate_adl_for_stock(stock):
+    subprocess.call("mkdir -p %s/qa/adl" % stock_data_root, shell=True)
     daily_data = load_daily_data(stock)
     for (idx, line) in enumerate(daily_data):
         try:
