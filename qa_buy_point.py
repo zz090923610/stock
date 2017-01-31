@@ -54,7 +54,7 @@ def _check_two_days_next_to_each_other(day1, day2):
     date1 = datetime.datetime(int(day1.split('-')[0]), int(day1.split('-')[1]), int(day1.split('-')[2]), 1, 1, 1)
     date2 = date1 + timedelta(days=1)
     if day2 == date2.strftime("%Y-%m-%d"):
-        return Trueget_buy_point_for_all_stock
+        return True
     else:
         return False
 

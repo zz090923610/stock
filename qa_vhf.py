@@ -62,6 +62,7 @@ def calculate_vhf(stock, n):
     b = pd.DataFrame(daily_data)
     column_order = ['date', 'close', 'vhf']
     b[column_order].to_csv('../stock_data/qa/vhf/%s.csv' % stock, index=False)
+    return daily_data
 
 
 if __name__ == '__main__':

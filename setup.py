@@ -8,5 +8,5 @@ setup(
     license='',
     author='zhangzhao',
     author_email='',
-    description=''
+    description='', requires=['pandas']
 )

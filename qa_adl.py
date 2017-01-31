@@ -81,6 +81,7 @@ def calculate_adl_for_stock(stock):
     b = pd.DataFrame(daily_data_sorted)
     column_order = ['date', 'open', 'high', 'close', 'low', 'adl']
     b[column_order].to_csv('../stock_data/qa/adl/%s.csv' % stock, index=False)
+    return daily_data_sorted
 
 
 def update_adl():

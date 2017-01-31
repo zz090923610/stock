@@ -15,7 +15,6 @@ import matplotlib.finance as plfin
 import matplotlib.ticker as ticker
 
 
-
 def load_daily_data(stock):
     data_list = []
     with open('../stock_data/data/%s.csv' % stock) as csvfile:
@@ -102,30 +101,31 @@ def calculate_lms_for_stock_one_day(stock, day, normalize=False):
                 sell_small += row['volume']
     if normalize:
 
-        return buy_large/outstanding, sell_large/outstanding, buy_mid/outstanding, sell_mid/outstanding, \
-               buy_small/outstanding, sell_small/outstanding, undirected_trade/outstanding
+        return buy_large / outstanding, sell_large / outstanding, buy_mid / outstanding, sell_mid / outstanding, \
+               buy_small / outstanding, sell_small / outstanding, undirected_trade / outstanding
     else:
         return buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small, undirected_trade
 
 
 def calc_lms_for_stocK_one_day_dict_wrap(stock, day, normalize=True):
-    print('calc lms for %s %s', stock,day)
+    print('calc lms for %s %s' % (stock, day))
     (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
      undirected_trade) = calculate_lms_for_stock_one_day(stock, day, normalize)
     return dict(buy_large=buy_large, sell_large=sell_large, buy_mid=buy_mid, sell_mid=sell_mid,
                 buy_small=buy_small, sell_small=sell_small, undirected_trade=undirected_trade)
+
 
 def load_lms(stock):
     lms_data = []
     with open('../stock_data/qa/lms/%s.csv' % stock) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            row['buy_large']= int(row['buy_large'])
+            row['buy_large'] = int(row['buy_large'])
             row['sell_large'] = int(row['sell_large'])
             row['buy_mid'] = int(row['buy_mid'])
             row['sell_mid'] = int(row['sell_mid'])
             row['buy_small'] = int(row['buy_small'])
-            row['sell_small']= int(row['sell_small'])
+            row['sell_small'] = int(row['sell_small'])
             row['undirected_trade'] = int(row['undirected_trade'])
             lms_data.append(row)
     return lms_data
