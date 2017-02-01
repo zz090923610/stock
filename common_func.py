@@ -135,6 +135,14 @@ def load_market_open_date_list():
         return update_market_open_date_list()
 
 
+def get_au_scaler_list_of_stock(stock):
+    qfq = load_daily_data(stock)
+    nonfq = load_daily_data(stock, autype='non_fq')
+    result = {}
+    for (price_qfq, price_non_fq) in zip(qfq, nonfq):
+        result[price_qfq['date']] = price_qfq['close'] / price_non_fq['close']
+    return result
+
 def get_au_scaler_of_stock(stock, day):
     qfq = load_daily_data(stock)
     nonfq = load_daily_data(stock, autype='non_fq')
@@ -152,12 +160,8 @@ def get_au_scaler_of_stock(stock, day):
     return price_qfq / price_non_fq
 
 
-def load_tick_data(stock, day, autype='qfq'):
+def load_tick_data(stock, day, autype='qfq', scaler=1):
     data_list = []
-    if autype == 'qfq':
-        scaler = get_au_scaler_of_stock(stock, day)
-    else:
-        scaler = 1
     with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
         reader = csv.DictReader(csvfile)
         try:

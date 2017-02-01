@@ -13,9 +13,9 @@ import multiprocessing as mp
 from qa_ma import ma_align
 
 
-def calc_average_trade_price_for_stock_one_day(stock, day):
-    print('calc ATPD for %s %s' % (stock, day))
-    tick_day = load_tick_data(stock, day)
+def calc_average_trade_price_for_stock_one_day(stock, day,scaler=1):
+    print('calc ATPD for %s %s %.03f' % (stock, day, scaler))
+    tick_day = load_tick_data(stock, day, scaler=scaler)
     vol_sum = 0
     cost_sum = 0
     for line in tick_day:
@@ -28,17 +28,12 @@ def calc_average_trade_price_for_stock_one_day(stock, day):
     return {'date': day, 'atpd': result}
 
 
-def calc_atpd_for_all_stock_fast():
-    pool = mp.Pool()
-    for i in SYMBOL_LIST:
-        pool.apply_async(calc_average_trade_price_for_stock, args=i)
-    pool.close()
-    pool.join()
 
 
 def calc_average_trade_price_for_stock(stock, refresh=False):
     print('calc atpd for %s' % stock)
-    date_list = load_stock_date_list_from_tick_files(stock)
+    scaler_list = get_au_scaler_list_of_stock(stock)
+    date_list = [i for i in scaler_list.keys()]
     if refresh:
         atpd_list = []
     else:
@@ -50,7 +45,7 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
             to_do_date_list.append(d)
     pool = mp.Pool()
     for i in to_do_date_list:
-        pool.apply_async(calc_average_trade_price_for_stock_one_day, args=(stock, i), callback=atpd_list.append)
+        pool.apply_async(calc_average_trade_price_for_stock_one_day, args=(stock, i, scaler_list[i]), callback=atpd_list.append)
     pool.close()
     pool.join()
     atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
@@ -59,9 +54,9 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
     b[column_order].to_csv('../stock_data/qa/atpd/%s.csv' % stock, index=False)
 
 
-def calc_atpd_for_all_stock():
+def calc_atpd_for_all_stock(refresh=False):
     for i in SYMBOL_LIST:
-        calc_average_trade_price_for_stock(i)
+        calc_average_trade_price_for_stock(i, refresh=refresh)
 
 
 def calc_atpdr_for_stock(stock):

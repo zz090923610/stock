@@ -45,7 +45,7 @@ def prepare_ma_lms_adl_for_stock(stock, short, mid, long, refresh=False, vhf_n=5
 
 def data_preparation():
     final_list = []
-    calc_atpd_for_all_stock()
+    calc_atpd_for_all_stock(refresh=True)
     pool = mp.Pool()
     for i in SYMBOL_LIST:
         pool.apply_async(prepare_ma_lms_adl_for_stock, args=(i, 10, 20, 40), callback=final_list.append)
