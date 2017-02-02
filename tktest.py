@@ -24,7 +24,7 @@ root.wm_title(u"对数成交量模型")
 
 
 def plot_log_quantity_idx_tk(a_fig, stock, base, type):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     a = calculate_log_quantity_index(stock, base)
     closes = []
     opens = []

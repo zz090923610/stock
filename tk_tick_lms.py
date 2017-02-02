@@ -7,7 +7,8 @@ matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.backend_bases import key_press_handler
 import numpy as np
-from qa_tick_lms import load_lms, load_basic_info_for_stock, load_daily_data
+from common_func import *
+from qa_tick_lms import load_lms, load_daily_data
 
 import sys
 
@@ -21,7 +22,7 @@ root.wm_title(u"对数成交量模型")
 
 
 def plot_tick_lms_tk(a_fig, stock, type):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     lms_list = load_lms(stock)
     closes = []
     opens = []

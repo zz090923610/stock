@@ -13,7 +13,7 @@ import multiprocessing as mp
 from qa_ma import ma_align
 
 
-def calc_average_trade_price_for_stock_one_day(stock, day,scaler=1):
+def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
     print('calc ATPD for %s %s %.03f' % (stock, day, scaler))
     tick_day = load_tick_data(stock, day, scaler=scaler)
     vol_sum = 0
@@ -26,8 +26,6 @@ def calc_average_trade_price_for_stock_one_day(stock, day,scaler=1):
     except ZeroDivisionError:
         result = -1
     return {'date': day, 'atpd': result}
-
-
 
 
 def calc_average_trade_price_for_stock(stock, refresh=False):
@@ -43,11 +41,8 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
     for d in date_list:
         if d not in atpd_calced_date_list:
             to_do_date_list.append(d)
-    pool = mp.Pool()
     for i in to_do_date_list:
-        pool.apply_async(calc_average_trade_price_for_stock_one_day, args=(stock, i, scaler_list[i]), callback=atpd_list.append)
-    pool.close()
-    pool.join()
+        atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i, scaler_list[i]))
     atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
     b = pd.DataFrame(atpd_list_sorted)
     column_order = ['date', 'atpd']
@@ -55,8 +50,11 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
 
 
 def calc_atpd_for_all_stock(refresh=False):
+    pool = mp.Pool()
     for i in SYMBOL_LIST:
-        calc_average_trade_price_for_stock(i, refresh=refresh)
+        pool.apply_async(calc_average_trade_price_for_stock, args=(i, refresh))
+    pool.close()
+    pool.join()
 
 
 def calc_atpdr_for_stock(stock):

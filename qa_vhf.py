@@ -16,32 +16,6 @@ import matplotlib.ticker as ticker
 import multiprocessing as mp
 
 
-def load_daily_data(stock):
-    data_list = []
-    with open('../stock_data/data/%s.csv' % stock) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            row['open'] = float(row['open'])
-            row['high'] = float(row['high'])
-            row['close'] = float(row['close'])
-            row['low'] = float(row['low'])
-            row['volume'] = round(float(row['volume']))
-            data_list.append(row)
-    data_new_sorted = sorted(data_list, key=itemgetter('date'))
-    return data_new_sorted
-
-
-def load_basic_info_for_stock(stock):
-    basic_info_list = []
-    with open('../stock_data/basic_info.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            basic_info_list.append(row)
-    basic_info = None
-    for row in basic_info_list:
-        if row['code'] == stock:
-            basic_info = row
-    return basic_info
 
 
 def calculate_vhf(stock, n):
@@ -63,6 +37,28 @@ def calculate_vhf(stock, n):
     column_order = ['date', 'close', 'vhf']
     b[column_order].to_csv('../stock_data/qa/vhf/%s.csv' % stock, index=False)
     return daily_data
+
+
+def calc_vhf_for_all_stock(n):
+    pool = mp.Pool()
+    for i in SYMBOL_LIST:
+        pool.apply_async(calculate_vhf, args=(i, n))
+    pool.close()
+    pool.join()
+
+
+def load_vhf_data(stock):
+    data_list = []
+    with open('../stock_data/qa/vhf/%s.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            row['close'] = float(row['close'])
+            if row['vhf']  == '-' :
+                continue
+            row['vhf'] = float(row['vhf'])
+            data_list.append(row)
+    data_new_sorted = sorted(data_list, key=itemgetter('date'))
+    return data_new_sorted
 
 
 if __name__ == '__main__':

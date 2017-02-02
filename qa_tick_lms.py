@@ -15,67 +15,55 @@ import matplotlib.finance as plfin
 import matplotlib.ticker as ticker
 
 
-def load_daily_data(stock):
-    data_list = []
-    with open('../stock_data/data/%s.csv' % stock) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            row['open'] = float(row['open'])
-            row['high'] = float(row['high'])
-            row['close'] = float(row['close'])
-            row['low'] = float(row['low'])
-            row['volume'] = float(row['volume'])
-            data_list.append(row)
-    return data_list
+def calc_tick_related_for_stock_one_day(stock, day, normalize=False, scaler=1):
+    basic_info = BASIC_INFO_DICT[stock]
+    outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
+    large_threshold = outstanding / 3600000
+    mid_threshold = outstanding / 18000000
+    tick_data = load_tick_data(stock, day, scaler=scaler)
+    (buy_small, sell_small) = (0, 0)
+    (buy_mid, sell_mid) = (0, 0)
+    (buy_large, sell_large) = (0, 0)
+    undirected_trade = 0
+    vol_sum = 0
+    cost_sum = 0
+    for row in tick_data:
+        cost_sum += row['price'] * row['volume']
+        vol_sum += row['volume']
+        if row['type'] == '买盘':
+            if int(row['volume']) >= large_threshold:
+                buy_large += row['volume']
+            elif (int(row['volume']) >= mid_threshold) & (int(row['volume']) < large_threshold):
+                buy_mid += row['volume']
+            else:
+                buy_small += row['volume']
+        elif row['type'] == '卖盘':
+            if row['volume'] >= large_threshold:
+                sell_large += row['volume']
+            elif (int(row['volume']) >= mid_threshold) & (int(row['volume']) < large_threshold):
+                sell_mid += row['volume']
+            else:
+                sell_small += row['volume']
+    try:
+        atpd = '%.2f' % (cost_sum / vol_sum)
+    except ZeroDivisionError:
+        atpd = -1
+    result = {'date': day, 'atpd': atpd}
 
-
-def load_basic_info_for_stock(stock):
-    basic_info_list = []
-    with open('../stock_data/basic_info.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            basic_info_list.append(row)
-    basic_info = None
-    for row in basic_info_list:
-        if row['code'] == stock:
-            basic_info = row
-    return basic_info
-
-
-def print_basic_info(stock):
-    basic_info = load_basic_info_for_stock(stock)
-    print('代码: {} 名称: {} 所属行业: {} 地区: {} \n\
-市盈率: {} 流通股本(亿): {} 总股本(亿): {} 总资产(万): {} \n\
-流动资产: {} 固定资产: {} 公积金: {} 每股公积金: {} 每股收益: {} \n\
-每股净资: {} 市净率: {} 上市日期: {} 未分利润: {} 每股未分配: {}\n\
-收入同比(%): {} 利润同比(%): {} 毛利率(%): {} 净利润率(%): {} 股东人数: {}'
-          .format(basic_info['code'],
-                  basic_info['name'],
-                  basic_info['industry'],
-                  basic_info['area'],
-                  basic_info['pe'],
-                  basic_info['outstanding'],
-                  basic_info['totals'],
-                  basic_info['totalAssets'],
-                  basic_info['liquidAssets'],
-                  basic_info['fixedAssets'],
-                  basic_info['reserved'],
-                  basic_info['reservedPerShare'],
-                  basic_info['esp'],
-                  basic_info['bvps'],
-                  basic_info['pb'],
-                  basic_info['timeToMarket'],
-                  basic_info['undp'],
-                  basic_info['perundp'],
-                  basic_info['rev'],
-                  basic_info['profit'],
-                  basic_info['gpr'],
-                  basic_info['npr'],
-                  basic_info['holders']))
+    if normalize:
+        result.update(
+            dict(buy_large=buy_large / outstanding, sell_large=sell_large / outstanding, buy_mid=buy_mid / outstanding,
+                 sell_mid=sell_mid / outstanding, buy_small=buy_small / outstanding,
+                 sell_small=sell_small / outstanding, undirected_trade=undirected_trade / outstanding))
+    else:
+        result.update(
+            dict(buy_large=buy_large, sell_large=sell_large, buy_mid=buy_mid, sell_mid=sell_mid, buy_small=buy_small,
+                 sell_small=sell_small, undirected_trade=undirected_trade / outstanding))
+    return result
 
 
 def calculate_lms_for_stock_one_day(stock, day, normalize=False):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
     large_threshold = outstanding / 3600000
     mid_threshold = outstanding / 18000000
@@ -107,14 +95,6 @@ def calculate_lms_for_stock_one_day(stock, day, normalize=False):
         return buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small, undirected_trade
 
 
-def calc_lms_for_stocK_one_day_dict_wrap(stock, day, normalize=True):
-    print('calc lms for %s %s' % (stock, day))
-    (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
-     undirected_trade) = calculate_lms_for_stock_one_day(stock, day, normalize)
-    return dict(buy_large=buy_large, sell_large=sell_large, buy_mid=buy_mid, sell_mid=sell_mid,
-                buy_small=buy_small, sell_small=sell_small, undirected_trade=undirected_trade)
-
-
 def load_lms(stock):
     lms_data = []
     with open('../stock_data/qa/lms/%s.csv' % stock) as csvfile:
@@ -128,33 +108,29 @@ def load_lms(stock):
             row['sell_small'] = int(row['sell_small'])
             row['undirected_trade'] = int(row['undirected_trade'])
             lms_data.append(row)
-    return lms_data
+    data_new_sorted = sorted(lms_data, key=itemgetter('date'))
+    return data_new_sorted
 
 
-def generated_lms_trade_for_stock(stock):
+def calc_lms_for_stock(stock):
     date_list = load_stock_date_list_from_daily_data(stock)
     detailed_trade_list = []
     for day in date_list:
         (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
          undirected_trade) = calculate_lms_for_stock_one_day(stock, day)
-        line = {'date': day, 'buy_large': buy_large,
-                'sell_large': sell_large,
-                'buy_mid': buy_mid,
-                'sell_mid': sell_mid,
-                'buy_small': buy_small,
-                'sell_small': sell_small,
-                'undirected_trade': undirected_trade}
-        detailed_trade_list.insert(0, line)
-    sorted_lms = sorted(detailed_trade_list, key=itemgetter('date'), reverse=True)
-    b = pd.DataFrame(sorted_lms)
+        line = dict(date=day, buy_large=buy_large, sell_large=sell_large, buy_mid=buy_mid, sell_mid=sell_mid,
+                    buy_small=buy_small, sell_small=sell_small, undirected_trade=undirected_trade)
+        detailed_trade_list.append(line)
+    b = pd.DataFrame(detailed_trade_list)
     column_order = ['date', 'buy_large', 'sell_large', 'buy_mid', 'sell_mid', 'buy_small', 'sell_small',
                     'undirected_trade']
     b[column_order].to_csv('../stock_data/qa/lms/%s.csv' % stock, index=False)
+    return detailed_trade_list
 
 
 def update_lms_trade_for_stock_for_day(stock, day):
     if not os.path.exists('../stock_data/qa/lms/%s.csv' % stock):
-        generated_lms_trade_for_stock(stock)
+        calc_lms_for_stock(stock)
     if not os.path.exists('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)):
         return
     (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
@@ -178,9 +154,9 @@ def update_lms_trade_for_stock_for_day(stock, day):
     b[column_order].to_csv('../stock_data/qa/lms/%s.csv' % stock, index=False)
 
 
-if __name__ == '__main__':
+def calc_lms_for_all_stock():
     p = Pool(8)
-    rs = p.imap_unordered(generated_lms_trade_for_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(calc_lms_for_stock, SYMBOL_LIST)
     p.close()  # No more work
     list_len = len(SYMBOL_LIST)
     while True:
@@ -192,3 +168,7 @@ if __name__ == '__main__':
         time.sleep(2)
     sys.stdout.write('%d/%d\r' % (completed, list_len))
     sys.stdout.flush()
+
+
+if __name__ == '__main__':
+    calc_lms_for_all_stock()

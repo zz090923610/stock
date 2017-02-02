@@ -14,19 +14,6 @@ import matplotlib.finance as plfin
 import matplotlib.ticker as ticker
 
 
-def load_daily_data(stock):
-    data_list = []
-    with open('../stock_data/data/%s.csv' % stock) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            row['open'] = float(row['open'])
-            row['high'] = float(row['high'])
-            row['close'] = float(row['close'])
-            row['low'] = float(row['low'])
-            row['volume'] = float(row['volume'])
-            data_list.append(row)
-    return data_list
-
 
 def load_detailed_daily_trade_data(stock):
     data_list = []
@@ -42,53 +29,9 @@ def load_detailed_daily_trade_data(stock):
     return data_list
 
 
-def load_basic_info_for_stock(stock):
-    basic_info_list = []
-    with open('../stock_data/basic_info.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            basic_info_list.append(row)
-    basic_info = None
-    for row in basic_info_list:
-        if row['code'] == stock:
-            basic_info = row
-    return basic_info
-
-
-def print_basic_info(stock):
-    basic_info = load_basic_info_for_stock(stock)
-    print('代码: {} 名称: {} 所属行业: {} 地区: {} \n\
-市盈率: {} 流通股本(亿): {} 总股本(亿): {} 总资产(万): {} \n\
-流动资产: {} 固定资产: {} 公积金: {} 每股公积金: {} 每股收益: {} \n\
-每股净资: {} 市净率: {} 上市日期: {} 未分利润: {} 每股未分配: {}\n\
-收入同比(%): {} 利润同比(%): {} 毛利率(%): {} 净利润率(%): {} 股东人数: {}'
-          .format(basic_info['code'],
-                  basic_info['name'],
-                  basic_info['industry'],
-                  basic_info['area'],
-                  basic_info['pe'],
-                  basic_info['outstanding'],
-                  basic_info['totals'],
-                  basic_info['totalAssets'],
-                  basic_info['liquidAssets'],
-                  basic_info['fixedAssets'],
-                  basic_info['reserved'],
-                  basic_info['reservedPerShare'],
-                  basic_info['esp'],
-                  basic_info['bvps'],
-                  basic_info['pb'],
-                  basic_info['timeToMarket'],
-                  basic_info['undp'],
-                  basic_info['perundp'],
-                  basic_info['rev'],
-                  basic_info['profit'],
-                  basic_info['gpr'],
-                  basic_info['npr'],
-                  basic_info['holders']))
-
 
 def calculate_trade_quantity_for_stock_one_day(stock, day):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
     large_threshold = outstanding / 3600000
     tick_data = load_tick_data(stock, day)
@@ -126,7 +69,7 @@ def calculate_detailed_trade_quantity_for_stock(stock):
 
 
 def calculate_log_quantity_index(stock, base):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
     daily_data = load_daily_data(stock)
     detailed_daily_trade_data = load_detailed_daily_trade_data(stock)
@@ -147,7 +90,7 @@ def calculate_log_quantity_index(stock, base):
 
 
 def plot_log_quantity_idx(stock, base, type):
-    basic_info = load_basic_info_for_stock(stock)
+    basic_info = BASIC_INFO_DICT[stock]
     a = calculate_log_quantity_index(stock, base)
     closes = []
     opens = []

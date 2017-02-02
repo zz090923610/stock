@@ -143,6 +143,7 @@ def get_au_scaler_list_of_stock(stock):
         result[price_qfq['date']] = price_qfq['close'] / price_non_fq['close']
     return result
 
+
 def get_au_scaler_of_stock(stock, day):
     qfq = load_daily_data(stock)
     nonfq = load_daily_data(stock, autype='non_fq')
@@ -218,6 +219,54 @@ def load_trade_pause_date_list_for_stock(stock):
             return pickle.load(f)
     except:
         return []
+
+
+
+def load_basic_info_list():
+    basic_info_list = []
+    with open('../stock_data/basic_info.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            basic_info_list.append(row)
+    basic_info_dict = {}
+    for line in basic_info_list:
+        basic_info_dict[line['code']] = line
+    return basic_info_dict
+
+
+BASIC_INFO_DICT = load_basic_info_list()
+
+
+def print_basic_info(stock):
+    basic_info = BASIC_INFO_DICT[stock]
+    print('代码: {} 名称: {} 所属行业: {} 地区: {} \n\
+市盈率: {} 流通股本(亿): {} 总股本(亿): {} 总资产(万): {} \n\
+流动资产: {} 固定资产: {} 公积金: {} 每股公积金: {} 每股收益: {} \n\
+每股净资: {} 市净率: {} 上市日期: {} 未分利润: {} 每股未分配: {}\n\
+收入同比(%): {} 利润同比(%): {} 毛利率(%): {} 净利润率(%): {} 股东人数: {}'
+          .format(basic_info['code'],
+                  basic_info['name'],
+                  basic_info['industry'],
+                  basic_info['area'],
+                  basic_info['pe'],
+                  basic_info['outstanding'],
+                  basic_info['totals'],
+                  basic_info['totalAssets'],
+                  basic_info['liquidAssets'],
+                  basic_info['fixedAssets'],
+                  basic_info['reserved'],
+                  basic_info['reservedPerShare'],
+                  basic_info['esp'],
+                  basic_info['bvps'],
+                  basic_info['pb'],
+                  basic_info['timeToMarket'],
+                  basic_info['undp'],
+                  basic_info['perundp'],
+                  basic_info['rev'],
+                  basic_info['profit'],
+                  basic_info['gpr'],
+                  basic_info['npr'],
+                  basic_info['holders']))
 
 
 def save_trade_pause_date_date_list_for_stock(stock, pause_list):
