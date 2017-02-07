@@ -154,7 +154,7 @@ def load_basic_info_list():
 
 def generate_trend_report(trade_days, continue_days, end_day):
     basic_info_list = load_basic_info_list()
-    msg = u'%s\n连续五日日平均交易价格上涨股票\n' % end_day
+    msg = u'%s\n连续五日日平均交易价格上涨股票<br>\n' % end_day
     u, d = sort_trend(trade_days, end_day)
     for l in u:
         l['timeToMarket'] = basic_info_list[l['code']]['timeToMarket']
@@ -164,25 +164,48 @@ def generate_trend_report(trade_days, continue_days, end_day):
     d = sorted(d, key=itemgetter('timeToMarket'))
     for l in u:
         if l['continue_days'] >= continue_days:
-            msg += u'连续 %s 天上涨 [%s] %s %s 上市\n' % (l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
-                                                   basic_info_list[l['code']]['timeToMarket'])
+            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br>\n' % (
+            l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
+            basic_info_list[l['code']]['timeToMarket'])
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
-                msg += u'%s\n' % out
-            msg += get_parsed_announcement_for_stock(l['code'], end_day)
-    msg += u'\n连续五日日平均交易价格下跌股票\n'
+                msg += u'%s<br>\n' % out
+            anmt = get_parsed_announcement_for_stock(l['code'], end_day)
+            if len(anmt) > 0:
+                msg += anmt
+                msg += '<br>\n'
+    msg += u'\n连续五日日平均交易价格下跌股票<br>\n'
     for l in d:
         if l['continue_days'] >= continue_days:
-            msg += u'连续 %s 天下跌 [%s] %s %s 上市\n' % (l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
-                                                   basic_info_list[l['code']]['timeToMarket'])
+            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br>\n' % (
+            l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
+            basic_info_list[l['code']]['timeToMarket'])
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
-                msg += u'%s\n' % out
-            msg += get_parsed_announcement_for_stock(l['code'], end_day)
+                msg += u'%s<br>\n' % out
+            anmt = get_parsed_announcement_for_stock(l['code'], end_day)
+            if len(anmt) > 0:
+                msg += anmt
+                msg += '<br>\n'
+    html = generate_html(msg)
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
-        myfile.write(bytes(msg, encoding='utf-8'))
+        myfile.write(bytes(html, encoding='utf-8'))
+
+
+def generate_html(msg):
+    html = """\
+    <html>
+      <head></head>
+      <body>
+        <p>
+            %s
+        </p>
+      </body>
+    </html>
+    """ % msg
+    return html
 
 
 if __name__ == '__main__':
