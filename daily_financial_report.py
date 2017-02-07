@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from common_func import get_today, get_time_of_a_day, get_time
 from common_func import load_market_close_days_for_year
+from data_announance_fetch import fetch_all_announcements
 
 if __name__ == "__main__":
     while True:
@@ -20,9 +21,10 @@ if __name__ == "__main__":
         seconds = next_wake_up_time - ln
         print("now is " + get_time_of_a_day())
         print("sleeping %d" % seconds.seconds)
-        time.sleep(seconds.seconds)
+        #time.sleep(seconds.seconds)
         if today not in close_days:
-            subprocess.call("./daily_update.py", shell=True)
+            #subprocess.call("./daily_update.py", shell=True)
             subprocess.call("./qa_trend_continue.py 100 5 %s" % get_today(), shell=True)
-            subprocess.call("./send_mail.py -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
-                            "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)
+            a=fetch_all_announcements(today)
+            #subprocess.call("./send_mail.py -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
+            #                "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)

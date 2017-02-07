@@ -10,6 +10,7 @@ from common_func import *
 import numpy as np
 import multiprocessing as mp
 
+from data_announance_fetch import get_parsed_announcement_for_stock
 from qa_ma import ma_align
 
 
@@ -169,6 +170,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
                 msg += u'%s\n' % out
+            msg += get_parsed_announcement_for_stock(l['code'], end_day)
     msg += u'\n连续五日日平均交易价格下跌股票\n'
     for l in d:
         if l['continue_days'] >= continue_days:
@@ -178,7 +180,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
                 msg += u'%s\n' % out
-            msg += u'%s\n' % out
+            msg += get_parsed_announcement_for_stock(l['code'], end_day)
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(msg, encoding='utf-8'))
 
