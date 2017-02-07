@@ -15,6 +15,30 @@ import subprocess
 
 from common_func import get_today
 
+def get_trade_stop_list(day):
+    req_url = 'http://query.sse.com.cn/infodisplay/querySpecialTipsInfoByPage.do'
+    s = requests.session()
+    page_num = 1
+    final_data_list = []
+    get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                   'Accept-Encoding': 'gzip, deflate, sdch',
+                   'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
+                   'Upgrade-Insecure-Requests': 1,
+                   'Referer': 'http://www.sse.com.cn/disclosure/dealinstruc/suspension/',
+                   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'}
+    get_params = {'jsonCallBack':'jsonpCallback1024000',
+                    'isPagination':'true',
+                    'searchDate':day,
+                    'bgFlag':1,
+                    'searchDo':1,
+                    'pageHelp.pageSize':25,
+                    'pageHelp.pageNo':1,
+                    'pageHelp.beginPage':1,
+                    'pageHelp.cacheSize':1,
+                    'pageHelp.endPage':5,
+                    '_': int(time.time() * 10000)}
+    result = s.get(req_url, headers=get_headers, params=get_params)
+    return result
 
 def get_sse_company_list():
     req_url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do'
