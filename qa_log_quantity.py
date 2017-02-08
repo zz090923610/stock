@@ -158,9 +158,9 @@ def plot_log_quantity_idx(stock, base, type):
 
 if __name__ == '__main__':
     p = Pool(8)
-    rs = p.imap_unordered(calculate_detailed_trade_quantity_for_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(calculate_detailed_trade_quantity_for_stock, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:

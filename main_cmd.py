@@ -118,7 +118,7 @@ class MyPrompt(Cmd):
     def do_data_remove_pause_date(self, args):
         args = _cvt_args_to_list(args)
         print(args)
-        for s in SYMBOL_LIST:
+        for s in BASIC_INFO.symbol_list:
             days = load_trade_pause_date_list_for_stock(s)
             if len(days) > 0:
                 for day in args:
@@ -266,7 +266,7 @@ class MyPrompt(Cmd):
                     long = int(args[loop + 3])
                 elif args[loop] == '-t':
                     calc_type = args[loop + 1]
-            for stock in SYMBOL_LIST:
+            for stock in BASIC_INFO.symbol_list:
                 try:
                     a = ma_align(stock, short, mid, long, calc_type=calc_type)
                     r, out = a.analysis_align_for_day(day)

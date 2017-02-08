@@ -8,7 +8,7 @@ local_tz = get_localzone()
 china_tz = pytz.timezone('Asia/Shanghai')
 AGENT = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'}
 POOL_SIZE = 128
-
+NEW_STOCK_IPO_DATE_THRESHOLD = '2017-01-01'
 stock_data_root = '../stock_data'
 back_up_root = "%s/%s " % (stock_data_root, 'back_up')
 daily_data_root = "%s/%s " % (stock_data_root, 'data')

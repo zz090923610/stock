@@ -130,9 +130,9 @@ if __name__ == "__main__":
         print_repaired_list()
     else:
         p = Pool(8)
-        rs = p.imap_unordered(handle_check_one, SYMBOL_LIST)
+        rs = p.imap_unordered(handle_check_one, BASIC_INFO.symbol_list)
         p.close()  # No more work
-        list_len = len(SYMBOL_LIST)
+        list_len = len(BASIC_INFO.symbol_list)
         while True:
             completed = rs._index
             if completed == list_len:

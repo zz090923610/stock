@@ -12,7 +12,7 @@ from common_func import *
 
 def get_all_data_for_one_stock(stock):
     print('getting %s' % stock)
-    start = max(IPO_DATE_LIST[stock], START_DATE)
+    start = max(BASIC_INFO.time_to_market_dict[stock], START_DATE)
     my_file = Path('../stock_data/data/%s.csv' % stock)
     if my_file.is_file():
         get_update_for_one_stock(stock)
@@ -26,13 +26,12 @@ def get_all_data_for_one_stock(stock):
     data_non_fq[cols].to_csv('../stock_data/data/%s_non_fq.csv' % stock, index=False)
 
 
-
 def get_all_data_for_all_stock():
     print('here')
     p = Pool(64)
-    rs = p.imap_unordered(get_all_data_for_one_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(get_all_data_for_one_stock, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:
@@ -47,7 +46,7 @@ def get_all_data_for_all_stock():
 def get_update_for_one_stock(stock):
     if not os.path.isfile('../stock_data/data/%s.csv' % stock):
         get_all_data_for_one_stock(stock)
-    start = max(IPO_DATE_LIST[stock], START_DATE)
+    start = max(BASIC_INFO.time_to_market_dict[stock], START_DATE)
     all_date_list = get_stock_open_date_list(start)
     date_list_already_have = load_stock_date_list_from_daily_data(stock)
     trade_pause_list = load_trade_pause_date_list_for_stock(stock)
@@ -112,9 +111,9 @@ def handle_update_one(stock):
 
 def get_update_for_all_stock():
     p = Pool(64)
-    rs = p.imap_unordered(handle_update_one, SYMBOL_LIST)
+    rs = p.imap_unordered(handle_update_one, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:

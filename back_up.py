@@ -61,9 +61,9 @@ def backup_tick_data_for_stock(stock):
 
 def backup_tick_data():
     p = Pool(8)
-    rs = p.imap_unordered(backup_tick_data_for_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(backup_tick_data_for_stock, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:
@@ -85,11 +85,11 @@ def _restore_tick_data_for_stock(stock):
 
 
 def restore_tick_data():
-    mkdirs(SYMBOL_LIST)
+    mkdirs(BASIC_INFO.symbol_list)
     p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(_restore_tick_data_for_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(_restore_tick_data_for_stock, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:

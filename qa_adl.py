@@ -63,7 +63,7 @@ def calculate_adl_for_stock(stock):
 
 def calc_adl_for_all_stock():
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(calculate_adl_for_stock, args=(i,))
     pool.close()
     pool.join()

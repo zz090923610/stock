@@ -41,7 +41,7 @@ def calculate_vhf(stock, n):
 
 def calc_vhf_for_all_stock(n):
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(calculate_vhf, args=(i, n))
     pool.close()
     pool.join()
@@ -63,7 +63,7 @@ def load_vhf_data(stock):
 
 if __name__ == '__main__':
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(calculate_vhf, args=(i, 5))
     pool.close()
     pool.join()

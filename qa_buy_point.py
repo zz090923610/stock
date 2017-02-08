@@ -75,7 +75,7 @@ def retract_buy_point_days(day_list):
 
 def get_buy_point_for_all_stock(pre_days, future_days, scale, retract=False):
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(get_buy_point_for_stock, args=(i, pre_days, future_days, scale, retract))
     pool.close()
     pool.join()

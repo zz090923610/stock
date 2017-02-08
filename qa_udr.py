@@ -20,7 +20,7 @@ import multiprocessing as mp
 def calculate_udr_for_day(day):
     print('Calc UDR for day %s' % day)
     trade_data_for_day = []
-    for stock in SYMBOL_LIST:
+    for stock in BASIC_INFO.symbol_list:
         daily_data = load_daily_data(stock)
         for line in daily_data:
             if day == line['date']:

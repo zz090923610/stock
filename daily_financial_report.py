@@ -26,7 +26,7 @@ if __name__ == "__main__":
             subprocess.call("./daily_update.py", shell=True)
             a = fetch_all_announcements(today)
             subprocess.call("./qa_trend_continue.py 100 5 %s" % get_today(), shell=True)
-            #subprocess.call("./send_mail.py -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
-            #               "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)
+            subprocess.call("./send_mail.py -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
+                            "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)
             subprocess.call("./send_mail.py -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
                             "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)

@@ -75,7 +75,7 @@ def prepare_ma_lms_adl_for_stock(stock, short, mid, long):
 
 def data_preparation():
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(prepare_ma_lms_adl_for_stock, args=(i, 10, 20, 40))
     pool.close()
     pool.join()
@@ -83,7 +83,7 @@ def data_preparation():
 
 def load_preparation_data(train=7, dev=2, test=1):
     raw_data_list = []
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         raw_data_list += load_perceptron_data_for_stock(i)
     randomized_data_list = random.sample(raw_data_list, len(raw_data_list))
     train_data = randomized_data_list[0:int(train / (train + dev + test) * len(randomized_data_list))]

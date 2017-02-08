@@ -156,9 +156,9 @@ def update_lms_trade_for_stock_for_day(stock, day):
 
 def calc_lms_for_all_stock():
     p = Pool(8)
-    rs = p.imap_unordered(calc_lms_for_stock, SYMBOL_LIST)
+    rs = p.imap_unordered(calc_lms_for_stock, BASIC_INFO.symbol_list)
     p.close()  # No more work
-    list_len = len(SYMBOL_LIST)
+    list_len = len(BASIC_INFO.symbol_list)
     while True:
         completed = rs._index
         if completed == list_len:

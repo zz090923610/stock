@@ -31,7 +31,7 @@ def download_stock(s_code):
     finished = False
     while not finished:
         current_file_date = get_last_date(s_code)
-        start = max(IPO_DATE_LIST[s_code], START_DATE)
+        start = max(BASIC_INFO.time_to_market_dict[s_code], START_DATE)
 
         if current_file_date is not None:
             start = current_file_date
@@ -49,7 +49,7 @@ def download_stock(s_code):
 def generate_day_list_for_stock(s_code):
     failed_loaded_list = load_fail_to_repair_list(s_code)
     current_file_date = get_last_date(s_code)
-    start = max(IPO_DATE_LIST[s_code], START_DATE)
+    start = max(BASIC_INFO.time_to_market_dict[s_code], START_DATE)
     all_date_list = get_stock_open_date_list(start)
     if current_file_date is None:
         return all_date_list
@@ -133,14 +133,14 @@ if __name__ == "__main__":
     all_work_list = []
     if sys.argv[1] == '--day':
         day = sys.argv[2]
-        for stock in SYMBOL_LIST:
+        for stock in BASIC_INFO.symbol_list:
             date_list = [day]
             all_work_list += generate_work_list(stock, date_list)
     elif sys.argv[1] == '--align':
         p = Pool(POOL_SIZE)
-        rs = p.imap_unordered(align_tick_data_stock, SYMBOL_LIST)
+        rs = p.imap_unordered(align_tick_data_stock, BASIC_INFO.symbol_list)
         p.close()  # No more work
-        list_len = len(SYMBOL_LIST)
+        list_len = len(BASIC_INFO.symbol_list)
         while True:
             completed = rs._index
             if completed == list_len:
@@ -152,7 +152,7 @@ if __name__ == "__main__":
         sys.stdout.flush()
         exit()
     else:
-        for stock in SYMBOL_LIST:
+        for stock in BASIC_INFO.symbol_list:
             date_list = generate_day_list_for_stock(stock)
             all_work_list += generate_work_list(stock, date_list)
     p = Pool(POOL_SIZE)

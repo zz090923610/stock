@@ -52,7 +52,7 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
 
 def calc_atpd_for_all_stock(refresh=False):
     pool = mp.Pool()
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         pool.apply_async(calc_average_trade_price_for_stock, args=(i, refresh))
     pool.close()
     pool.join()
@@ -73,7 +73,7 @@ def calc_atpdr_for_stock(stock):
 
 
 def calc_atpdr_for_all_stock():
-    for i in SYMBOL_LIST:
+    for i in BASIC_INFO.symbol_list:
         calc_atpdr_for_stock(i)
 
 
@@ -121,7 +121,7 @@ def recent_trend_stat(stock, trade_days, last_day):
 def sort_trend(trade_days, end_day):
     up_list = []
     down_list = []
-    for s in SYMBOL_LIST:
+    for s in BASIC_INFO.symbol_list:
         (trend, continue_day, last_day) = recent_trend_stat(s, trade_days, end_day)
         if (trend == 'up') & (last_day == end_day):
             up_list.append({'code': s, 'trend': trend, 'continue_days': continue_day})
@@ -153,20 +153,19 @@ def load_basic_info_list():
 
 
 def generate_trend_report(trade_days, continue_days, end_day):
-    basic_info_list = load_basic_info_list()
     msg = u'%s\n连续五日日平均交易价格上涨股票<br>\n' % end_day
     u, d = sort_trend(trade_days, end_day)
     for l in u:
-        l['timeToMarket'] = basic_info_list[l['code']]['timeToMarket']
+        l['timeToMarket'] = BASIC_INFO.time_to_market_dict[l['code']]
     for l in d:
-        l['timeToMarket'] = basic_info_list[l['code']]['timeToMarket']
+        l['timeToMarket'] = BASIC_INFO.time_to_market_dict[l['code']]
     u = sorted(u, key=itemgetter('timeToMarket'))
     d = sorted(d, key=itemgetter('timeToMarket'))
     for l in u:
         if l['continue_days'] >= continue_days:
             msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br>\n' % (
-            l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
-            basic_info_list[l['code']]['timeToMarket'])
+                l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+                BASIC_INFO.time_to_market_dict[l['code']])
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
@@ -179,8 +178,8 @@ def generate_trend_report(trade_days, continue_days, end_day):
     for l in d:
         if l['continue_days'] >= continue_days:
             msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br>\n' % (
-            l['continue_days'], l['code'], basic_info_list[l['code']]['name'],
-            basic_info_list[l['code']]['timeToMarket'])
+                l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+                BASIC_INFO.time_to_market_dict[l['code']])
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
