@@ -12,7 +12,7 @@ import datetime
 from threading import Thread
 from variables import *
 import pandas as pd
-
+from datetime import timedelta as td
 import multiprocessing as mp
 
 
@@ -75,7 +75,7 @@ def get_weekends_of_a_year(year):
     d2 = date(int(year), 12, 31)
     days = []
     delta = d2 - d1
-    from datetime import timedelta as td
+
     for i in range(delta.days + 1):
         if not check_weekday((d1 + td(days=i)).strftime('%Y-%m-%d')):
             days.append((d1 + td(days=i)).strftime('%Y-%m-%d'))
