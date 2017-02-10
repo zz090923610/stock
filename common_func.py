@@ -138,6 +138,14 @@ class BasicInfoHDL:
         link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, stock, stock)
         return link
 
+    def get_market_code_of_stock(self, stock):
+        mkt = ''
+        if self.market_dict[stock] == 'sse':
+            mkt = 'sh'
+        elif self.market_dict[stock] == 'szse':
+            mkt = 'sz'
+        return '%s%s' % (mkt, stock)
+
     def _get_sse_company_list(self):
         print('Updating Shanghai Stock Exchange List')
         req_url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do'
@@ -278,7 +286,8 @@ class BasicInfoHDL:
         json_call_back_num = time.time()
         pool = mp.Pool()
         for day in self.market_open_days:
-            pool.apply_async(self.get_stock_suspend_list_of_day, args=(day, json_call_back_num), callback=all_list.__iadd__)
+            pool.apply_async(self.get_stock_suspend_list_of_day, args=(day, json_call_back_num),
+                             callback=all_list.__iadd__)
         pool.close()
         pool.join()
         return all_list

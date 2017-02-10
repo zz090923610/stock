@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import subprocess
 from math import log
 from multiprocessing.pool import Pool
 from operator import itemgetter
@@ -152,7 +153,21 @@ def load_basic_info_list():
     return symbol_dict
 
 
+def download_plots(stock_list):
+    full_name_list = []
+    subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
+    for stock in stock_list:
+        s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+        subprocess.call("wget http://image.sinajs.cn/newchart/daily/n/%s.gif -O ../stock_data/plots/%s.gif" %
+                        (s_full_name, s_full_name), shell=True)  # FIXME try not use subprocess
+        full_name_list.append('%s.gif' % s_full_name)
+    with open('../stock_data/plots/plot_list.pickle', 'wb') as f:
+        pickle.dump(full_name_list, f, protocol=2)
+
+
 def generate_trend_report(trade_days, continue_days, end_day):
+    print("Generating Finance Report")
+    stock_list_of_plot_to_download = []
     msg = u'%s\n连续五日日平均交易价格上涨股票<br>\n' % end_day
     u, d = sort_trend(trade_days, end_day)
     for l in u:
@@ -163,9 +178,10 @@ def generate_trend_report(trade_days, continue_days, end_day):
     d = sorted(d, key=itemgetter('timeToMarket'))
     for l in u:
         if l['continue_days'] >= continue_days:
-            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br>\n' % (
+            s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.gif"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
-                BASIC_INFO.time_to_market_dict[l['code']])
+                BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
@@ -174,12 +190,15 @@ def generate_trend_report(trade_days, continue_days, end_day):
             if len(anmt) > 0:
                 msg += anmt
                 msg += '<br>\n'
+            stock_list_of_plot_to_download.append(l['code'])
+
     msg += u'\n连续五日日平均交易价格下跌股票<br>\n'
     for l in d:
         if l['continue_days'] >= continue_days:
-            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br>\n' % (
+            s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.gif"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
-                BASIC_INFO.time_to_market_dict[l['code']])
+                BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
             r, out = a.analysis_align_for_day(end_day)
             if len(out) > 0:
@@ -188,9 +207,11 @@ def generate_trend_report(trade_days, continue_days, end_day):
             if len(anmt) > 0:
                 msg += anmt
                 msg += '<br>\n'
+            stock_list_of_plot_to_download.append(l['code'])
     html = generate_html(msg)
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
+    download_plots(stock_list_of_plot_to_download)
 
 
 def generate_html(msg):
