@@ -6,11 +6,13 @@ from matplotlib.finance import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-
 from common_func import BASIC_INFO
 from variables import *
 import pickle
 
+from PIL import ImageSequence
+from PIL import Image
+import gifmaker
 
 def load_stock(stock, days):
     daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
@@ -28,6 +30,7 @@ def load_ma_for_stock(stock, ma_params, days):
     return df.tail(days)
 
 def k_plot(stock, days):
+    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     df = load_stock(stock, days)
     last_open= df.tail(1)['open'][0]
     last_close = df.tail(1)['close'][0]
@@ -48,10 +51,10 @@ def k_plot(stock, days):
         thisind = np.clip(int(x + 0.5), 0, N - 1)
         return date_list[thisind]
 
-    matplotlib.rcParams.update({'font.size': 14})
+    matplotlib.rcParams.update({'font.size': 18})
     ax1 = plt.subplot2grid((4,1),(0,0), rowspan=3)
     ax3 = plt.subplot2grid((4,1),(3,0), sharex=ax1)
-    fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1],last_day_msg), fontsize=16)
+    fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1],last_day_msg), fontsize=20)
 
     ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     legend_list = []
@@ -71,11 +74,19 @@ def k_plot(stock, days):
     vc=volume_overlay(ax3, df.open, df.close, df.volume, colorup='r', colordown='g', width=1, alpha=1.0)
     ax3.add_collection(vc)
     ax1.set_axisbelow(True)
-    ax1.yaxis.grid(color='gray', linestyle='dashed')
-    ax1.xaxis.grid(color='gray', linestyle='dashed')
-    ax3.yaxis.grid(color='gray', linestyle='dashed')
-    ax3.xaxis.grid(color='gray', linestyle='dashed')
+    ax1.yaxis.grid(color='gray', linestyle='-')
+    ax1.xaxis.grid(color='gray', linestyle='-')
+    ax3.yaxis.grid(color='gray', linestyle='-')
+    ax3.xaxis.grid(color='gray', linestyle='-')
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('../stock_data/plots/%s.png' % stock)
+    fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
+    plt.close()
+    cvt2gif(stock)
+
+def cvt2gif(stock):
+    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    img = Image.open('../stock_data/plots/%s.png' % s_full_name)
+    img = img.resize((545, 300))
+    img.save('../stock_data/plots/%s.png' % s_full_name, 'png')

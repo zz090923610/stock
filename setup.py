@@ -8,5 +8,5 @@ setup(
     license='',
     author='zhangzhao',
     author_email='',
-    description='', requires=['pandas', 'requests', 'tushare', 'bs4', 'tzlocal', 'plotly', 'matplotlib']
+    description='', requires=['pandas', 'requests', 'tushare', 'bs4', 'tzlocal', 'matplotlib', 'pillow']
 )

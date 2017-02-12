@@ -240,6 +240,7 @@ def calc_ma_for_stock(stock: str, days: int, calc_type: str = 'atpd') -> list:
 
 
 def calc_ma_for_all_stock(days, calc_type='atpd'):
+    print('Calc MA%d %s ' % (days, calc_type))
     pool = mp.Pool()
     for i in BASIC_INFO.symbol_list:
         pool.apply_async(calc_ma_for_stock, args=(i, days, calc_type))

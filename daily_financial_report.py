@@ -1,9 +1,20 @@
 #!/usr/bin/python3
+import signal
+
 from common_func import *
 from datetime import datetime, timedelta
 
 from qa_ma import calc_ma_for_all_stock
 from qa_trend_continue import calc_atpdr_for_all_stock, calc_atpd_for_all_stock
+
+
+def signal_handler(signal, frame):
+    print('Ctrl+C detected, exiting')
+    subprocess.call("killall qa_trend_continue.py 2>/dev/null", shell=True)
+    exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
     while True:
@@ -37,3 +48,4 @@ if __name__ == "__main__":
             subprocess.call("./send_mail.py -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
                             "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
             subprocess.call("./data_news_handler.py %s" % today, shell=True)
+        time.sleep(30)

@@ -12,8 +12,9 @@ import numpy as np
 import multiprocessing as mp
 
 from data_announance_parsing import get_parsed_announcement_for_stock
+from k_plot import k_plot
 from qa_ma import ma_align
-
+from PIL import Image
 
 def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
     print('calc ATPD for %s %s %.03f' % (stock, day, scaler))
@@ -158,9 +159,14 @@ def download_plots(stock_list):
     subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
     for stock in stock_list:
         s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-        subprocess.call("wget http://image.sinajs.cn/newchart/daily/n/%s.gif -O ../stock_data/plots/%s.gif" %
-                        (s_full_name, s_full_name), shell=True)  # FIXME try not use subprocess
-        full_name_list.append('%s.gif' % s_full_name)
+        k_plot(stock, 60)
+        full_name_list.append('%s.png' % s_full_name)
+
+    #for stock in stock_list:
+    #    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    #    subprocess.call("wget http://image.sinajs.cn/newchart/daily/n/%s.gif -O ../stock_data/plots/%s.gif" %
+    #                    (s_full_name, s_full_name), shell=True)  # FIXME try not use subprocess
+    #    full_name_list.append('%s.gif' % s_full_name)
     with open('../stock_data/plots/plot_list.pickle', 'wb') as f:
         pickle.dump(full_name_list, f, protocol=2)
 
@@ -179,7 +185,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
     for l in u:
         if l['continue_days'] >= continue_days:
             s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
-            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.gif"><br>\n' % (
+            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.png"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
                 BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
@@ -196,7 +202,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
     for l in d:
         if l['continue_days'] >= continue_days:
             s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
-            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.gif"><br>\n' % (
+            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.png"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
                 BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
