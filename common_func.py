@@ -1,7 +1,7 @@
 import csv
 import os
-import random
 import re
+import subprocess
 import time
 from operator import itemgetter
 import requests
@@ -10,11 +10,12 @@ import tushare as ts
 import pickle
 from datetime import date, datetime
 import datetime
-from threading import Thread
+
+from bs4 import BeautifulSoup
+
 from variables import *
 import pandas as pd
 from datetime import timedelta as td
-import multiprocessing as mp
 import operator
 
 
@@ -133,7 +134,7 @@ def load_market_open_date_list():
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
             return pickle.load(f)
-    except:
+    except FileNotFoundError:
         return update_market_open_date_list()
 
 
@@ -146,23 +147,25 @@ class BasicInfoHDL:
         self.time_to_market_dict = {}
         self.symbol_list = []
         self.market_open_days = []
-        self.load()
         self.stock_suspend_day_list = {i: [] for i in self.symbol_list}
         self.stock_trade_day_list = {i: [] for i in self.symbol_list}
+        self.load()
         self.symbol_sse = [s for s in self.symbol_list if self.in_sse(s)]
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
         self.timestamp = time.time()
         self.s = requests.session()
 
-    def load_suspend_trade_date_list(self):
+    def load_suspend_trade_date_list(self):  # FIXME
         for stock in self.symbol_list:
             try:
                 with open('../stock_data/dates/stock_suspend_days/%s.pickle' % stock, 'rb') as f:
                     self.stock_suspend_day_list[stock] = pickle.load(f)
-            except:
+            except FileNotFoundError:
                 self.stock_suspend_day_list[stock] = []
             self.stock_trade_day_list[stock] = list(
                 set(self.market_open_days) - set(self.stock_suspend_day_list[stock]))
+            self.stock_trade_day_list[stock].sort()
+            self.stock_suspend_day_list[stock].sort()
 
     def get_link_of_stock(self, stock):
         mkt = ''
@@ -173,7 +176,8 @@ class BasicInfoHDL:
         link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, stock, stock)
         return link
 
-    def get_newest_price_of_stock(self, stock, price_limit=''):
+    @staticmethod
+    def get_newest_price_of_stock(stock, price_limit=''):
         data = load_daily_data(stock)
         min_close = min([l['close'] for l in data])
         min_date = ''
@@ -289,11 +293,11 @@ class BasicInfoHDL:
             self._get_szse_company_list()
             self._merge_company_list()
             update_market_open_date_list()
-            self.get_sse_stock_suspend_list_for_all_days('2017-01-16', get_today())
-            self.fetch_szse_suspend_list('2017-01-16', get_today())
+            self.get_all_announcements()
+            self.get_all_stock_suspend_list()
         basic_info_list = load_csv('../stock_data/basic_info.csv')
         self.market_open_days = load_market_open_date_list()
-        self.load_suspend_trade_date_list()
+
         for i in basic_info_list:
             try:
                 assert i['market'] in ['sse', 'szse']
@@ -313,207 +317,150 @@ class BasicInfoHDL:
             self.totals_dict[i['code']] = i['totals']
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
+        self.load_suspend_trade_date_list()
 
-    def get_sse_stock_suspend_list_of_day_one_page(self, day, current_t, current_page, end_page):
-        jsoncb = int(current_t + 24 * 3600 * int(day.replace('-', '')))
-        try:
-            req_url = 'http://query.sse.com.cn/infodisplay/querySpecialTipsInfoByPage.do'
-            get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                           'Accept-Encoding': 'gzip, deflate, sdch',
-                           'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
-                           'Upgrade-Insecure-Requests': 1,
-                           'Referer': 'http://www.sse.com.cn/disclosure/dealinstruc/suspension/',
-                           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'}
-            get_params = {'jsonCallBack': 'jsonpCallback%d' % jsoncb,
-                          'isPagination': 'true',
-                          'searchDate': day,
-                          'bgFlag': 1,
-                          'searchDo': 1,
-                          'pageHelp.pageSize': 25,
-                          'pageHelp.pageNo': current_page,
-                          'pageHelp.beginPage': current_page,
-                          'pageHelp.cacheSize': 1,
-                          'pageHelp.endPage': end_page,
-                          '_': int(time.time() * 10000)}
-            result = self.s.get(req_url, headers=get_headers, params=get_params)
-            b = result.text.replace('jsonpCallback%d(' % jsoncb, '')
-            b = b.replace(')', '')
-            result = json.loads(b)
-            final_list = []
-            for i in result['result']:
-                if (i['stopTime'] == '全天') | (i['stopTime'].find('连续停牌') != -1):
-                    final_list.append({'date': day, 'code': i['productCode']})
-            self.timestamp = time.time()
-            print('Fetched suspend data for day %s, page %d of %d' % (day, current_page, result['pageHelp']['endPage']))
-            return final_list, result['pageHelp']['endPage']
-        except KeyboardInterrupt:
-            raise
-        except requests.exceptions.ConnectionError:
-            print('Connection Refused')
-            return self.get_sse_stock_suspend_list_of_day_one_page(day, jsoncb, current_page, end_page)
-
-    def get_sse_stock_suspend_list_of_day(self, day):
-        current_page = 1
-        end_page = 5
+    @staticmethod
+    def _handle_an_uls(uls):
         final_list = []
-        while current_page <= end_page:
-            tmp_list, end_page = self.get_sse_stock_suspend_list_of_day_one_page(day, time.time(), current_page,
-                                                                                 end_page)
-            final_list += tmp_list
-            current_page += 1
+        for line in uls:
+            stock = line.find("li", {"class": "ta-1"}).get_text()
+            if stock == '代码':
+                continue
+            name = line.find("li", {"class": "ta-2"}).get_text()
+            start_time = line.find("li", {"class": "ta-3"}).get_text()
+            end_time = line.find("li", {"class": "ta-4"}).get_text()
+            try:
+                start_time = re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', start_time).group(0)
+            except AttributeError:
+                start_time = None
+            try:
+                end_time = re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', end_time).group(0)
+            except AttributeError:
+                end_time = None
+            final_list.append({'code': stock, 'name': name, 'start_time': start_time, 'end_time': end_time})
         return final_list
 
-    def get_sse_stock_suspend_list_for_all_days(self, start_date, end_date):
-        all_list = []
-        day_list = [day for day in self.market_open_days if (day >= start_date) & (day <= end_date)]
-        for day in day_list:
-            all_list += self.get_sse_stock_suspend_list_of_day(day)
-        for i in all_list:
-            if i['code'] in self.symbol_list:
-                self.stock_suspend_day_list[i['code']].append(i['date'])
-        for stock in self.symbol_list:
-            if not BASIC_INFO.in_sse(stock):
-                continue
-            self.stock_trade_day_list[stock] = list(
-                set(self.market_open_days) - set(self.stock_suspend_day_list[stock]))
-            with open('../stock_data/dates/stock_trade_days/%s.pickle' % stock, 'wb') as f:
-                pickle.dump(self.stock_trade_day_list[stock], f, -1)
-            with open('../stock_data/dates/stock_suspend_days/%s.pickle' % stock, 'wb') as f:
-                pickle.dump(self.stock_suspend_day_list[stock], f, -1)
-
-    def fetch_szse_suspend_list(self, start_date, end_date):
-        total_list = []
-        total_list2 = []
-        current_page = 1
-        end_page = 10
-        record_cnt = 0
-        id = 0
-        s = requests.session()
-        while current_page <= end_page:
-            req_url = 'http://www.szse.cn/szseWeb/FrontController.szse?randnum=%f' % random.random()
-            post_params = {'Accept': '*/*', 'Accept-Encoding': 'gzip, deflate',
-                           'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
-                           'Connection': 'keep-alive',
-                           'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                           'Host': 'www.szse.cn',
-                           'Origin': 'http://www.szse.cn',
-                           'Referer': 'http://www.szse.cn/main/disclosure/news/tfpts/',
-                           'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'}
-            if current_page == 1:
-                post_data = {'ACTIONID': 7,
-                             'AJAX': 'AJAX-TRUE',
-                             'CATALOGID': 1798,
-                             'TABKEY': 'tab1',
-                             'REPORT_ACTION': 'search',
-                             'txtKsrq': start_date,
-                             'txtZzrq': end_date}
-            else:
-                post_data = {
-                    'ACTIONID': 7,
-                    'AJAX': 'AJAX-TRUE',
-                    'CATALOGID': 1798,
-                    'txtKsrq': start_date,
-                    'txtZzrq': end_date,
-                    'TABKEY': 'tab1',
-                    'tab1PAGENUM': current_page,
-                    'tab1PAGECOUNT': end_page,
-                    'tab1RECORDCOUNT': record_cnt,
-                    'REPORT_ACTION': 'navigate'
-                }
-            result = s.post(req_url, data=post_data, params=post_params)
-            b = result.content.decode('gbk')
-            b = b.replace('\r\n', '')
-            regex_page_num = r'当前第([0-9]+)页  共([0-9]+)页'
-            m = re.search(regex_page_num, b)
-            current_page = int(m.group(1))
-            end_page = int(m.group(2))
-            regex_record_cnt = r'gotoReportPageNoByTextBox\(\'1798\',\'tab1\',\'1798_tab1_naviboxid\',[0-9]+,([0-9]+)\)'
-            m = re.search(regex_record_cnt, b)
-            record_cnt = int(m.group(1))
-            line_regex = r'<tr bgcolor=\'#[0-9a-zA-Z]{6}\' ><td  align=\'center\'  >([0-9]{6})</td><td  width=\'[0-9]*\'  align=\'center\'  >([\u4e00-\u9fa5\uff21-\uff3a\uff41-\uff5aA-Za-z0-9\*\- ]+)</td><td  width=\'[0-9]*\'  align=\'center\'  >([0-9]{4}\-[0-9]{2}\-[0-9]{2})*[\u4e00-\u9fa5\uff21-\uff3a\uff41-\uff5aA-Za-z0-9\*\:, ]*</td><td  width=\'[0-9]*\'  align=\'center\'  >([0-9]{4}\-[0-9]{2}\-[0-9]{2})*[\u4e00-\u9fa5\uff21-\uff3a\uff41-\uff5aA-Za-z0-9\*\:, ]*</td><td  align=\'center\'  >([\u4e00-\u9fa5\uff21-\uff3a\uff41-\uff5aA-Za-z0-9\*\:, ]*)</td><td  align=\'left\'  >([\u4e00-\u9fa5\uff21-\uff3a\uff41-\uff5aA-Za-z0-9\*\:, （）/]*)</td></tr>'
-            page_list = []
-            while True:
-                m = re.search(line_regex, b)
-                try:
-                    grp_msg = m.groups()
-                    page_list.append(
-                        {'id': id, 'code': m.group(1), 'start_date': m.group(3), 'end_date': m.group(4),
-                         'action': m.group(5),
-                         'reason': m.group(6)})
-                    total_list.append(
-                        {'id': id, 'code': m.group(1), 'start_date': m.group(3), 'end_date': m.group(4),
-                         'action': m.group(5),
-                         'reason': m.group(6)})
-                    id += 1
-                    b = b.replace(m.group(0), '')
-                except AttributeError:
-                    break
-
-            print('%d of %d pages' % (current_page, end_page))
-            current_page += 1
-            total_list2.append(page_list)
+    def _get_stock_suspend_list_of_day(self, day):
+        print("Fetching %s" % day)
+        req_url = 'http://www.cninfo.com.cn/cninfo-new/memo-2'
+        get_headers = {
+            'Host': 'www.cninfo.com.cn',
+            'Referer': 'http://www.cninfo.com.cn/cninfo-new/memo-2',
+            'Upgrade-Insecure-Requests': 1,
+            'User-Agent': AGENT['1']}
+        get_params = {'queryDate': day,
+                      'queryType': 'queryType1'}
+        result = self.s.get(req_url, headers=get_headers, params=get_params)
+        b = result.text
+        soup = BeautifulSoup(b, 'lxml')
+        c = soup.find("div", {"id": "suspensionAndResumption1"})
+        d = c.findAll("div", {"class": "column2"})
+        start_idx = 0
+        end_idx = 1
+        if re.search(u'今起停牌', b) is None:
+            start_idx = -999
+            end_idx = 0
+        if re.search(u'今起复牌', b) is None:
+            end_idx = -999
         try:
-            assert (len(total_list) == record_cnt)
-        except AssertionError:
-            print(record_cnt, len(total_list))
-            raise
-        total_list = sorted(total_list, key=itemgetter('id'))
-        stock_suspend_dict = {s: [] for s in BASIC_INFO.symbol_szse}
-        for item in total_list:
-            if item['code'] in BASIC_INFO.symbol_szse:
-                stock_suspend_dict[item['code']].append(item)
-        for stock in BASIC_INFO.symbol_szse:
-            if len(stock_suspend_dict[stock]) != 0:
-                self.generate_szse_suspend_list_of_a_stock(stock, stock_suspend_dict[stock])
-            self.stock_suspend_day_list[stock] = list(set(self.stock_suspend_day_list[stock]))
-            self.stock_trade_day_list[stock] = list(
-                set(self.market_open_days) - set(self.stock_suspend_day_list[stock]))
-            with open('../stock_data/dates/stock_trade_days/%s.pickle' % stock, 'wb') as f:
-                pickle.dump(self.stock_trade_day_list[stock], f, -1)
-            with open('../stock_data/dates/stock_suspend_days/%s.pickle' % stock, 'wb') as f:
-                pickle.dump(self.stock_suspend_day_list[stock], f, -1)
+            start_from_day = self._handle_an_uls(d[start_idx].findAll('ul'))
+        except IndexError:
+            start_from_day = []
+        try:
+            end_from_day = self._handle_an_uls(d[end_idx].findAll('ul'))
+        except IndexError:
+            end_from_day = []
+        return start_from_day, end_from_day
 
-    def generate_szse_suspend_list_of_a_stock(self, stock, input_list):
-        while len(input_list):
-            l = input_list[0]
-            start_date = l['start_date']
-            end_date = l['end_date']
-            if (start_date is not None) & (end_date is not None):
-                if start_date == end_date:
-                    input_list.remove(l)
-                    continue
-                else:
-                    self.add_stock_suspend_date_between_two_date(stock, start_date, end_date)
-                    input_list.remove(l)
-                    continue
-            if end_date is not None:
+    def get_all_stock_suspend_list(self):
+        try:
+            with open('../stock_data/dates/raw_suspend_date_list.pickle', 'rb') as f:
+                final_dict = pickle.load(f)
+        except FileNotFoundError:
+            final_dict = {}
+        for day in self.market_open_days:
+            try:
+                _ = final_dict[day]
+            except KeyError:
+                s, e = self._get_stock_suspend_list_of_day(day)
+                final_dict[day] = {'start': s, 'end': e}
+                with open('../stock_data/dates/raw_suspend_date_list.pickle', 'wb') as f:
+                    pickle.dump(final_dict, f, -1)
+
+    def _get_announcement_one_day_one_stock(self, target_day, fetch_type, market):
+        fetch_type = fetch_type
+        req_url = 'http://www.cninfo.com.cn/cninfo-new/announcement/query'
+
+        page_num = 1
+        final_data_list = []
+        post_params = {"Accept": "application/json, text/javascript, */*; q=0.01", "Accept-Encoding": "gzip, deflate",
+                       "Accept-Language": "en-US,en;q=0.8,zh-CN;q=0.6",
+                       "Cache-Control": "no-cache",
+                       "Connection": "keep-alive",
+                       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                       "User-Agent": AGENT['1'],
+                       "X-Requested-With": "XMLHttpRequest"}
+        while True:
+            post_data = {'stock': None, 'searchkey': None, 'plate': None, 'category': None, 'trade': None,
+                         'column': market,
+                         'columnTitle': '历史公告查询',
+                         'pageNum': page_num, 'pageSize': 30, 'tabName': fetch_type, 'sortName': None, 'sortType': None,
+                         'limit': None,
+                         'showTitle': None, 'seDate': target_day}
+
+            result = self.s.post(req_url, data=post_data, params=post_params)
+            result_dict = json.loads(result.text)
+            final_data_list += result_dict['announcements']
+            if result_dict['hasMore']:
+                page_num += 1
+            else:
+                break
+        print('Fetched all announcements %d %s' % (len(final_data_list), target_day))
+        return final_data_list
+
+    def _get_announcement_all_stock_one_day(self, target_day):
+        data = []
+        data += self._get_announcement_one_day_one_stock(target_day, 'fulltext',
+                                                         'szse')  # market doesn't matter, will fetch all markets
+        for i in data:
+            i['adjunctUrl'] = 'http://www.cninfo.com.cn/%s' % i['adjunctUrl']
+        self._save_announcements(target_day, data)
+        return data
+
+    def get_all_announcements(self):
+        try:
+            with open('../stock_data/announcements/fetched_days.pickle', 'rb') as f:
+                fetched_days = pickle.load(f)
+        except FileNotFoundError:
+            fetched_days = []
+        for day in self.market_open_days:
+            if day not in fetched_days:
                 try:
-                    start_date = input_list[1]['start_date']
-                    next_l = input_list[1]
-                    assert (start_date is not None)
-                    self.add_stock_suspend_date_between_two_date(stock, start_date, end_date)
-                    input_list.remove(l)
-                    input_list.remove(next_l)
-                    continue
-                except AssertionError as e:
-                    input_list.remove(l)
-                    # print(e, input_list)
-                    continue
-                except IndexError:
-                    self.add_stock_suspend_date_between_two_date(stock, START_DATE, end_date)
-                    input_list.remove(l)
-                    continue
-            if start_date is not None:
-                self.add_stock_suspend_date_between_two_date(stock, start_date, get_today())
-                input_list.remove(l)
+                    self._get_announcement_all_stock_one_day(day)
+                    with open('../stock_data/announcements/fetched_days.pickle', 'wb') as f:
+                        pickle.dump(fetched_days, f, -1)
+                    fetched_days.append(day)
+                except:
+                    raise
 
-    def add_stock_suspend_date_between_two_date(self, stock, day1, day2):
-        date_list = BASIC_INFO.market_open_days
-        suspend_list = []
-        for day in date_list:
-            if (day >= day1) & (day < day2):
-                suspend_list.append(day)
-        self.stock_suspend_day_list[stock] += suspend_list
+    @staticmethod
+    def _save_announcements(target_day, data_list):
+        subprocess.call("mkdir -p ../stock_data/announcements", shell=True)
+        with open('../stock_data/announcements/%s.pickle' % target_day, 'wb') as f:
+            pickle.dump(data_list, f, -1)
+
+    @staticmethod
+    def load_announcements_for(stock, target_day):
+        result = []
+        try:
+            with open('../stock_data/announcements/%s.pickle' % target_day, 'rb') as f:
+                loaded = pickle.load(f)
+        except FileNotFoundError:
+            loaded = []
+        for i in loaded:
+            if i['secCode'] == stock:
+                result.append(i)
+        return result
 
 
 BASIC_INFO = BasicInfoHDL()
@@ -581,7 +528,7 @@ def load_tick_data(stock, day, scaler=1):
                 row['volume'] = int(row['volume'])
                 row['amount'] = float(row['amount'])
                 data_list.append(row)
-        except:
+        except FileNotFoundError:
             return []
     return data_list
 
@@ -590,7 +537,7 @@ def load_market_open_date_list_from(given_day):
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
             raw_date = pickle.load(f)
-    except:
+    except FileNotFoundError:
         raw_date = update_market_open_date_list()
     result_list = []
     for day in raw_date:
@@ -603,7 +550,7 @@ def load_market_close_days_for_year(year):
     try:
         with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'rb') as f:
             return pickle.load(f)
-    except:
+    except FileNotFoundError:
         return []
 
 
@@ -611,7 +558,7 @@ def load_ma_for_stock(stock, ma_params):
     try:
         with open("%s/qa/ma/%s/%s.pickle" % (stock_data_root, ma_params, stock), 'rb') as f:
             return pickle.load(f)
-    except:
+    except FileNotFoundError:
         return []
 
 
@@ -627,7 +574,7 @@ def load_trade_pause_date_list_for_stock(stock):
     try:
         with open('../stock_data/trade_pause_date/%s.pickle' % stock, 'rb') as f:
             return pickle.load(f)
-    except:
+    except FileNotFoundError:
         return []
 
 
@@ -725,21 +672,15 @@ def load_atpd_data(stock):
                 data_list.append(row)
         data_new_sorted = sorted(data_list, key=itemgetter('date'))
         return data_new_sorted
-    except:
+    except FileNotFoundError:
         return []
 
 
 def mkdirs(symbol_list):
-    try:
-        if not os.path.isdir('../stock_data/tick_data'):
-            os.mkdir('../stock_data/tick_data', mode=0o777)
-        for s_code in symbol_list:
-            if not os.path.isdir('../stock_data/tick_data/%s' % s_code):
-                os.mkdir('../stock_data/tick_data/%s' % s_code, mode=0o777)
-    except KeyboardInterrupt:
-        exit(0)
-    except:
-        pass
+    for a_dir in DIR_LIST:
+        subprocess.call('mkdir -p %s' % a_dir, shell=True)
+    for s_code in symbol_list:
+        subprocess.call('mkdir -p ../stock_data/tick_data/%s' % s_code, shell=True)
 
 
 def load_daily_data(stock, autype='qfq'):
@@ -766,3 +707,15 @@ def load_daily_data(stock, autype='qfq'):
                 data_list.append(row)
     data_new_sorted = sorted(data_list, key=itemgetter('date'))
     return data_new_sorted
+def generate_html(msg):
+    html = """\
+    <html>
+      <head></head>
+      <body>
+        <p>
+            %s
+        </p>
+      </body>
+    </html>
+    """ % msg
+    return html

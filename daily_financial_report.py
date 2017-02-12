@@ -1,12 +1,6 @@
 #!/usr/bin/python3
-import subprocess
-
-import time
+from common_func import *
 from datetime import datetime, timedelta
-
-from common_func import get_today, get_time_of_a_day, get_time
-from common_func import load_market_close_days_for_year
-from data_announance_fetch import fetch_all_announcements
 
 if __name__ == "__main__":
     while True:
@@ -24,9 +18,11 @@ if __name__ == "__main__":
         time.sleep(seconds.seconds)
         if today not in close_days:
             subprocess.call("./daily_update.py", shell=True)
-            a = fetch_all_announcements(today)
-            subprocess.call("./qa_trend_continue.py 100 5 %s" % get_today(), shell=True)
+            BASIC_INFO.get_all_announcements()
+            subprocess.call("./qa_trend_continue.py 100 5 %s" % today, shell=True)
             subprocess.call("./send_mail.py -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
-                            "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)
+                            "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
             subprocess.call("./send_mail.py -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
-                            "'../stock_data/report/five_days_trend/%s.txt'" % (get_today(), get_today()), shell=True)
+                            "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
+            subprocess.call("./data_news_handler.py %s" % today, shell=True)
+

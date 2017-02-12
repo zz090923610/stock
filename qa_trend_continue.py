@@ -11,7 +11,7 @@ from common_func import *
 import numpy as np
 import multiprocessing as mp
 
-from data_announance_fetch import get_parsed_announcement_for_stock
+from data_announance_parsing import get_parsed_announcement_for_stock
 from qa_ma import ma_align
 
 
@@ -212,20 +212,6 @@ def generate_trend_report(trade_days, continue_days, end_day):
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
     download_plots(stock_list_of_plot_to_download)
-
-
-def generate_html(msg):
-    html = """\
-    <html>
-      <head></head>
-      <body>
-        <p>
-            %s
-        </p>
-      </body>
-    </html>
-    """ % msg
-    return html
 
 
 if __name__ == '__main__':

@@ -77,11 +77,10 @@ def create_message(sender, to, subject, message_text):
     message.attach(part2)
     return {'raw': base64.urlsafe_b64encode(message.as_string())}
 
-def load_plot_list():
 
+def load_plot_list():
     with open('../stock_data/plots/plot_list.pickle', 'rb') as f:
         return pickle.load(f)
-
 
 
 def create_message_with_attachment(
@@ -140,7 +139,6 @@ def send_message(service, user_id, message):
         print('An error occurred: %s' % error)
 
 
-
 if __name__ == '__main__':
     """Shows basic usage of the Gmail API.
 
@@ -153,6 +151,7 @@ if __name__ == '__main__':
     title = ''
     content_file = ''
     data = ''
+    without_attachment = False
     for (idx, arg) in enumerate(sys.argv):
         if arg == '-l':
             try_login = True
@@ -164,6 +163,8 @@ if __name__ == '__main__':
             content_file = sys.argv[idx + 3]
             with open(content_file, 'r') as myfile:
                 data = myfile.read()
+        elif arg == '-n':
+            without_attachment = True
     if try_login:
         flags = argparse.Namespace(auth_host_name='localhost', auth_host_port=[8080, 8090], logging_level='ERROR',
                                    noauth_local_webserver=False)
@@ -181,5 +182,8 @@ if __name__ == '__main__':
             for label in labels:
                 print(label['name'])
         if try_send:
-            msg = create_message_with_attachment('me', recipient, title, data)
+            if not without_attachment :
+                msg = create_message_with_attachment('me', recipient, title, data)
+            else:
+                msg = create_message('me', recipient, title, data)
             send_message(service, 'me', msg)
