@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import csv
+from _operator import itemgetter
+
 import matplotlib
 from matplotlib import ticker
 from matplotlib.finance import *
@@ -10,9 +13,8 @@ from common_func import BASIC_INFO
 from variables import *
 import pickle
 
-from PIL import ImageSequence
 from PIL import Image
-import gifmaker
+
 
 
 def load_stock(stock, days):
@@ -31,7 +33,43 @@ def load_ma_for_stock(stock, ma_params, days):
     return df.tail(days)
 
 
-def k_plot(stock, days):
+def load_adl_for_stock(stock, days):
+    data_list = []
+    with open('../stock_data/qa/adl/%s.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            row['open'] = float(row['open'])
+            row['high'] = float(row['high'])
+            row['close'] = float(row['close'])
+            row['low'] = float(row['low'])
+            row['adl'] = round(float(row['adl']))
+            data_list.append(row)
+    df = pd.DataFrame(data_list)
+    df = df.sort_values(by='date', ascending=True)
+    return df.tail(days)
+
+
+def load_vhf_for_stock(stock, days):
+    data_list = []
+    with open('../stock_data/qa/vhf/%s.csv' % stock) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            row['close'] = float(row['close'])
+            if row['vhf'] == '-':
+                row['vhf'] = None
+            else:
+                row['vhf'] = float(row['vhf'])
+            data_list.append(row)
+    df = pd.DataFrame(data_list)
+    df = df.sort_values(by='date', ascending=True)
+    return df.tail(days)
+
+
+def k_plot(stock, days, scale=True):
+    if scale:
+        fonts = [18, 20]
+    else:
+        fonts = [14, 16]
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     df = load_stock(stock, days)
     last_open = df.tail(1)['open'][0]
@@ -39,12 +77,14 @@ def k_plot(stock, days):
     last_high = df.tail(1)['high'][0]
     last_low = df.tail(1)['low'][0]
     last_day_msg = ' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
+    df_adl = load_adl_for_stock(stock, days)
+    df_vhf = load_vhf_for_stock(stock, days)
     df_ma3 = load_ma_for_stock(stock, 'atpd_3', days)
     df_ma10 = load_ma_for_stock(stock, 'atpd_10', days)
     df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
     df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
     # plt.ion()
-    fig = plt.figure(figsize=(12, 6), dpi=100)
+    fig = plt.figure(figsize=(12, 9), dpi=100)
 
     N = len(df.date)
     ind = np.arange(N)
@@ -54,15 +94,26 @@ def k_plot(stock, days):
         thisind = np.clip(int(x + 0.5), 0, N - 1)
         return date_list[thisind]
 
-    matplotlib.rcParams.update({'font.size': 18})
-    ax1 = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
-    ax3 = plt.subplot2grid((4, 1), (3, 0), sharex=ax1)
+    matplotlib.rcParams.update({'font.size': fonts[0]})
+    ax1 = plt.subplot2grid((6, 1), (2, 0), rowspan=3)
+    ax3 = plt.subplot2grid((6, 1), (5, 0), sharex=ax1)
+    ax4 = plt.subplot2grid((6, 1), (1, 0), sharex=ax1)
+    ax5 = plt.subplot2grid((6, 1), (0, 0), sharex=ax1)
     fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1], last_day_msg),
-                 fontsize=20)
+                 fontsize=fonts[1])
 
     ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     legend_list = []
     line_width = 1.5
+    p_adl, = ax4.plot(ind, df_adl.adl, '-', label=u'累积/派发线')
+    plt.setp(p_adl, linewidth=line_width)
+    leg4 = ax4.legend(handles=[p_adl], )
+
+    p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线')
+    plt.setp(p_vhf, linewidth=line_width)
+    leg5 = ax5.legend(handles=[p_vhf], )
+
+
     p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
     plt.setp(p_ma3, linewidth=line_width)
     legend_list.append(p_ma3)
@@ -85,12 +136,18 @@ def k_plot(stock, days):
     ax1.xaxis.grid(color='gray', linestyle='-')
     ax3.yaxis.grid(color='gray', linestyle='-')
     ax3.xaxis.grid(color='gray', linestyle='-')
+    ax4.yaxis.grid(color='gray', linestyle='-')
+    ax4.xaxis.grid(color='gray', linestyle='-')
+    ax5.yaxis.grid(color='gray', linestyle='-')
+    ax5.xaxis.grid(color='gray', linestyle='-')
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
-    plt.close()
-    cvt2gif(stock)
+    fig.savefig('../stock_data/plots/%s.png' % s_full_name)
+    if scale:
+        fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
+        cvt2gif(stock)
+        plt.close()
 
 
 def cvt2gif(stock):
