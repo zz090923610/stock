@@ -14,6 +14,7 @@ from PIL import ImageSequence
 from PIL import Image
 import gifmaker
 
+
 def load_stock(stock, days):
     daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
     daily_data = daily_data.sort_values(by='date', ascending=True)
@@ -29,15 +30,17 @@ def load_ma_for_stock(stock, ma_params, days):
     df = df.sort_values(by='date', ascending=True)
     return df.tail(days)
 
+
 def k_plot(stock, days):
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     df = load_stock(stock, days)
-    last_open= df.tail(1)['open'][0]
+    last_open = df.tail(1)['open'][0]
     last_close = df.tail(1)['close'][0]
     last_high = df.tail(1)['high'][0]
     last_low = df.tail(1)['low'][0]
-    last_day_msg=' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
-    df_ma10= load_ma_for_stock(stock,'atpd_10', days)
+    last_day_msg = ' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
+    df_ma3 = load_ma_for_stock(stock, 'atpd_3', days)
+    df_ma10 = load_ma_for_stock(stock, 'atpd_10', days)
     df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
     df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
     # plt.ion()
@@ -52,13 +55,17 @@ def k_plot(stock, days):
         return date_list[thisind]
 
     matplotlib.rcParams.update({'font.size': 18})
-    ax1 = plt.subplot2grid((4,1),(0,0), rowspan=3)
-    ax3 = plt.subplot2grid((4,1),(3,0), sharex=ax1)
-    fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1],last_day_msg), fontsize=20)
+    ax1 = plt.subplot2grid((4, 1), (0, 0), rowspan=3)
+    ax3 = plt.subplot2grid((4, 1), (3, 0), sharex=ax1)
+    fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1], last_day_msg),
+                 fontsize=20)
 
     ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     legend_list = []
-    line_width=1.5
+    line_width = 1.5
+    p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
+    plt.setp(p_ma3, linewidth=line_width)
+    legend_list.append(p_ma3)
     p_ma10, = ax1.plot(ind, df_ma10.ma10, '-', label=u'MA10: %s' % df_ma10['ma10'].tolist()[-1])
     plt.setp(p_ma10, linewidth=line_width)
     legend_list.append(p_ma10)
@@ -71,7 +78,7 @@ def k_plot(stock, days):
     leg = ax1.legend(handles=legend_list, )
     leg.get_frame().set_alpha(0.5)
     candlestick2_ochl(ax1, df.open, df.close, df.high, df.low, width=0.75, colorup='r', colordown='g', alpha=1)
-    vc=volume_overlay(ax3, df.open, df.close, df.volume, colorup='r', colordown='g', width=1, alpha=1.0)
+    vc = volume_overlay(ax3, df.open, df.close, df.volume, colorup='r', colordown='g', width=1, alpha=1.0)
     ax3.add_collection(vc)
     ax1.set_axisbelow(True)
     ax1.yaxis.grid(color='gray', linestyle='-')
@@ -84,6 +91,7 @@ def k_plot(stock, days):
     fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
     plt.close()
     cvt2gif(stock)
+
 
 def cvt2gif(stock):
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)

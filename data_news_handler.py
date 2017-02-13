@@ -2,7 +2,8 @@
 import pickle
 import re
 import subprocess
-from datetime import datetime, timedelta, sys
+from datetime import datetime, timedelta
+import sys
 import time
 import requests
 from bs4 import BeautifulSoup

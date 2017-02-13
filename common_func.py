@@ -294,6 +294,7 @@ class BasicInfoHDL:
             self._merge_company_list()
             update_market_open_date_list()
             self.get_all_announcements()
+            #self.get_announcement_all_stock_one_day(get_today()) #FIXME
             self.get_all_stock_suspend_list()
         basic_info_list = load_csv('../stock_data/basic_info.csv')
         self.market_open_days = load_market_open_date_list()
@@ -418,7 +419,7 @@ class BasicInfoHDL:
         print('Fetched all announcements %d %s' % (len(final_data_list), target_day))
         return final_data_list
 
-    def _get_announcement_all_stock_one_day(self, target_day):
+    def get_announcement_all_stock_one_day(self, target_day):
         data = []
         data += self._get_announcement_one_day_one_stock(target_day, 'fulltext',
                                                          'szse')  # market doesn't matter, will fetch all markets
@@ -433,10 +434,14 @@ class BasicInfoHDL:
                 fetched_days = pickle.load(f)
         except FileNotFoundError:
             fetched_days = []
-        for day in self.market_open_days:
+        target_days = self.market_open_days
+        #for day in target_days:
+        #    if day <= '2017-01-01':#FIXME temp workaround
+        #        target_days.remove(day)
+        for day in target_days:
             if day not in fetched_days:
                 try:
-                    self._get_announcement_all_stock_one_day(day)
+                    self.get_announcement_all_stock_one_day(day)
                     with open('../stock_data/announcements/fetched_days.pickle', 'wb') as f:
                         pickle.dump(fetched_days, f, -1)
                     fetched_days.append(day)
@@ -707,6 +712,8 @@ def load_daily_data(stock, autype='qfq'):
                 data_list.append(row)
     data_new_sorted = sorted(data_list, key=itemgetter('date'))
     return data_new_sorted
+
+
 def generate_html(msg):
     html = """\
     <html>

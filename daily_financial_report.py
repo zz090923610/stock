@@ -33,10 +33,12 @@ if __name__ == "__main__":
         if today not in close_days:
             # update data
             subprocess.call("./daily_update.py", shell=True)
+            #BASIC_INFO.get_announcement_all_stock_one_day(today)
             BASIC_INFO.get_all_announcements()
             # calculate intermediate variables
             calc_atpd_for_all_stock()
             calc_atpdr_for_all_stock()
+            calc_ma_for_all_stock(3)
             calc_ma_for_all_stock(10)
             calc_ma_for_all_stock(20)
             calc_ma_for_all_stock(40)
