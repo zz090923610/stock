@@ -5,7 +5,7 @@ from _operator import itemgetter
 
 import matplotlib
 from matplotlib import ticker
-from matplotlib.finance import *
+from mpl_finance import *
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -84,7 +84,7 @@ def k_plot(stock, days, scale=True):
     df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
     df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
     # plt.ion()
-    fig = plt.figure(figsize=(12, 9), dpi=100)
+    fig = plt.figure(figsize=(16, 9), dpi=100)
 
     N = len(df.date)
     ind = np.arange(N)
@@ -105,13 +105,13 @@ def k_plot(stock, days, scale=True):
     ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
     legend_list = []
     line_width = 1.5
-    p_adl, = ax4.plot(ind, df_adl.adl, '-', label=u'累积/派发线')
-    plt.setp(p_adl, linewidth=line_width)
-    leg4 = ax4.legend(handles=[p_adl], )
+    p_adl, = ax4.plot(ind, df_adl.adl, '-', label=u'累积/派发线(ADL)')
+    plt.setp(p_adl, linewidth=2)
+    leg4 = ax4.legend(handles=[p_adl], framealpha=0.3)
 
-    p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线')
-    plt.setp(p_vhf, linewidth=line_width)
-    leg5 = ax5.legend(handles=[p_vhf], )
+    p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线(VHF)')
+    plt.setp(p_vhf, linewidth=2)
+    leg5 = ax5.legend(handles=[p_vhf], framealpha=0.3)
 
 
     p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
@@ -147,7 +147,7 @@ def k_plot(stock, days, scale=True):
     if scale:
         fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
         cvt2gif(stock)
-        plt.close()
+    plt.close()
 
 
 def cvt2gif(stock):

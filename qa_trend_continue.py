@@ -159,7 +159,7 @@ def download_plots(stock_list):
     subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
     for stock in stock_list:
         s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-        k_plot(stock, 60)
+        k_plot(stock, 120,scale=False)
         full_name_list.append('%s.png' % s_full_name)
 
     #for stock in stock_list:
@@ -185,7 +185,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
     for l in u:
         if l['continue_days'] >= continue_days:
             s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
-            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.png"><br>\n' % (
+            msg += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
                 BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
@@ -202,7 +202,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
     for l in d:
         if l['continue_days'] >= continue_days:
             s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
-            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="cid:%s.png"><br>\n' % (
+            msg += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (
                 l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
                 BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
             a = ma_align(l['code'], 10, 20, 40)
@@ -215,9 +215,12 @@ def generate_trend_report(trade_days, continue_days, end_day):
                 msg += '<br>\n'
             stock_list_of_plot_to_download.append(l['code'])
     html = generate_html(msg)
+    email_html = generate_html('http://115.28.142.56/plots/%s.html' % end_day)
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
-        myfile.write(bytes(html, encoding='utf-8'))
+        myfile.write(bytes(email_html, encoding='utf-8'))
     download_plots(stock_list_of_plot_to_download)
+    with open('../stock_data/plots/%s.html' % end_day, 'wb') as myfile:
+        myfile.write(bytes(html, encoding='utf-8'))
 
 
 if __name__ == '__main__':
