@@ -1,20 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import csv
-from _operator import itemgetter
-
-import matplotlib
-from matplotlib import ticker
-from mpl_finance import *
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-from common_func import BASIC_INFO
-from variables import *
 import pickle
 
+import matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
 from PIL import Image
+from matplotlib import ticker
+from mpl_finance import *
 
+from common_func import BASIC_INFO
+from variables import *
 
 
 def load_stock(stock, days):
@@ -90,7 +87,9 @@ def k_plot(stock, days, scale=False):
     ind = np.arange(N)
     date_list = df['date'].tolist()
 
+    # noinspection PyUnusedLocal
     def format_date(x, pos=None):
+        # noinspection PyTypeChecker
         thisind = np.clip(int(x + 0.5), 0, N - 1)
         return date_list[thisind]
 
@@ -107,12 +106,13 @@ def k_plot(stock, days, scale=False):
     line_width = 1.5
     p_adl, = ax4.plot(ind, df_adl.adl, '-', label=u'累积/派发线(ADL)')
     plt.setp(p_adl, linewidth=2)
+    # noinspection PyUnusedLocal
     leg4 = ax4.legend(handles=[p_adl], framealpha=0.3)
 
     p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线(VHF)')
     plt.setp(p_vhf, linewidth=2)
+    # noinspection PyUnusedLocal
     leg5 = ax5.legend(handles=[p_vhf], framealpha=0.3)
-
 
     p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
     plt.setp(p_ma3, linewidth=line_width)

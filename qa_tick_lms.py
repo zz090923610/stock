@@ -1,18 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from math import log
-from multiprocessing.pool import Pool
-from operator import itemgetter
-
-import matplotlib
-import pandas as pd
-import sys
 
 from common_func import *
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.finance as plfin
-import matplotlib.ticker as ticker
 
 
 def calc_tick_related_for_stock_one_day(stock, day, normalize=False, scaler=1):
@@ -155,19 +144,11 @@ def update_lms_trade_for_stock_for_day(stock, day):
 
 
 def calc_lms_for_all_stock():
-    p = Pool(8)
-    rs = p.imap_unordered(calc_lms_for_stock, BASIC_INFO.symbol_list)
-    p.close()  # No more work
-    list_len = len(BASIC_INFO.symbol_list)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('%d/%d\r' % (completed, list_len))
-        sys.stdout.flush()
-        time.sleep(2)
-    sys.stdout.write('%d/%d\r' % (completed, list_len))
-    sys.stdout.flush()
+    pool = mp.Pool()
+    for stock in BASIC_INFO.symbol_list:
+        pool.apply_async(calc_lms_for_stock, args=(stock,))
+    pool.close()
+    pool.join()
 
 
 if __name__ == '__main__':

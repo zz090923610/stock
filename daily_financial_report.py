@@ -2,13 +2,12 @@
 import signal
 
 from common_func import *
-from datetime import datetime, timedelta
+from k_plot import k_plot
 from qa_ma import calc_ma_for_all_stock
 from qa_trend_continue import calc_atpdr_for_all_stock, calc_atpd_for_all_stock
-from k_plot import k_plot
 
 
-def signal_handler(signal, frame):
+def signal_handler():
     print('Ctrl+C detected, exiting')
     subprocess.call("killall qa_trend_continue.py 2>/dev/null", shell=True)
     exit(0)

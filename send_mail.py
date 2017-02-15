@@ -3,18 +3,14 @@ from __future__ import print_function
 
 import argparse
 import base64
-import mimetypes
+import os
 import pickle
-from email.mime.audio import MIMEAudio
-from email.mime.base import MIMEBase
+import sys
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import httplib2
-import os
-
-import sys
 from apiclient import discovery
 from googleapiclient import errors
 from oauth2client import client
@@ -28,6 +24,7 @@ CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Gmail API Python Quickstart'
 
 
+# noinspection PyShadowingNames
 def get_credentials():
     """Gets valid user credentials from storage.
 
@@ -52,6 +49,7 @@ def get_credentials():
         if flags:
             credentials = tools.run_flow(flow, store, flags)
         else:  # Needed only for compatibility with Python 2.6
+            # noinspection PyUnresolvedReferences
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
@@ -85,19 +83,6 @@ def load_plot_list():
 
 def create_message_with_attachment(
         sender, to, subject, message_text):
-    """Create a message for an email.
-
-  Args:
-    sender: Email address of the sender.
-    to: Email address of the receiver.
-    subject: The subject of the email message.
-    message_text: The text of the email message.
-    file: The path to the file to be attached.
-
-  Returns:
-    An object containing a base64url encoded email object.
-  """
-
     message = MIMEMultipart()
     message['to'] = to
     message['from'] = sender
@@ -118,11 +103,11 @@ def create_message_with_attachment(
     return {'raw': base64.urlsafe_b64encode(message.as_string())}
 
 
-def send_message(service, user_id, message):
+def send_message(gmail_service, user_id, message):
     """Send an email message.
 
   Args:
-    service: Authorized Gmail API service instance.
+    gmail_service: Authorized Gmail API service instance.
     user_id: User's email address. The special value "me"
     can be used to indicate the authenticated user.
     message: Message to be sent.
@@ -131,7 +116,7 @@ def send_message(service, user_id, message):
     Sent Message.
   """
     try:
-        message = (service.users().messages().send(userId=user_id, body=message)
+        message = (gmail_service.users().messages().send(userId=user_id, body=message)
                    .execute())
         print('Message Id: %s' % message['id'])
         return message
@@ -182,7 +167,7 @@ if __name__ == '__main__':
             for label in labels:
                 print(label['name'])
         if try_send:
-            if not without_attachment :
+            if not without_attachment:
                 msg = create_message_with_attachment('me', recipient, title, data)
             else:
                 msg = create_message('me', recipient, title, data)

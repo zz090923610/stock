@@ -9,6 +9,7 @@ import json
 import tushare as ts
 import pickle
 from datetime import datetime, date
+# noinspection PyUnresolvedReferences
 import multiprocessing as mp
 from bs4 import BeautifulSoup
 
@@ -107,6 +108,7 @@ def check_weekday(date_str):
         return True
     else:
         return False
+
 
 def return_weekday(date_str):
     (y, m, d) = int(date_str.split('-')[0]), int(date_str.split('-')[1]), int(date_str.split('-')[2])
@@ -517,6 +519,7 @@ def update_market_open_date_list():
     return days_list
 
 
+# noinspection PyUnusedLocal
 def get_au_scaler_list_of_stock(stock):
     # FIXME fix using yahoo
     # qfq = load_daily_data(stock)

@@ -1,20 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from math import log
-from multiprocessing.pool import Pool
-from operator import itemgetter
 
-import matplotlib
-import pandas as pd
-import sys
 
 from common_func import *
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.finance as plfin
-import matplotlib.ticker as ticker
-import multiprocessing as mp
 
+import multiprocessing as mp
 
 
 def calculate_udr_for_day(day):
@@ -40,6 +30,7 @@ def calculate_udr_for_day(day):
 
 def load_udr():
     data_list = []
+    # noinspection PyBroadException
     try:
         with open('../stock_data/qa/udr.csv') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -71,7 +62,7 @@ def update_udr():
     pool.close()
     pool.join()
     udr_sorted = sorted(udr, key=itemgetter('date'))
-    b = pd.DataFrame(udr)
+    b = pd.DataFrame(udr_sorted)
     column_order = ['date', 'advancing_volume', 'declining_volume', 'udr']
     b[column_order].to_csv('../stock_data/qa/udr.csv', index=False)
 

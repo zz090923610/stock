@@ -1,8 +1,7 @@
 #!/usr/bin/python3
-from time import sleep
 import sys
-from multiprocessing import Pool
 from io import StringIO
+from multiprocessing import Pool
 
 from common_func import *
 
@@ -109,19 +108,11 @@ def get_update_for_one_stock(stock):
 
 
 def get_update_for_all_stock():
-    p = Pool(64)
-    rs = p.imap_unordered(get_update_for_one_stock, BASIC_INFO.symbol_list)
-    p.close()  # No more work
-    list_len = len(BASIC_INFO.symbol_list)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
-        sys.stdout.flush()
-        sleep(2)
-    sys.stdout.write('Getting 1.000\n')
-    sys.stdout.flush()
+    pool = mp.Pool()
+    for stock in BASIC_INFO.symbol_list:
+        pool.apply_async(get_update_for_one_stock, args=(stock,))
+    pool.close()
+    pool.join()
 
 
 if __name__ == "__main__":

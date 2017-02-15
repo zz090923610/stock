@@ -1,17 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from math import log
-from multiprocessing.pool import Pool
-from operator import itemgetter
-import pandas as pd
-import sys
-
-import subprocess
 
 from common_func import *
-import numpy as np
-
-
 
 
 def load_adl_data(stock):
@@ -27,7 +17,6 @@ def load_adl_data(stock):
             data_list.append(row)
     data_new_sorted = sorted(data_list, key=itemgetter('date'))
     return data_new_sorted
-
 
 
 def calculate_adl_for_stock(stock):
@@ -49,6 +38,7 @@ def calculate_adl_for_stock(stock):
                     break
                 except ZeroDivisionError:
                     idx -= 1
+        # noinspection PyUnboundLocalVariable
         item = round(item)
         if idx == 0:
             line['adl'] = item

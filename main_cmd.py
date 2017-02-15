@@ -1,14 +1,14 @@
 #!/usr/bin/python3
-import subprocess
+import os.path
+import readline
 from cmd import Cmd
+
 from common_func import *
 from get_tick_data import align_tick_data_stock
 from qa_buy_point import get_buy_point_for_stock
 from qa_ma import calc_ma_for_stock
 from qa_trend_continue import calc_average_trade_price_for_stock
 from variables import *
-import os.path
-import readline
 
 
 def _cvt_args_to_list(args):
@@ -38,6 +38,7 @@ def do_pause_date(args):
 
 class MyPrompt(Cmd):
     def __init__(self, promp):
+        # noinspection PyCompatibility
         super().__init__()
         self.prompt = promp
 
@@ -81,7 +82,9 @@ class MyPrompt(Cmd):
         self.prompt = '%s >>> ' % get_time_of_a_day()
         return Cmd.postcmd(self, stop, line)
 
-    def do_quit(self, args):
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def do_quit(args):
         """Quits the program."""
         print("Quitting.")
         if readline:
@@ -89,7 +92,9 @@ class MyPrompt(Cmd):
             readline.write_history_file(hist_file)
         raise SystemExit
 
-    def do_q(self, args):
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def do_q(args):
         """Quits the program."""
         print("Quitting.")
         if readline:
@@ -97,7 +102,9 @@ class MyPrompt(Cmd):
             readline.write_history_file(hist_file)
         raise SystemExit
 
-    def do_exit(self, args):
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def do_exit(args):
         """Quits the program."""
         print("Quitting.")
         if readline:
@@ -105,7 +112,8 @@ class MyPrompt(Cmd):
             readline.write_history_file(hist_file)
         raise SystemExit
 
-    def do_data_print_market_close_days(self, args):
+    @staticmethod
+    def do_data_print_market_close_days(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             today_year = get_today().split('-')[0]
@@ -115,7 +123,8 @@ class MyPrompt(Cmd):
         for d in close_days:
             print(d)
 
-    def do_data_remove_pause_date(self, args):
+    @staticmethod
+    def do_data_remove_pause_date(args):
         args = _cvt_args_to_list(args)
         print(args)
         for s in BASIC_INFO.symbol_list:
@@ -128,7 +137,8 @@ class MyPrompt(Cmd):
                         pass
             save_trade_pause_date_date_list_for_stock(s, days)
 
-    def do_data_update_daily_data(self, args):
+    @staticmethod
+    def do_data_update_daily_data(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             pass
@@ -137,7 +147,8 @@ class MyPrompt(Cmd):
                 from get_daily_data import get_update_for_one_stock
                 get_update_for_one_stock(s)
 
-    def do_qa_calc_average_trade_price(self, args):
+    @staticmethod
+    def do_qa_calc_average_trade_price(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             pass
@@ -145,7 +156,8 @@ class MyPrompt(Cmd):
             for s in args:
                 calc_average_trade_price_for_stock(s)
 
-    def do_data_check_missing_tick(self, args):
+    @staticmethod
+    def do_data_check_missing_tick(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             pass
@@ -157,7 +169,8 @@ class MyPrompt(Cmd):
                     if i not in date_list_tick:
                         print(i)
 
-    def do_data_align_tick(self, args):
+    @staticmethod
+    def do_data_align_tick(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             pass
@@ -165,7 +178,8 @@ class MyPrompt(Cmd):
             for s in args:
                 align_tick_data_stock(s)
 
-    def do_qa_buy_point_of_stock(self, args):
+    @staticmethod
+    def do_qa_buy_point_of_stock(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             return
@@ -175,26 +189,27 @@ class MyPrompt(Cmd):
             future_days = int(args[2])
             scale = float(args[3])
         except Exception as e:
-            print("Error : %s" %e)
+            print("Error : %s" % e)
             print("用法: qa_buy_point_of_stock 股票代码 买点前统计天数 买点后观察天数 涨幅 [是否合并相邻天]")
             print("示例: qa_buy_point_of_stock 002263 6 30 1.3 retract")
             print("示例: qa_buy_point_of_stock 002263 6 30 1.3")
             return
+        # noinspection PyBroadException
         try:
-            retract= args[4]
             retract = True
         except:
             retract = False
         buy_point_list = get_buy_point_for_stock(stock, pre_days, future_days, scale, retract=retract)
         print(buy_point_list)
 
-    def do_qa_ma(self, args):
+    @staticmethod
+    def do_qa_ma(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             return
-        stock =None
-        days=None
-        type='atpd'
+        stock = None
+        days = None
+        ma_type = 'atpd'
         try:
             for loop in range(len(args)):
                 if args[loop] == '-s':
@@ -202,53 +217,21 @@ class MyPrompt(Cmd):
                 elif args[loop] == '-d':
                     days = int(args[loop + 1])
                 elif args[loop] == '-t':
-                    type = args[loop + 1]
+                    ma_type = args[loop + 1]
 
-            calc_ma_for_stock(stock, days, type)
+            calc_ma_for_stock(stock, days, ma_type)
         except Exception as e:
             print("Error : %s" % e)
             print('用法: qa_ma 股票代码 天数 [数据类型(close, atpd)]')
             print("示例: qa_ma 5 atpd")
 
-    def do_qa_moving_average(self, args):
+    @staticmethod
+    def do_qa_moving_average(args):
         from qa_ma import ma_align
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             return
         stock = None
-        day = None
-        short= None
-        mid=None
-        long=None
-        calc_type = 'atpd'
-        try:
-            for loop in range(len(args)):
-                if args[loop] == '-s':
-                    stock = args[loop + 1]
-                elif args[loop] == '-d':
-                    day = args[loop + 1]
-                elif args[loop] == '--map':
-                    short = int(args[loop + 1])
-                    mid = int(args[loop + 2])
-                    long = int(args[loop + 3])
-                elif args[loop] == '-t':
-                    calc_type = args[loop + 1]
-            a=ma_align(stock, short, mid, long, calc_type=calc_type)
-            r,out=a.analysis_align_for_day(day)
-            if len(out) > 0:
-                print(out)
-            else:
-                print(r)
-        except Exception as e:
-            print("Error : %s" % e)
-            print('用法: qa_moving_average -s 股票代码 --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
-            print("示例: qa_moving_average -s 002263 --map 10 20 40 -d 2017-01-20 -t atpd")
-
-    def do_qa_ma_all_stock(self, args):
-        from qa_ma import ma_align
-        args = _cvt_args_to_list(args)
-        if len(args) == 0:
-            return
         day = None
         short = None
         mid = None
@@ -266,7 +249,41 @@ class MyPrompt(Cmd):
                     long = int(args[loop + 3])
                 elif args[loop] == '-t':
                     calc_type = args[loop + 1]
+            a = ma_align(stock, short, mid, long, calc_type=calc_type)
+            r, out = a.analysis_align_for_day(day)
+            if len(out) > 0:
+                print(out)
+            else:
+                print(r)
+        except Exception as e:
+            print("Error : %s" % e)
+            print('用法: qa_moving_average -s 股票代码 --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
+            print("示例: qa_moving_average -s 002263 --map 10 20 40 -d 2017-01-20 -t atpd")
+
+    # noinspection PyBroadException
+    @staticmethod
+    def do_qa_ma_all_stock(args):
+        from qa_ma import ma_align
+        args = _cvt_args_to_list(args)
+        if len(args) == 0:
+            return
+        day = None
+        short = None
+        mid = None
+        long = None
+        calc_type = 'atpd'
+        try:
+            for loop in range(len(args)):
+                if args[loop] == '-d':
+                    day = args[loop + 1]
+                elif args[loop] == '--map':
+                    short = int(args[loop + 1])
+                    mid = int(args[loop + 2])
+                    long = int(args[loop + 3])
+                elif args[loop] == '-t':
+                    calc_type = args[loop + 1]
             for stock in BASIC_INFO.symbol_list:
+                # noinspection PyUnusedLocal
                 try:
                     a = ma_align(stock, short, mid, long, calc_type=calc_type)
                     r, out = a.analysis_align_for_day(day)
@@ -279,15 +296,14 @@ class MyPrompt(Cmd):
             print('用法: qa_moving_average --map 短天数 中天数 长天数 -d 某交易日 [-t 数据类型(close, atpd)]')
             print("示例: qa_moving_average --map 10 20 40 -d 2017-01-20 -t atpd")
 
-    def do_load_ma(self, args):
+    @staticmethod
+    def do_load_ma(args):
         args = _cvt_args_to_list(args)
         if len(args) == 0:
             return
         stock = args[0]
         params = args[1]
         print(load_ma_for_stock(stock, params))
-
-
 
 
 if __name__ == '__main__':

@@ -8,12 +8,12 @@ from termcolor import colored
 import sys
 
 import signal
-from  common_func import get_time
+from common_func import get_time
 
 import tushare as ts
 
 
-def signal_handler(signal, frame):
+def signal_handler():
     print('Ctrl+C detected, exiting')
     exit(0)
 
@@ -21,20 +21,18 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-
-
-
 def bell():
     subprocess.call(["bell.sh", "2>>/dev/null"])
 
 
-def run_monitor(trade_list):
+def run_monitor(the_trade_list):
     while True:
-        show_gain(trade_list, cls=True)
-        check_gain(trade_list)
+        show_gain(the_trade_list, cls=True)
+        check_gain(the_trade_list)
         sleep(1)
 
 
+# noinspection PyShadowingNames
 def check_belonging_market(code):
     file = 'shanghai_list.txt'
     with open(file, 'rb') as f:
@@ -50,6 +48,7 @@ def check_belonging_market(code):
         return 'N'
 
 
+# noinspection PyShadowingNames
 def check_gain(trade_list):
     for trade in trade_list:
         if trade.expect * trade.cost <= (trade.cost + trade.gain):
@@ -58,6 +57,7 @@ def check_gain(trade_list):
 
 
 class Trade(object):
+    # noinspection PyShadowingNames
     def __init__(self, code, cost, quantity, expect=1.05, buy_in_time=''):
         self.code = code
         self.name = ''
@@ -73,6 +73,7 @@ class NetGain(object):
         self.val = 0
 
     def load_net_gain(self, file='netgain.pickle'):
+        # noinspection PyBroadException
         try:
             with open(file, 'rb') as f:
                 self.val = pickle.load(f)
@@ -84,6 +85,7 @@ class NetGain(object):
             pickle.dump(self.val, f, -1)
 
 
+# noinspection PyShadowingNames
 def save_trade(trade_list):
     file = 'trades.pickle'
     with open(file, 'wb') as f:
@@ -92,10 +94,12 @@ def save_trade(trade_list):
 
 def load_trade(file='trades.pickle'):
     with open(file, 'rb') as f:
+        # noinspection PyShadowingNames
         trade_list = pickle.load(f)
     return trade_list
 
 
+# noinspection PyShadowingNames
 def create_trade(code, cost, quantity, expect):
     new_trade = Trade(code, cost, quantity, expect)
     data = ts.get_realtime_quotes([new_trade.code])
@@ -104,12 +108,14 @@ def create_trade(code, cost, quantity, expect):
     return new_trade
 
 
+# noinspection PyShadowingNames
 def print_trade(trade):
     print('Code: %s, Name: %s, Cost:%.2f, Quantity: %d, Expect: %.2f,Expect Gain: %.2f' % (
         trade.code, trade.name, trade.cost, trade.quantity, trade.expect,
         (trade.expect - 1) * trade.cost * trade.quantity))
 
 
+# noinspection PyShadowingNames
 def calculate_sell_fee(code, quantity, price):
     market = check_belonging_market(code)
     gain_before_fee = quantity * price
@@ -122,6 +128,7 @@ def calculate_sell_fee(code, quantity, price):
     return brokerage + guo_hu_fee + tax
 
 
+# noinspection PyShadowingNames
 def calculate_current_sell_fee(code):
     for trade in trade_list:
         if trade.code == code:
@@ -129,6 +136,7 @@ def calculate_current_sell_fee(code):
     return 0
 
 
+# noinspection PyShadowingNames
 def print_gain_of_trade(trade):
     color = 'green'
     if trade.gain > 0:
@@ -138,19 +146,22 @@ def print_gain_of_trade(trade):
     market = check_belonging_market(trade.code)
     sell_fee = calculate_sell_fee(trade.code, trade.quantity, trade.cost + trade.gain)
     if trade.cost + trade.gain == 0:
-        print(colored('[ %s %s ] %s\t成本/现价:%.2f/停牌 量: %04d\t浮动/清仓: 停牌/停牌' % (trade.code, market, trade.name, trade.cost,  trade.quantity), color))
+        print(colored('[ %s %s ] %s\t成本/现价:%.2f/停牌 量: %04d\t浮动/清仓: 停牌/停牌' % (
+            trade.code, market, trade.name, trade.cost, trade.quantity), color))
     else:
         print(colored('[ %s %s ] %s\t成本/现价:%.2f/%.2f 量: %04d\t浮动/清仓: %.2f/%.02f' % (
-        trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity,
-        trade.gain * trade.quantity,
-        trade.gain * trade.quantity - sell_fee), color))
+            trade.code, market, trade.name, trade.cost, trade.cost + trade.gain, trade.quantity,
+            trade.gain * trade.quantity,
+            trade.gain * trade.quantity - sell_fee), color))
 
 
+# noinspection PyShadowingNames
 def update_current_price(trade_list):
     code_list = []
     for loop in trade_list:
         code_list.append(loop.code)
     code_list = [l for l in set(code_list)]
+    # noinspection PyBroadException
     try:
         data = ts.get_realtime_quotes(code_list)
         for trade in trade_list:
@@ -160,6 +171,7 @@ def update_current_price(trade_list):
         print('Connection lost')
 
 
+# noinspection PyShadowingNames
 def show_gain(trade_list, cls=False):
     update_current_price(trade_list)
     netgain = NetGain()
@@ -179,6 +191,7 @@ def show_gain(trade_list, cls=False):
             print_gain_of_trade(trade)
 
 
+# noinspection PyShadowingNames
 def calculate_float_gain(trade_list):
     total_float_gain = 0
     for trade in trade_list:
@@ -188,6 +201,7 @@ def calculate_float_gain(trade_list):
     return total_float_gain
 
 
+# noinspection PyShadowingNames
 def calculate_clear_all_gain(trade_list):
     total_clear_gain = 0
     for trade in trade_list:
@@ -198,6 +212,7 @@ def calculate_clear_all_gain(trade_list):
     return total_clear_gain
 
 
+# noinspection PyShadowingNames,PyBroadException
 def sell(trade_list, code, price, quantity):
     price = float(price)
     quantity = int(quantity)
@@ -227,15 +242,18 @@ def modify_net_gain(new_val):
     net_gain.save_net_gain()
 
 
+# noinspection PyShadowingNames
 def reset_expectation(trade_list, expect):
     for trade in trade_list:
         trade.expect = expect
 
 
+# noinspection PyShadowingNames
 def remove(code):
     tl = load_trade()
     for trade in tl:
         if trade.code == code:
+            # noinspection PyBroadException
             try:
                 print()
                 tl.remove(trade)
@@ -245,6 +263,7 @@ def remove(code):
 
 
 if __name__ == "__main__":
+    # noinspection PyBroadException
     try:
         trade_list = load_trade()
     except:
@@ -299,6 +318,7 @@ if __name__ == "__main__":
         # print(add_trade, sale_trade, price, code, cost, quantity, expect)
 
         if add_trade:
+            # noinspection PyBroadException
             try:
                 trade_list = load_trade()
             except:
@@ -308,6 +328,7 @@ if __name__ == "__main__":
             trade_list.append(new_trade)
             save_trade(trade_list)
         if sale_trade:
+            # noinspection PyBroadException
             try:
                 trade_list = load_trade()
             except:

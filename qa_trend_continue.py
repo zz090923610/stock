@@ -1,20 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import subprocess
-from math import log
-from multiprocessing.pool import Pool
-from operator import itemgetter
-import pandas as pd
 import sys
 
 from common_func import *
-import numpy as np
-import multiprocessing as mp
-
 from data_announance_parsing import get_parsed_announcement_for_stock
-from k_plot import k_plot
 from qa_ma import ma_align
-from PIL import Image
+
 
 def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
     print('calc ATPD for %s %s %.03f' % (stock, day, scaler))
@@ -86,6 +77,7 @@ def load_atpdr_data(stock):
     :return:
     """
     data_list = []
+    # noinspection PyBroadException
     try:
         with open('../stock_data/qa/atpdr/%s.csv' % stock) as csvfile:
             reader = csv.DictReader(csvfile)
@@ -105,6 +97,7 @@ def recent_trend_stat(stock, trade_days, last_day):
         select_list = atpdr_list
     else:
         select_list = atpdr_list[len(atpdr_list) - trade_days: len(atpdr_list)]
+    # noinspection PyShadowingNames
     td = 0
     if len(atpdr_list) < trade_days:
         return 'up', 0, '1970-01-01'

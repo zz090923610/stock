@@ -2,21 +2,17 @@
 import pickle
 import re
 import subprocess
-
 import sys
-import time
+
 import requests
 from bs4 import BeautifulSoup
 
-from common_func import get_today, get_time_of_a_day, generate_html
+from common_func import get_today, generate_html
 
 
 def write_text_file(file, content):
     with open(file, 'wb') as f:
         f.write(content.encode('utf8'))
-
-
-
 
 
 class NEWS_SRC:

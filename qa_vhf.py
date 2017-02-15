@@ -1,21 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-from math import log
-from multiprocessing.pool import Pool
-from operator import itemgetter
-
-import matplotlib
-import pandas as pd
-import sys
 
 from common_func import *
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.finance as plfin
-import matplotlib.ticker as ticker
-import multiprocessing as mp
-
-
 
 
 def calculate_vhf(stock, n):
@@ -29,6 +15,7 @@ def calculate_vhf(stock, n):
             lcp = min(close_price_list[idx - n + 1: idx + 1])
             numerator = abs(hcp - lcp)
             denominator = 0
+            # noinspection PyShadowingNames
             for i in range(0, n):
                 denominator += abs(close_price_list[idx - i] - close_price_list[idx - i - 1])
             vhf = numerator / denominator
@@ -40,7 +27,9 @@ def calculate_vhf(stock, n):
 
 
 def calc_vhf_for_all_stock(n):
+    # noinspection PyShadowingNames
     pool = mp.Pool()
+    # noinspection PyShadowingNames
     for i in BASIC_INFO.symbol_list:
         pool.apply_async(calculate_vhf, args=(i, n))
     pool.close()
@@ -53,7 +42,7 @@ def load_vhf_data(stock):
         reader = csv.DictReader(csvfile)
         for row in reader:
             row['close'] = float(row['close'])
-            if row['vhf']  == '-' :
+            if row['vhf'] == '-':
                 continue
             row['vhf'] = float(row['vhf'])
             data_list.append(row)

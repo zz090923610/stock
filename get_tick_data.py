@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-import os
 import sys
-from math import floor
-from multiprocessing.pool import Pool
+# noinspection PyCompatibility
 from pathlib import Path
+
+from datetime import timedelta
+
 from common_func import *
 from qa_tick_lms import calculate_lms_for_stock_one_day, load_tick_data
-import pandas as pd
 
 
-def load_fail_to_repair_list(stock):
+# noinspection PyShadowingNames
+def load_fail_to_repair_list(stock: str):
+    """
+
+    :type stock: str
+    """
     try:
         with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'rb') as f:
             return pickle.load(f)
-    except:
+    except FileNotFoundError:
         return []
 
 
+# noinspection PyShadowingNames
 def load_something_for_stock_one_day(stock, day, something):
     volume = 0
     with open('../stock_data/data/%s.csv' % stock) as csvfile:
@@ -36,6 +42,7 @@ def download_stock(s_code):
         if current_file_date is not None:
             start = current_file_date
         date_list = get_date_list(start, get_today(), timedelta(days=1))
+        # noinspection PyBroadException
         try:
             for a_day in date_list:
                 _download_one_stock_one_day("%s+%s" % (s_code, a_day))
@@ -69,6 +76,7 @@ def generate_work_list(s_code, date_list):
     return result
 
 
+# noinspection PyBroadException
 def _download_one_stock_one_day(scode_a_day):
     (scode, a_day) = scode_a_day.split('+')[0], scode_a_day.split('+')[1]
     if Path('../stock_data/tick_data/%s/%s_%s.csv' % (scode, scode, a_day)).is_file():
@@ -96,10 +104,11 @@ def get_last_date(s_code):
     for f in file_list:
         day = f.split('_')[1].split('.')[0]
         (y, m, d) = int(day.split('-')[0]), int(day.split('-')[1]), int(day.split('-')[2])
-        date_list.append(datetime.datetime(y, m, d))
+        date_list.append(datetime(y, m, d))
     return max(date_list).strftime("%Y-%m-%d")
 
 
+# noinspection PyShadowingNames
 def align_tick_data_stock(stock):
     daily_date_list = load_stock_date_list_from_daily_data(stock)
     tick_date_list = load_stock_date_list_from_tick_files(stock)
@@ -113,7 +122,8 @@ def align_tick_data_stock(stock):
                 print('Still missing tick data for %s %s' % (stock, day))
                 (buy_large, sell_large, buy_mid, sell_mid, buy_small, sell_small,
                  undirected_trade) = calculate_lms_for_stock_one_day(stock, daily_date_list[idx - 1])
-                yesterday_volume = buy_large + sell_large + buy_mid + sell_mid + buy_small + sell_small + undirected_trade
+                yesterday_volume = buy_large + sell_large + buy_mid + sell_mid + buy_small + sell_small + \
+                    undirected_trade
                 today_volume = load_something_for_stock_one_day(stock, day, 'volume')
                 today_price = load_something_for_stock_one_day(stock, day, 'close')
                 yesterday_tick = load_tick_data(stock, daily_date_list[idx - 1])
@@ -132,39 +142,24 @@ def align_tick_data_stock(stock):
 if __name__ == "__main__":
     all_work_list = []
     if sys.argv[1] == '--day':
-        day = sys.argv[2]
+        target_day = sys.argv[2]
         for stock in BASIC_INFO.symbol_list:
-            date_list = [day]
-            all_work_list += generate_work_list(stock, date_list)
+            day_list = [target_day]
+            all_work_list += generate_work_list(stock, day_list)
     elif sys.argv[1] == '--align':
-        p = Pool(POOL_SIZE)
-        rs = p.imap_unordered(align_tick_data_stock, BASIC_INFO.symbol_list)
-        p.close()  # No more work
-        list_len = len(BASIC_INFO.symbol_list)
-        while True:
-            completed = rs._index
-            if completed == list_len:
-                break
-            sys.stdout.write('%d/%d\r' % (completed, list_len))
-            sys.stdout.flush()
-            time.sleep(2)
-        sys.stdout.write('%d/%d\r' % (completed, list_len))
-        sys.stdout.flush()
+        pool = mp.Pool()
+        for stock in BASIC_INFO.symbol_list:
+            pool.apply_async(align_tick_data_stock, args=(stock,))
+        pool.close()
+        pool.join()
         exit()
     else:
         for stock in BASIC_INFO.symbol_list:
-            date_list = generate_day_list_for_stock(stock)
-            all_work_list += generate_work_list(stock, date_list)
-    p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(_download_one_stock_one_day, all_work_list)
-    p.close()  # No more work
-    list_len = len(all_work_list)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('%d/%d\r' % (completed, list_len))
-        sys.stdout.flush()
-        time.sleep(2)
-    sys.stdout.write('%d/%d\r' % (completed, list_len))
-    sys.stdout.flush()
+            day_list = generate_day_list_for_stock(stock)
+            all_work_list += generate_work_list(stock, day_list)
+
+    pool = mp.Pool()
+    for stock in all_work_list:
+        pool.apply_async(_download_one_stock_one_day, args=(stock,))
+    pool.close()
+    pool.join()

@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 
-import os
-import re
 import sys
 from multiprocessing import Pool
-from time import sleep
 
-import requests
 from common_func import *
 from get_tick_data import download_stock
 
 
-
-
-
+# noinspection PyShadowingNames
 def download_one_stock_one_day_from_qq(stock, a_day):
     print("Get %s %s" % (stock, a_day))
     s = requests.session()
@@ -61,6 +55,7 @@ def qq_csv_format_correction(csv_file):
         writer.writerows(a)
 
 
+# noinspection PyShadowingNames
 def tick_data_content_check_one_stock_one_day(stock, day):
     data_list = []
     with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
@@ -76,7 +71,9 @@ def tick_data_content_check_one_stock_one_day(stock, day):
         save_fail_to_repair_list(stock, failed_list)
 
 
+# noinspection PyShadowingNames
 def load_fail_to_repair_list(stock):
+    # noinspection PyBroadException
     try:
         with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'rb') as f:
             return pickle.load(f)
@@ -84,11 +81,13 @@ def load_fail_to_repair_list(stock):
         return []
 
 
+# noinspection PyShadowingNames
 def save_fail_to_repair_list(stock, f_list):
     with open('../stock_data/failed_downloaded_tick/%s.pickle' % stock, 'wb') as f:
         pickle.dump(f_list, f, -1)
 
 
+# noinspection PyShadowingNames
 def check_one_stock_integrity(stock):
     failed_list = load_fail_to_repair_list(stock)
     daily_date_list = load_stock_date_list_from_daily_data(stock)
@@ -103,7 +102,9 @@ def check_one_stock_integrity(stock):
             download_one_stock_one_day_from_qq(stock, daily_day)
 
 
+# noinspection PyShadowingNames
 def handle_check_one(stock):
+    # noinspection PyBroadException
     try:
         check_one_stock_integrity(stock)
     except:
@@ -129,16 +130,8 @@ if __name__ == "__main__":
     if sys.argv[1] == '-p':
         print_repaired_list()
     else:
-        p = Pool(8)
-        rs = p.imap_unordered(handle_check_one, BASIC_INFO.symbol_list)
-        p.close()  # No more work
-        list_len = len(BASIC_INFO.symbol_list)
-        while True:
-            completed = rs._index
-            if completed == list_len:
-                break
-            sys.stdout.write('%d/%d\r' % (completed, list_len))
-            sys.stdout.flush()
-            sleep(2)
-        sys.stdout.write('Getting 1.000\n')
-        sys.stdout.flush()
+        pool = mp.Pool()
+        for stock in BASIC_INFO.symbol_list:
+            pool.apply_async(handle_check_one, args=(stock,))
+        pool.close()
+        pool.join()

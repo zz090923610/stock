@@ -1,21 +1,23 @@
 #!/usr/bin/python3
-import subprocess
-import multiprocessing as mp
 
 import sys
+from datetime import timedelta
 
 from common_func import *
 from qa_trend_continue import load_atpd_data
 from variables import *
 
 
+# noinspection PyShadowingNames
 def save_buy_point_list_for_stock(stock, buy_point_list, buy_point_params):
     subprocess.call("mkdir -p %s/qa/buy_point/%s" % (stock_data_root, buy_point_params), shell=True)
     with open("%s/qa/buy_point/%s/%s.pickle" % (stock_data_root, buy_point_params, stock), 'wb') as f:
         pickle.dump(buy_point_list, f, -1)
 
 
+# noinspection PyShadowingNames,PyUnusedLocal
 def load_buy_point_list_for_stock(stock, buy_point_list, buy_point_params):
+    # noinspection PyBroadException
     try:
         with open("%s/qa/buy_point/%s/%s.pickle" % (stock_data_root, buy_point_params, stock), 'rb') as f:
             return pickle.load(f)
@@ -23,6 +25,7 @@ def load_buy_point_list_for_stock(stock, buy_point_list, buy_point_params):
         return []
 
 
+# noinspection PyShadowingNames
 def get_buy_point_for_stock(stock, pre_days, future_days, scale, retract=False):
     print("Finding buy point for %s" % stock)
     date_list = load_stock_date_list_from_daily_data(stock)
@@ -51,7 +54,7 @@ def get_buy_point_for_stock(stock, pre_days, future_days, scale, retract=False):
 
 
 def _check_two_days_next_to_each_other(day1, day2):
-    date1 = datetime.datetime(int(day1.split('-')[0]), int(day1.split('-')[1]), int(day1.split('-')[2]), 1, 1, 1)
+    date1 = datetime(int(day1.split('-')[0]), int(day1.split('-')[1]), int(day1.split('-')[2]), 1, 1, 1)
     date2 = date1 + timedelta(days=1)
     if day2 == date2.strftime("%Y-%m-%d"):
         return True
@@ -73,6 +76,7 @@ def retract_buy_point_days(day_list):
     return day_list
 
 
+# noinspection PyShadowingNames
 def get_buy_point_for_all_stock(pre_days, future_days, scale, retract=False):
     pool = mp.Pool()
     for i in BASIC_INFO.symbol_list:

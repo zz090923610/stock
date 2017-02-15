@@ -1,17 +1,13 @@
 #!/usr/bin/python3
 import random
-import subprocess
-
 import sys
 
-from qa_trend_continue import calc_atpd_for_all_stock, calc_atpdr_for_all_stock
-from qa_ma import ma_align
-from qa_tick_lms import calc_lms_for_stock, calc_lms_for_all_stock, load_lms
-from qa_adl import calculate_adl_for_stock, calc_adl_for_all_stock, load_adl_data
-from qa_vhf import calculate_vhf, calc_vhf_for_all_stock, load_vhf_data
-from qa_buy_point import get_buy_point_for_stock
 from common_func import *
-import multiprocessing as mp
+from qa_adl import load_adl_data
+from qa_buy_point import get_buy_point_for_stock
+from qa_ma import ma_align
+from qa_tick_lms import load_lms
+from qa_vhf import load_vhf_data
 
 
 def save_perceptron_data_for_stock(stock, data_list):
@@ -21,6 +17,7 @@ def save_perceptron_data_for_stock(stock, data_list):
 
 
 def load_perceptron_data_for_stock(stock):
+    # noinspection PyBroadException
     try:
         with open('../stock_data/qa/perceptron/%s.pickle' % stock, 'rb') as f:
             return pickle.load(f)
@@ -28,6 +25,7 @@ def load_perceptron_data_for_stock(stock):
         return []
 
 
+# noinspection PyUnusedLocal
 def data_calculation_phase(vhf_n=5):
     pass
     # calc_atpd_for_all_stock(refresh=False)
@@ -88,9 +86,9 @@ def load_preparation_data(train=7, dev=2, test=1):
     randomized_data_list = random.sample(raw_data_list, len(raw_data_list))
     train_data = randomized_data_list[0:int(train / (train + dev + test) * len(randomized_data_list))]
     dev_data = randomized_data_list[int(train / (train + dev + test) * len(randomized_data_list)):
-    int((train + dev) / (train + dev + test) * len(randomized_data_list))]
+        int((train + dev) / (train + dev + test) * len(randomized_data_list))]
     test_data = randomized_data_list[int((train + dev) / (train + dev + test) * len(randomized_data_list)):
-    len(randomized_data_list)]
+        len(randomized_data_list)]
     features = [i for i in randomized_data_list[0].keys() if i not in ['stock', 'date', 'buy_point']]
     return train_data, dev_data, test_data, features
 
@@ -133,7 +131,8 @@ class Perceptron:
         return sum(
             self.weights[i] * float(line[i]) - self.theta[i] for i in self.features)  # sum(w[i] x[i]- theta[i])
 
-    def load_data_for_stock_prediction(self, stock, short, mid, long, day):
+    @staticmethod
+    def load_data_for_stock_prediction(stock, short, mid, long, day):
         print('Load adl for %s' % stock)
         adl = load_adl_data(stock)
         adl_day = None
@@ -151,9 +150,9 @@ class Perceptron:
         for line in lms:
             if line['date'] == day:
                 lms_day = {'buy_large': line['buy_large'], 'sell_large': line['sell_large'],
-                                      'buy_mid': line['buy_mid'], 'sell_mid': line['sell_mid'],
-                                      'buy_small': line['buy_small'], 'sell_small': line['sell_small'],
-                                      'undirected_trade': line['undirected_trade']}
+                           'buy_mid': line['buy_mid'], 'sell_mid': line['sell_mid'],
+                           'buy_small': line['buy_small'], 'sell_small': line['sell_small'],
+                           'undirected_trade': line['undirected_trade']}
         m = ma_align(stock, short, mid, long)
         r, o = m.analysis_align_for_day(day)
         r.update(lms_day)
@@ -181,7 +180,7 @@ class Perceptron:
                 else:
                     false_negative += 1
 
-        print('Evaluation TP %d %d %.5f' % (true_positive, true_cnt, true_positive/float(true_cnt)))
+        print('Evaluation TP %d %d %.5f' % (true_positive, true_cnt, true_positive / float(true_cnt)))
         print('Evaluation FN %d %d %.5f' % (false_negative, false_cnt, false_negative / float(false_cnt)))
 
     def save_weights(self):
@@ -190,6 +189,7 @@ class Perceptron:
             pickle.dump(params, f)
 
     def load_weights(self):
+        # noinspection PyBroadException
         try:
             with open('../stock_data/qa/perceptron_params/params.pickle', 'rb') as f:
                 params = pickle.load(f)

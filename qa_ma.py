@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 # Moving Average System
 
-import subprocess
-import multiprocessing as mp
 import sys
 
 from common_func import *
@@ -56,6 +54,7 @@ class ma_align:
 
     def get_valid_date_list(self):
         vdl = []
+        # noinspection PyShadowingNames
         for line in self.ma_long:
             if line['ma%s' % self.l] is not None:
                 vdl.append(line['date'])
@@ -157,6 +156,7 @@ class ma_align:
         if day not in self.dates:
             return {}, '该日无交易'
         self.align_type = []
+        # noinspection PyShadowingNames
         for line in self.ma_long:
             if line['date'] == day:
                 if line['ma%s' % self.l] is None:
@@ -190,11 +190,13 @@ class ma_align:
 
     def generate_ma_data_for_all_day(self):
         strict_dates = []
+        # noinspection PyShadowingNames
         for line in self.ma_long:
             if line['ma%s' % self.l] is not None:
                 strict_dates.append(line['date'])
         result = []
         for d in strict_dates:
+            # noinspection PyBroadException
             try:
                 r, a = self.analysis_align_for_day(d)
                 result.append(r)
@@ -229,6 +231,7 @@ def calc_ma_for_stock(stock: str, days: int, calc_type: str = 'atpd') -> list:
     if len(data_list) < days:
         return []
     ma_list = []
+    # noinspection PyShadowingNames
     for (idx, line) in enumerate(data_list):
         if idx < days - 1:
             ma_list.append({'date': line['date'], 'ma%d' % days: None})

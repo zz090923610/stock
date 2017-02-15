@@ -1,13 +1,8 @@
 #!/usr/bin/python3
-import os
-import tarfile
 import pylzma
-import re
-from multiprocessing.pool import Pool
-
-import sys
-
 import shutil
+import sys
+import tarfile
 
 from common_func import *
 
@@ -60,19 +55,11 @@ def backup_tick_data_for_stock(stock):
 
 
 def backup_tick_data():
-    p = Pool(8)
-    rs = p.imap_unordered(backup_tick_data_for_stock, BASIC_INFO.symbol_list)
-    p.close()  # No more work
-    list_len = len(BASIC_INFO.symbol_list)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('%d/%d\r' % (completed, list_len))
-        sys.stdout.flush()
-        time.sleep(2)
-    sys.stdout.write('%d/%d\r' % (completed, list_len))
-    sys.stdout.flush()
+    pool = mp.Pool()
+    for stock in BASIC_INFO.symbol_list:
+        pool.apply_async(backup_tick_data_for_stock, args=(stock,))
+    pool.close()
+    pool.join()
 
 
 def _restore_tick_data_for_stock(stock):
@@ -86,19 +73,11 @@ def _restore_tick_data_for_stock(stock):
 
 def restore_tick_data():
     mkdirs(BASIC_INFO.symbol_list)
-    p = Pool(POOL_SIZE)
-    rs = p.imap_unordered(_restore_tick_data_for_stock, BASIC_INFO.symbol_list)
-    p.close()  # No more work
-    list_len = len(BASIC_INFO.symbol_list)
-    while True:
-        completed = rs._index
-        if completed == list_len:
-            break
-        sys.stdout.write('Getting %.3f\n' % (completed / list_len))
-        sys.stdout.flush()
-        time.sleep(2)
-    sys.stdout.write('Getting 1.000\n')
-    sys.stdout.flush()
+    pool = mp.Pool()
+    for stock in BASIC_INFO.symbol_list:
+        pool.apply_async(_restore_tick_data_for_stock, args=(stock,))
+    pool.close()
+    pool.join()
 
 
 def back_up_daily_data():
