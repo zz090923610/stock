@@ -2,7 +2,7 @@
 import pickle
 import re
 import subprocess
-from datetime import datetime, timedelta
+
 import sys
 import time
 import requests
@@ -16,20 +16,7 @@ def write_text_file(file, content):
         f.write(content.encode('utf8'))
 
 
-def sleep_until(when):
-    h, m, s = int(when.split(':')[0]), int(when.split(':')[1]), int(when.split(':')[2])
-    date_today = get_today()
-    next_wake_up_time = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]),
-                                 int(date_today.split('-')[2]), h,
-                                 m, s) + timedelta(days=1)
-    local_date = get_today()
-    local_time = get_time_of_a_day()
-    ln = datetime(int(local_date.split('-')[0]), int(local_date.split('-')[1]), int(local_date.split('-')[2]),
-                  int(local_time.split(':')[0]), int(local_time.split(':')[1]), int(local_time.split(':')[2]))
-    seconds = next_wake_up_time - ln
-    print("now is " + get_time_of_a_day())
-    print("sleeping %d" % seconds.seconds)
-    time.sleep(seconds.seconds)
+
 
 
 class NEWS_SRC:

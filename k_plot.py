@@ -65,17 +65,17 @@ def load_vhf_for_stock(stock, days):
     return df.tail(days)
 
 
-def k_plot(stock, days, scale=True):
+def k_plot(stock, days, scale=False):
     if scale:
         fonts = [18, 20]
     else:
         fonts = [14, 16]
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     df = load_stock(stock, days)
-    last_open = df.tail(1)['open'][0]
-    last_close = df.tail(1)['close'][0]
-    last_high = df.tail(1)['high'][0]
-    last_low = df.tail(1)['low'][0]
+    last_open = df.tail(1).iloc[-1]['open']
+    last_close = df.tail(1).iloc[-1]['close']
+    last_high = df.tail(1).iloc[-1]['high']
+    last_low = df.tail(1).iloc[-1]['low']
     last_day_msg = ' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
     df_adl = load_adl_for_stock(stock, days)
     df_vhf = load_vhf_for_stock(stock, days)
@@ -143,7 +143,7 @@ def k_plot(stock, days, scale=True):
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('../stock_data/plots/%s.png' % s_full_name)
+    fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
     if scale:
         fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
         cvt2gif(stock)

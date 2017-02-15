@@ -8,9 +8,8 @@ import requests
 import json
 import tushare as ts
 import pickle
-from datetime import date, datetime
-import datetime
-
+from datetime import datetime, date
+import multiprocessing as mp
 from bs4 import BeautifulSoup
 
 from variables import *
@@ -34,6 +33,22 @@ def get_operator_fn(op):
         '<': operator.lt,
         '<=': operator.le
     }[op]
+
+
+def sleep_until(when):
+    h, m, s = int(when.split(':')[0]), int(when.split(':')[1]), int(when.split(':')[2])
+    date_today = get_today()
+    next_wake_up_time = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]),
+                                 int(date_today.split('-')[2]), h,
+                                 m, s) + td(days=1)
+    local_date = get_today()
+    local_time = get_time_of_a_day()
+    ln = datetime(int(local_date.split('-')[0]), int(local_date.split('-')[1]), int(local_date.split('-')[2]),
+                  int(local_time.split(':')[0]), int(local_time.split(':')[1]), int(local_time.split(':')[2]))
+    seconds = next_wake_up_time - ln
+    print("now is " + get_time_of_a_day())
+    print("sleeping %d" % seconds.seconds)
+    time.sleep(seconds.seconds)
 
 
 def eval_binary_expr(op1, optr, op2):
@@ -82,16 +97,20 @@ def load_stock_date_list_from_tick_files(stock):
     for f in file_list:
         day = f.split('_')[1].split('.')[0]
         (y, m, d) = int(day.split('-')[0]), int(day.split('-')[1]), int(day.split('-')[2])
-        date_list.append(datetime.datetime(y, m, d).strftime("%Y-%m-%d"))
+        date_list.append(datetime(y, m, d).strftime("%Y-%m-%d"))
     return date_list
 
 
 def check_weekday(date_str):
     (y, m, d) = int(date_str.split('-')[0]), int(date_str.split('-')[1]), int(date_str.split('-')[2])
-    if datetime.datetime(y, m, d).weekday() in range(0, 5):
+    if datetime(y, m, d).weekday() in range(0, 5):
         return True
     else:
         return False
+
+def return_weekday(date_str):
+    (y, m, d) = int(date_str.split('-')[0]), int(date_str.split('-')[1]), int(date_str.split('-')[2])
+    return datetime(y, m, d).weekday()
 
 
 def get_weekends_of_a_year(year):
@@ -289,12 +308,13 @@ class BasicInfoHDL:
 
     def load(self, update=False):
         if update:
-            self._get_sse_company_list()
-            self._get_szse_company_list()
-            self._merge_company_list()
+            if return_weekday(get_today()) == 0:
+                self._get_sse_company_list()
+                self._get_szse_company_list()
+                self._merge_company_list()
             update_market_open_date_list()
-            #self.get_all_announcements()
-            self.get_announcement_all_stock_one_day(get_today()) #FIXME
+            # self.get_all_announcements()
+            self.get_announcement_all_stock_one_day(get_today())  # FIXME
             self.get_all_stock_suspend_list()
         basic_info_list = load_csv('../stock_data/basic_info.csv')
         self.market_open_days = load_market_open_date_list()
@@ -435,7 +455,7 @@ class BasicInfoHDL:
         except FileNotFoundError:
             fetched_days = []
         target_days = self.market_open_days
-        #for day in target_days:
+        # for day in target_days:
         #    if day <= '2017-01-01':#FIXME temp workaround
         #        target_days.remove(day)
         for day in target_days:
@@ -498,29 +518,13 @@ def update_market_open_date_list():
 
 
 def get_au_scaler_list_of_stock(stock):
-    qfq = load_daily_data(stock)
-    nonfq = load_daily_data(stock, autype='non_fq')
-    result = {}
-    for (price_qfq, price_non_fq) in zip(qfq, nonfq):
-        result[price_qfq['date']] = price_qfq['close'] / price_non_fq['close']
-    return result
-
-
-def get_au_scaler_of_stock(stock, day):
-    qfq = load_daily_data(stock)
-    nonfq = load_daily_data(stock, autype='non_fq')
-    price_qfq = 1
-    price_non_fq = 1
-
-    for line in qfq:
-        if line['date'] == day:
-            price_qfq = line['close']
-            break
-    for line in nonfq:
-        if line['date'] == day:
-            price_non_fq = line['close']
-            break
-    return price_qfq / price_non_fq
+    # FIXME fix using yahoo
+    # qfq = load_daily_data(stock)
+    # nonfq = load_daily_data(stock, autype='non_fq')
+    # result = {}
+    # for (price_qfq, price_non_fq) in zip(qfq, nonfq):
+    #    result[price_qfq['date']] = price_qfq['close'] / price_non_fq['close']
+    return 1
 
 
 def load_tick_data(stock, day, scaler=1):

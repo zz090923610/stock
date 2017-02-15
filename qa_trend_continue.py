@@ -33,8 +33,8 @@ def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
 
 def calc_average_trade_price_for_stock(stock, refresh=False):
     print('calc atpd for %s' % stock)
-    scaler_list = get_au_scaler_list_of_stock(stock)
-    date_list = [i for i in scaler_list.keys()]
+    daily_data = load_daily_data(stock)
+    date_list = [i['date'] for i in daily_data]
     if refresh:
         atpd_list = []
     else:
@@ -45,7 +45,7 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
         if d not in atpd_calced_date_list:
             to_do_date_list.append(d)
     for i in to_do_date_list:
-        atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i, scaler_list[i]))
+        atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i))
     atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
     b = pd.DataFrame(atpd_list_sorted)
     column_order = ['date', 'atpd']
@@ -156,17 +156,9 @@ def load_basic_info_list():
 
 def download_plots(stock_list):
     full_name_list = []
-    subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
     for stock in stock_list:
         s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-        k_plot(stock, 120,scale=False)
         full_name_list.append('%s.png' % s_full_name)
-
-    #for stock in stock_list:
-    #    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-    #    subprocess.call("wget http://image.sinajs.cn/newchart/daily/n/%s.gif -O ../stock_data/plots/%s.gif" %
-    #                    (s_full_name, s_full_name), shell=True)  # FIXME try not use subprocess
-    #    full_name_list.append('%s.gif' % s_full_name)
     with open('../stock_data/plots/plot_list.pickle', 'wb') as f:
         pickle.dump(full_name_list, f, protocol=2)
 
