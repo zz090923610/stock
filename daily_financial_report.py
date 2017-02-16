@@ -39,12 +39,12 @@ if __name__ == "__main__":
     while True:
         today = get_today()
         close_days = load_market_close_days_for_year('2017')
-        sleep_until('17:00:00')
+        #sleep_until('19:00:00')
         if today not in close_days:
             # update data
             update_basic_info()
             update_market_open_date_list()
-            subprocess.call("./get_daily_data.py --update", shell=True)
+            subprocess.call("./get_daily_data.py --all", shell=True)
             subprocess.call("./get_tick_data.py %s" % today, shell=True)
             # BASIC_INFO.get_announcement_all_stock_one_day(today)
             # calculate intermediate variables
@@ -75,3 +75,4 @@ if __name__ == "__main__":
             # subprocess.call("./data_news_handler.py %s" % today, shell=True)
             print('All set')
         time.sleep(30)
+        sleep_until('19:00:00')
