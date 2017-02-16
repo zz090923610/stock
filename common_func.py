@@ -17,6 +17,10 @@ from variables import *
 import pandas as pd
 from datetime import timedelta as td
 import operator
+import threading
+import sys
+
+lock = threading.Lock()
 
 
 def get_operator_fn(op):
@@ -36,15 +40,23 @@ def get_operator_fn(op):
     }[op]
 
 
+def logging(msg):
+    print(msg, file=sys.stderr)
+    lock.acquire()
+    fo = open('../stock_data/log.txt', "a")
+    print('[%s] %s' % (get_time(), msg), file=fo)
+    fo.close()
+    lock.release()
+
+
 def sleep_until(when):
     h, m, s = int(when.split(':')[0]), int(when.split(':')[1]), int(when.split(':')[2])
     date_today = get_today()
     next_wake_up_time = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]),
                                  int(date_today.split('-')[2]), h,
                                  m, s) + td(days=1)
-    local_date = get_today()
     local_time = get_time_of_a_day()
-    ln = datetime(int(local_date.split('-')[0]), int(local_date.split('-')[1]), int(local_date.split('-')[2]),
+    ln = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]), int(date_today.split('-')[2]),
                   int(local_time.split(':')[0]), int(local_time.split(':')[1]), int(local_time.split(':')[2]))
     seconds = next_wake_up_time - ln
     print("now is " + get_time_of_a_day())
@@ -71,7 +83,22 @@ def get_today():
     current_time = time.time()
     utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
     local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    return local_now.strftime("%Y-%m-%d")
+    year = local_now.strftime("%Y")
+    local_now = local_now.strftime("%Y-%m-%d")
+    market_close_list = load_market_close_days_for_year(year)
+    history_market_open_list = load_market_open_date_list()
+    time_of_the_day = get_time_of_a_day()
+    if local_now in market_close_list:
+        result = max(history_market_open_list)
+        # print('Market close today %s' % result)
+    else:
+        if time_of_the_day >= '17:30:00':
+            result = local_now
+            # print('Market open today, new data released %s' % result)
+        else:
+            result = max(history_market_open_list)
+            # print('Market open today, but new data not available, now has %s' % result)
+    return result
 
 
 def get_time():
@@ -155,7 +182,8 @@ def load_market_open_date_list():
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
             return pickle.load(f)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        logging('load_market_open_date_list(): File not found')
         return update_market_open_date_list()
 
 
@@ -182,6 +210,8 @@ class BasicInfoHDL:
                 with open('../stock_data/dates/stock_suspend_days/%s.pickle' % stock, 'rb') as f:
                     self.stock_suspend_day_list[stock] = pickle.load(f)
             except FileNotFoundError:
+                logging('load_suspend_trade_date_list(): File not found,%s' %
+                        ('../stock_data/dates/stock_suspend_days/%s.pickle' % stock))
                 self.stock_suspend_day_list[stock] = []
             self.stock_trade_day_list[stock] = list(
                 set(self.market_open_days) - set(self.stock_suspend_day_list[stock]))
@@ -250,7 +280,7 @@ class BasicInfoHDL:
                        'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
                        'Host': 'query.sse.com.cn',
                        'Referer': 'http://www.sse.com.cn/assortment/stock/list/share/',
-                       'Upgrade-Insecure-Requests': 1,
+                       'Upgrade-Insecure-Requests': '1',
                        'User-Agent': AGENT['User-Agent']}
         get_params = {'csrcCode': None,
                       'stockCode': None,
@@ -272,7 +302,7 @@ class BasicInfoHDL:
         get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                        'Accept-Encoding': 'gzip, deflate, sdch',
                        'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
-                       'Upgrade-Insecure-Requests': 1,
+                       'Upgrade-Insecure-Requests': '1',
                        'User-Agent': AGENT['User-Agent']}
         get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
                       'TABKEY': market_type_dict[market_type][1]}
@@ -369,7 +399,7 @@ class BasicInfoHDL:
         get_headers = {
             'Host': 'www.cninfo.com.cn',
             'Referer': 'http://www.cninfo.com.cn/cninfo-new/memo-2',
-            'Upgrade-Insecure-Requests': 1,
+            'Upgrade-Insecure-Requests': '1',
             'User-Agent': AGENT['1']}
         get_params = {'queryDate': day,
                       'queryType': 'queryType1'}
@@ -530,18 +560,22 @@ def get_au_scaler_list_of_stock(stock):
     return 1
 
 
-def load_tick_data(stock, day, scaler=1):
+def load_tick_data(stock, day):
     data_list = []
     with open('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, day)) as csvfile:
         reader = csv.DictReader(csvfile)
         try:
             for row in reader:
-                row['price'] = float('%.2f' % (float(row['price']) * scaler))
-                row['volume'] = int(row['volume'])
-                row['amount'] = float(row['amount'])
-                data_list.append(row)
+                try:
+                    row['price'] = float(row['price'])
+                    row['volume'] = int(row['volume'])
+                    row['amount'] = float(row['amount'])
+                    data_list.append(row)
+                except ValueError as e:
+                    logging('%s %s' % (e, ('load_tick_data %s %s %s' % (stock, day, row['time']))))
         except FileNotFoundError:
             return []
+
     return data_list
 
 

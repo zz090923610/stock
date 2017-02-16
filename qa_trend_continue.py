@@ -7,9 +7,8 @@ from data_announance_parsing import get_parsed_announcement_for_stock
 from qa_ma import ma_align
 
 
-def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
-    print('calc ATPD for %s %s %.03f' % (stock, day, scaler))
-    tick_day = load_tick_data(stock, day, scaler=scaler)
+def calc_average_trade_price_for_stock_one_day(stock, day):
+    tick_day = load_tick_data(stock, day)
     vol_sum = 0
     cost_sum = 0
     for line in tick_day:
@@ -22,10 +21,8 @@ def calc_average_trade_price_for_stock_one_day(stock, day, scaler=1):
     return {'date': day, 'atpd': result}
 
 
-def calc_average_trade_price_for_stock(stock, refresh=False):
-    print('calc atpd for %s' % stock)
-    daily_data = load_daily_data(stock)
-    date_list = [i['date'] for i in daily_data]
+def calc_average_trade_price_for_stock(stock, refresh):
+    date_list = load_stock_date_list_from_tick_files(stock)
     if refresh:
         atpd_list = []
     else:
@@ -35,6 +32,9 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
     for d in date_list:
         if d not in atpd_calced_date_list:
             to_do_date_list.append(d)
+    if len(to_do_date_list) == 0:
+        return
+    print('calc atpd for %s' % stock)
     for i in to_do_date_list:
         atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i))
     atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
@@ -44,6 +44,7 @@ def calc_average_trade_price_for_stock(stock, refresh=False):
 
 
 def calc_atpd_for_all_stock(refresh=False):
+    print('calc atpd for all stocks %s' % len(BASIC_INFO.symbol_list))
     pool = mp.Pool()
     for i in BASIC_INFO.symbol_list:
         pool.apply_async(calc_average_trade_price_for_stock, args=(i, refresh))
@@ -52,7 +53,7 @@ def calc_atpd_for_all_stock(refresh=False):
 
 
 def calc_atpdr_for_stock(stock):
-    print('Calc atpdr for %s' % stock)
+
     atpd_list = load_atpd_data(stock)
     for (idx, line) in enumerate(atpd_list):
         if idx > 0:
@@ -66,6 +67,7 @@ def calc_atpdr_for_stock(stock):
 
 
 def calc_atpdr_for_all_stock():
+    print('Calc atpdr for all stocks')
     for i in BASIC_INFO.symbol_list:
         calc_atpdr_for_stock(i)
 

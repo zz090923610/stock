@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from common_func import *
 from qa_tick_lms import calculate_lms_for_stock_one_day, load_tick_data
-
+TODAY =get_today()
 
 # noinspection PyShadowingNames
 def load_fail_to_repair_list(stock: str):
@@ -37,11 +37,11 @@ def download_stock(s_code):
     finished = False
     while not finished:
         current_file_date = get_last_date(s_code)
-        start = max(BASIC_INFO.time_to_market_dict[s_code], START_DATE)
-
+        df_already = pd.read_csv('../stock_data/data/%s.csv' % stock)
+        date_list = df_already['date'].tolist()
         if current_file_date is not None:
             start = current_file_date
-        date_list = get_date_list(start, get_today(), timedelta(days=1))
+        date_list = [day for day in date_list if day >= start]
         # noinspection PyBroadException
         try:
             for a_day in date_list:
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             day_list = generate_day_list_for_stock(stock)
             all_work_list += generate_work_list(stock, day_list)
 
-    pool = mp.Pool()
+    pool = mp.Pool(64)
     for stock in all_work_list:
         pool.apply_async(_download_one_stock_one_day, args=(stock,))
     pool.close()

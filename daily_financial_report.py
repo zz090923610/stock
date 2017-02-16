@@ -42,10 +42,13 @@ if __name__ == "__main__":
         sleep_until('17:00:00')
         if today not in close_days:
             # update data
-            subprocess.call("./daily_update.py", shell=True)
+            update_basic_info()
+            update_market_open_date_list()
+            subprocess.call("./get_daily_data.py --update", shell=True)
+            subprocess.call("./get_tick_data.py %s" % today, shell=True)
             # BASIC_INFO.get_announcement_all_stock_one_day(today)
             # calculate intermediate variables
-            calc_atpd_for_all_stock()
+            calc_atpd_for_all_stock(refresh=False)
             calc_atpdr_for_all_stock()
             calc_ma_for_all_stock(3)
             calc_ma_for_all_stock(10)

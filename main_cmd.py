@@ -144,8 +144,8 @@ class MyPrompt(Cmd):
             pass
         else:
             for s in args:
-                from get_daily_data import get_update_for_one_stock
-                get_update_for_one_stock(s)
+                from get_daily_data import get_daily_data_for_stock_yahoo
+                get_daily_data_for_stock_yahoo(s, get_today(), get_today())
 
     @staticmethod
     def do_qa_calc_average_trade_price(args):
@@ -154,7 +154,7 @@ class MyPrompt(Cmd):
             pass
         else:
             for s in args:
-                calc_average_trade_price_for_stock(s)
+                calc_average_trade_price_for_stock(s,True)
 
     @staticmethod
     def do_data_check_missing_tick(args):
