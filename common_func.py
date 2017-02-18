@@ -147,7 +147,6 @@ def get_weekends_of_a_year(year):
     d2 = date(int(year), 12, 31)
     days = []
     delta = d2 - d1
-
     for i in range(delta.days + 1):
         if not check_weekday((d1 + td(days=i)).strftime('%Y-%m-%d')):
             days.append((d1 + td(days=i)).strftime('%Y-%m-%d'))
@@ -202,7 +201,7 @@ class BasicInfoHDL:
         self.symbol_sse = [s for s in self.symbol_list if self.in_sse(s)]
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
         self.timestamp = time.time()
-        self.s = requests.session()
+
 
     def load_suspend_trade_date_list(self):  # FIXME
         for stock in self.symbol_list:
@@ -286,7 +285,8 @@ class BasicInfoHDL:
                       'stockCode': None,
                       'areaName': None,
                       'stockType': 1}
-        result = self.s.get(req_url, headers=get_headers, params=get_params)
+        s = requests.session()
+        result = s.get(req_url, headers=get_headers, params=get_params)
         csv_data = result.text
         csv_data = csv_data.replace('\t', ',')
         csv_data = csv_data.replace(' ', '')
@@ -306,7 +306,8 @@ class BasicInfoHDL:
                        'User-Agent': AGENT['User-Agent']}
         get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
                       'TABKEY': market_type_dict[market_type][1]}
-        result = self.s.get(req_url, headers=get_headers, params=get_params)
+        s = requests.session()
+        result = s.get(req_url, headers=get_headers, params=get_params)
         with open('/tmp/szse_company.xlsx', 'wb') as f:
             f.write(result.content)
 
@@ -408,7 +409,8 @@ class BasicInfoHDL:
             'User-Agent': AGENT['1']}
         get_params = {'queryDate': day,
                       'queryType': 'queryType1'}
-        result = self.s.get(req_url, headers=get_headers, params=get_params)
+        s = requests.session()
+        result = s.get(req_url, headers=get_headers, params=get_params)
         b = result.text
         soup = BeautifulSoup(b, 'lxml')
         c = soup.find("div", {"id": "suspensionAndResumption1"})
@@ -465,8 +467,8 @@ class BasicInfoHDL:
                          'pageNum': page_num, 'pageSize': 30, 'tabName': fetch_type, 'sortName': None, 'sortType': None,
                          'limit': None,
                          'showTitle': None, 'seDate': target_day}
-
-            result = self.s.post(req_url, data=post_data, params=post_params)
+            s = requests.session()
+            result = s.post(req_url, data=post_data, params=post_params)
             result_dict = json.loads(result.text)
             final_data_list += result_dict['announcements']
             if result_dict['hasMore']:
