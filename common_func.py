@@ -353,6 +353,7 @@ class BasicInfoHDL:
                  col_order=['code', 'name', 'market', 'outstanding', 'totals', 'timeToMarket'])
         self.timestamp = time.time()
 
+
     def load(self, update=False):
         if update:
             if return_weekday(get_today()) == 0:
@@ -369,6 +370,8 @@ class BasicInfoHDL:
             self._get_sse_company_list()
             self._get_szse_company_list()
             self._merge_company_list()
+            basic_info_list = load_csv('../stock_data/basic_info.csv')
+
         self.market_open_days = load_market_open_date_list()
 
         for i in basic_info_list:
@@ -390,6 +393,7 @@ class BasicInfoHDL:
             self.totals_dict[i['code']] = i['totals']
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
+        mkdirs(self.symbol_list)
         self.load_suspend_trade_date_list()
 
     @staticmethod
