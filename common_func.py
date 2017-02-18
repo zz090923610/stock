@@ -199,6 +199,12 @@ def load_market_open_date_list():
         logging('load_market_open_date_list(): File not found')
         return update_market_open_date_list()
 
+def mkdirs(symbol_list):
+    for a_dir in DIR_LIST:
+        subprocess.call('mkdir -p %s' % a_dir, shell=True)
+    for s_code in symbol_list:
+        subprocess.call('mkdir -p ../stock_data/tick_data/%s' % s_code, shell=True)
+
 
 class BasicInfoHDL:
     def __init__(self):
@@ -735,11 +741,6 @@ def load_atpd_data(stock):
         return []
 
 
-def mkdirs(symbol_list):
-    for a_dir in DIR_LIST:
-        subprocess.call('mkdir -p %s' % a_dir, shell=True)
-    for s_code in symbol_list:
-        subprocess.call('mkdir -p ../stock_data/tick_data/%s' % s_code, shell=True)
 
 
 def load_daily_data(stock, autype='qfq'):
