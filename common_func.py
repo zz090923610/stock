@@ -177,6 +177,16 @@ def load_csv(path):
     return final_list
 
 
+def update_market_open_date_list():
+    b = ts.get_k_data('000001', index=True, start=START_DATE)
+    days_cnt = len(b.index)
+    days_list = []
+    for idx in range(0, days_cnt):
+        days_list.append(b.iloc[idx].date)
+    save_market_open_date_list(days_list)
+    return days_list
+
+
 def load_market_open_date_list():
     try:
         with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
@@ -545,15 +555,6 @@ def load_symbol_list(symbol_file):
                 symbol_list.append(row['code'])
     return symbol_list
 
-
-def update_market_open_date_list():
-    b = ts.get_k_data('000001', index=True, start=START_DATE)
-    days_cnt = len(b.index)
-    days_list = []
-    for idx in range(0, days_cnt):
-        days_list.append(b.iloc[idx].date)
-    save_market_open_date_list(days_list)
-    return days_list
 
 
 # noinspection PyUnusedLocal
