@@ -12,6 +12,7 @@ from mpl_finance import *
 
 from common_func import BASIC_INFO, logging
 from qa_linear_fit import get_fitted_data
+from qa_tvi import calc_tvi_series_for_stock
 from variables import *
 
 
@@ -71,11 +72,18 @@ def k_plot(stock, days, scale=False, from_pickle=False):
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     # load from file
     # df = load_stock(stock, days)
-    df=None; df_adl=None;df_vhf=None;df_ma3=None;df_ma10=None;df_ma20=None;df_ma40=None
+    df = None
+    df_adl = None
+    df_vhf = None
+    df_ma3 = None
+    df_ma10 = None
+    df_ma20 = None
+    df_ma40 = None
+    df_tvi_accu = None
     if from_pickle:
         loaded_pkl = load_fig_pickle(s_full_name)
         if loaded_pkl is None:
-            from_pickle=False
+            from_pickle = False
         else:
             df = loaded_pkl['df']
             df_adl = loaded_pkl['df_adl']
@@ -84,6 +92,7 @@ def k_plot(stock, days, scale=False, from_pickle=False):
             df_ma10 = loaded_pkl['df_ma10']
             df_ma20 = loaded_pkl['df_ma20']
             df_ma40 = loaded_pkl['df_ma40']
+            df_tvi_accu = loaded_pkl['df_tvi_accu']
     if not from_pickle:
         df = get_fitted_data(stock, days, 15, 2)
         df_adl = load_adl_for_stock(stock, days)
@@ -92,6 +101,7 @@ def k_plot(stock, days, scale=False, from_pickle=False):
         df_ma10 = load_ma_for_stock(stock, 'atpd_10', days)
         df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
         df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
+        df_tvi_accu = calc_tvi_series_for_stock(stock, days)
 
     last_open = df.tail(1).iloc[-1]['open']
     last_close = df.tail(1).iloc[-1]['close']
@@ -112,10 +122,11 @@ def k_plot(stock, days, scale=False, from_pickle=False):
         return date_list[thisind]
 
     matplotlib.rcParams.update({'font.size': fonts[0]})
-    ax1 = plt.subplot2grid((6, 1), (2, 0), rowspan=3)
-    ax3 = plt.subplot2grid((6, 1), (5, 0), sharex=ax1)
-    ax4 = plt.subplot2grid((6, 1), (1, 0), sharex=ax1)
-    ax5 = plt.subplot2grid((6, 1), (0, 0), sharex=ax1)
+    ax1 = plt.subplot2grid((7, 1), (2, 0), rowspan=3)
+    ax3 = plt.subplot2grid((7, 1), (5, 0), sharex=ax1)
+    ax4 = plt.subplot2grid((7, 1), (1, 0), sharex=ax1)
+    ax5 = plt.subplot2grid((7, 1), (0, 0), sharex=ax1)
+    ax6 = plt.subplot2grid((7, 1), (6, 0), sharex=ax1)
     fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1], last_day_msg),
                  fontsize=fonts[1])
 
@@ -129,6 +140,10 @@ def k_plot(stock, days, scale=False, from_pickle=False):
     p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线(VHF)')
     plt.setp(p_vhf, linewidth=2)
     leg5 = ax5.legend(handles=[p_vhf], framealpha=0.3)
+
+    p_tvi_accu, = ax6.plot(ind, df_tvi_accu.tvi_accu, '-', label=u'成交单累积手数(首日起)')
+    plt.setp(p_tvi_accu, linewidth=2)
+    leg6 = ax6.legend(handles=[p_tvi_accu], framealpha=0.3)
 
     p_utl, = ax1.plot(ind, df.upper_trend, 'k-')
     plt.setp(p_utl, linewidth=2)
@@ -161,6 +176,8 @@ def k_plot(stock, days, scale=False, from_pickle=False):
     ax4.xaxis.grid(color='gray', linestyle='-')
     ax5.yaxis.grid(color='gray', linestyle='-')
     ax5.xaxis.grid(color='gray', linestyle='-')
+    ax6.yaxis.grid(color='gray', linestyle='-')
+    ax6.xaxis.grid(color='gray', linestyle='-')
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)

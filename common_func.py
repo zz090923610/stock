@@ -367,6 +367,7 @@ class BasicInfoHDL:
                 self._get_szse_company_list()
                 self._merge_company_list()
             update_market_open_date_list()
+            mkdirs(self.symbol_list)
             # self.get_all_announcements()
             self.get_announcement_all_stock_one_day(get_today())  # FIXME
             self.get_all_stock_suspend_list()
@@ -379,7 +380,6 @@ class BasicInfoHDL:
             basic_info_list = load_csv('../stock_data/basic_info.csv')
 
         self.market_open_days = load_market_open_date_list()
-
         for i in basic_info_list:
             try:
                 assert i['market'] in ['sse', 'szse']
@@ -399,8 +399,8 @@ class BasicInfoHDL:
             self.totals_dict[i['code']] = i['totals']
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
-        mkdirs(self.symbol_list)
-        self.load_suspend_trade_date_list()
+
+        # self.load_suspend_trade_date_list() FIXME suspend list not used for now
 
     @staticmethod
     def _handle_an_uls(uls):

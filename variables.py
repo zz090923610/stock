@@ -1,7 +1,7 @@
 import pytz
 from tzlocal import get_localzone
 
-START_DATE = '2016-05-01'
+START_DATE = '2012-01-01'
 # get local timezone
 local_tz = get_localzone()
 
