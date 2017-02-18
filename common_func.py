@@ -348,7 +348,12 @@ class BasicInfoHDL:
             # self.get_all_announcements()
             self.get_announcement_all_stock_one_day(get_today())  # FIXME
             self.get_all_stock_suspend_list()
-        basic_info_list = load_csv('../stock_data/basic_info.csv')
+        try:
+            basic_info_list = load_csv('../stock_data/basic_info.csv')
+        except FileNotFoundError:
+            self._get_sse_company_list()
+            self._get_szse_company_list()
+            self._merge_company_list()
         self.market_open_days = load_market_open_date_list()
 
         for i in basic_info_list:

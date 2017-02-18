@@ -8,6 +8,6 @@ setup(
     license='',
     author='zhangzhao',
     author_email='',
-    description='', requires=['pandas', 'requests', 'tushare', 'bs4', 'tzlocal', 'matplotlib', 'pillow', 'bypy',
+    description='', requires=['pandas', 'lxml','requests', 'tushare', 'bs4', 'tzlocal', 'matplotlib', 'pillow', 'bypy',
                               'pylzma', 'termcolor', 'scipy']
 )
