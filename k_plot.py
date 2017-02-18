@@ -10,7 +10,8 @@ from PIL import Image
 from matplotlib import ticker
 from mpl_finance import *
 
-from common_func import BASIC_INFO
+from common_func import BASIC_INFO, logging
+from qa_linear_fit import get_fitted_data
 from variables import *
 
 
@@ -62,24 +63,42 @@ def load_vhf_for_stock(stock, days):
     return df.tail(days)
 
 
-def k_plot(stock, days, scale=False):
+def k_plot(stock, days, scale=False, from_pickle=False):
     if scale:
         fonts = [18, 20]
     else:
         fonts = [14, 16]
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-    df = load_stock(stock, days)
+    # load from file
+    # df = load_stock(stock, days)
+    df=None; df_adl=None;df_vhf=None;df_ma3=None;df_ma10=None;df_ma20=None;df_ma40=None
+    if from_pickle:
+        loaded_pkl = load_fig_pickle(s_full_name)
+        if loaded_pkl is None:
+            from_pickle=False
+        else:
+            df = loaded_pkl['df']
+            df_adl = loaded_pkl['df_adl']
+            df_vhf = loaded_pkl['df_vhf']
+            df_ma3 = loaded_pkl['df_ma3']
+            df_ma10 = loaded_pkl['df_ma10']
+            df_ma20 = loaded_pkl['df_ma20']
+            df_ma40 = loaded_pkl['df_ma40']
+    if not from_pickle:
+        df = get_fitted_data(stock, days, 15, 2)
+        df_adl = load_adl_for_stock(stock, days)
+        df_vhf = load_vhf_for_stock(stock, days)
+        df_ma3 = load_ma_for_stock(stock, 'atpd_3', days)
+        df_ma10 = load_ma_for_stock(stock, 'atpd_10', days)
+        df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
+        df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
+
     last_open = df.tail(1).iloc[-1]['open']
     last_close = df.tail(1).iloc[-1]['close']
     last_high = df.tail(1).iloc[-1]['high']
     last_low = df.tail(1).iloc[-1]['low']
     last_day_msg = ' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
-    df_adl = load_adl_for_stock(stock, days)
-    df_vhf = load_vhf_for_stock(stock, days)
-    df_ma3 = load_ma_for_stock(stock, 'atpd_3', days)
-    df_ma10 = load_ma_for_stock(stock, 'atpd_10', days)
-    df_ma20 = load_ma_for_stock(stock, 'atpd_20', days)
-    df_ma40 = load_ma_for_stock(stock, 'atpd_40', days)
+
     # plt.ion()
     fig = plt.figure(figsize=(16, 9), dpi=100)
 
@@ -87,7 +106,6 @@ def k_plot(stock, days, scale=False):
     ind = np.arange(N)
     date_list = df['date'].tolist()
 
-    # noinspection PyUnusedLocal
     def format_date(x, pos=None):
         # noinspection PyTypeChecker
         thisind = np.clip(int(x + 0.5), 0, N - 1)
@@ -106,13 +124,16 @@ def k_plot(stock, days, scale=False):
     line_width = 1.5
     p_adl, = ax4.plot(ind, df_adl.adl, '-', label=u'累积/派发线(ADL)')
     plt.setp(p_adl, linewidth=2)
-    # noinspection PyUnusedLocal
     leg4 = ax4.legend(handles=[p_adl], framealpha=0.3)
 
     p_vhf, = ax5.plot(ind, df_vhf.vhf, '-', label=u'盘整/趋势线(VHF)')
     plt.setp(p_vhf, linewidth=2)
-    # noinspection PyUnusedLocal
     leg5 = ax5.legend(handles=[p_vhf], framealpha=0.3)
+
+    p_utl, = ax1.plot(ind, df.upper_trend, 'k-')
+    plt.setp(p_utl, linewidth=2)
+    p_btl, = ax1.plot(ind, df.bottom_trend, 'k-')
+    plt.setp(p_btl, linewidth=2)
 
     p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
     plt.setp(p_ma3, linewidth=line_width)
@@ -143,11 +164,29 @@ def k_plot(stock, days, scale=False):
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
+    fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=False)
     if scale:
         fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=True)
         cvt2gif(stock)
+    to_save = {'df': df, 'df_adl': df_adl, 'df_vhf': df_vhf, 'df_ma3': df_ma3, 'df_ma10': df_ma10, 'df_ma20': df_ma20,
+               'df_ma40': df_ma40}
+    if not from_pickle:
+        save_fig_pickle('../stock_data/plots_pickle/%s.pickle' % s_full_name, to_save)
     plt.close()
+
+
+def save_fig_pickle(path, fig_param):
+    with open(path, 'wb') as f:
+        pickle.dump(fig_param, f)
+
+
+def load_fig_pickle(s_full_name):
+    try:
+        with open('../stock_data/plots_pickle/%s.pickle' % s_full_name, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError as e:
+        logging('load_fig_pickle(): File not found')
+        return None
 
 
 def cvt2gif(stock):

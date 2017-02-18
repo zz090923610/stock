@@ -9,5 +9,5 @@ setup(
     author='zhangzhao',
     author_email='',
     description='', requires=['pandas', 'requests', 'tushare', 'bs4', 'tzlocal', 'matplotlib', 'pillow', 'bypy',
-                              'pylzma', 'termcolor']
+                              'pylzma', 'termcolor', 'scipy']
 )

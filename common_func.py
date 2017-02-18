@@ -768,3 +768,9 @@ def generate_html(msg):
     </html>
     """ % msg
     return html
+
+
+def load_stock_for_plot(stock, days):
+    daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
+    daily_data = daily_data.sort_values(by='date', ascending=True)
+    return daily_data.tail(days)
