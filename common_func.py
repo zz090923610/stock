@@ -176,6 +176,10 @@ def load_csv(path):
             final_list.append(row)
     return final_list
 
+def save_market_open_date_list(market_open_date_list):
+    with open('../stock_data/market_open_date_list.pickle', 'wb') as f:
+        pickle.dump(market_open_date_list, f, -1)
+
 
 def update_market_open_date_list():
     b = ts.get_k_data('000001', index=True, start=START_DATE)
@@ -616,9 +620,6 @@ def load_ma_for_stock(stock, ma_params):
         return []
 
 
-def save_market_open_date_list(market_open_date_list):
-    with open('../stock_data/market_open_date_list.pickle', 'wb') as f:
-        pickle.dump(market_open_date_list, f, -1)
 
 
 MARKET_OPEN_DATE_LIST = load_market_open_date_list()
