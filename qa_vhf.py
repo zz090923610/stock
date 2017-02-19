@@ -18,7 +18,10 @@ def calculate_vhf(stock, n):
             # noinspection PyShadowingNames
             for i in range(0, n):
                 denominator += abs(close_price_list[idx - i] - close_price_list[idx - i - 1])
-            vhf = numerator / denominator
+            try:
+                vhf = numerator / denominator
+            except ZeroDivisionError:
+                vhf = numerator / 1
             data_for_day['vhf'] = vhf
     b = pd.DataFrame(daily_data)
     column_order = ['date', 'close', 'vhf']

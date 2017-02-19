@@ -49,20 +49,4 @@ def save_tvi_stock_day(stock, target_date, dic):
         pickle.dump(dic, f, -1)
 
 
-def calc_tvi_series_for_stock(stock, days):
-    print('Calc TVI for %s' %stock)
-    daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
-    daily_data = daily_data.sort_values(by='date', ascending=True)
-    daily_data = daily_data.tail(days)
-    date_list = daily_data['date'].tolist()
-    tvi_list = []
-    tvi_accu = 0
-    for day in date_list:
-        df, dic = load_tvi_stock_day(stock, day)
-        if (df is None) or (dic is None):
-            df, dic = calc_tvi_stock_day(stock, day)
-        tvi_accu += dic['tvi']
-        dic['tvi_accu'] = tvi_accu
-        tvi_list.append(dic)
-    df = pd.DataFrame(tvi_list)
-    return df
+

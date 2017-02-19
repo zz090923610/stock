@@ -9,7 +9,7 @@ def calc_tick_related_for_stock_one_day(stock, day, normalize=False, scaler=1):
     outstanding = float(basic_info['outstanding']) * 100000000.  # 流通股本
     large_threshold = outstanding / 3600000
     mid_threshold = outstanding / 18000000
-    tick_data = load_tick_data(stock, day, scaler=scaler)
+    tick_data = load_tick_data(stock, day)
     (buy_small, sell_small) = (0, 0)
     (buy_mid, sell_mid) = (0, 0)
     (buy_large, sell_large) = (0, 0)

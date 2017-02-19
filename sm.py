@@ -13,7 +13,7 @@ from common_func import get_time
 import tushare as ts
 
 
-def signal_handler():
+def signal_handler(signal, frame):
     print('Ctrl+C detected, exiting')
     exit(0)
 

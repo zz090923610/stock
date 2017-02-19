@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 import csv
 import pickle
+import subprocess
 
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 from PIL import Image
@@ -13,6 +15,12 @@ from mpl_finance import *
 from common_func import BASIC_INFO, logging
 from qa_linear_fit import get_fitted_data
 from variables import *
+
+
+from scoop import futures
+data = BASIC_INFO.symbol_list
+days = 120
+
 
 
 def calc_tmi_series_for_stock(stock, days):
@@ -87,7 +95,8 @@ def load_vhf_for_stock_for_plot(stock, days):
     return df.tail(days)
 
 
-def k_plot(stock, days):
+def k_plot(idx):
+    stock = data[idx]
     fonts = [14, 16]
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
     # load data from file
@@ -219,3 +228,7 @@ def cvt2gif(stock):
     img = Image.open('../stock_data/plots/%s.png' % s_full_name)
     img = img.resize((545, 300))
     img.save('../stock_data/plots/%s.png' % s_full_name, 'png')
+
+if __name__ == '__main__':
+    subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
+    results = list(futures.map(k_plot, range(len(data))))

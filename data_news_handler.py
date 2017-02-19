@@ -25,7 +25,7 @@ class NEWS_SRC:
     def _get_src_news_of_day(self, day):
         print("Fetching SRC news %s" % day)
         req_url = 'http://www.csrc.gov.cn/pub/newsite/zjhxwfb/xwdd/index.html'
-        result = self.s.get(req_url)
+        result = self.s.get(req_url, verify=False)
         b = result.content.decode('utf-8')
         soup = BeautifulSoup(b, 'lxml')
 
@@ -45,7 +45,7 @@ class NEWS_SRC:
     def _get_src_announcement_of_day(self, day):
         print("Fetching SRC announcement %s" % day)
         req_url = 'http://www.csrc.gov.cn/pub/newsite/zjhxwfb/xwfbh/'
-        result = self.s.get(req_url)
+        result = self.s.get(req_url, verify=False)
         b = result.content.decode('utf-8')
         soup = BeautifulSoup(b, 'lxml')
 
@@ -78,6 +78,8 @@ class NEWS_SRC:
                 self.all_data = pickle.load(f)
         except FileNotFoundError:
             return {}
+        except EOFError:
+            return {}
 
     def generate_html_of_day(self, day):
         news = self.all_data[day]['news']
@@ -94,7 +96,15 @@ class NEWS_SRC:
         html_str += '\n'
         return html_str
 
+    def have_news(self,day):
+        news = self.all_data[day]['news']
+        announcement = self.all_data[day]['announcement']
+        if (len(news) > 0) | (len(announcement) > 0):
+            return True
+        else:
+            return False
 
+# FIXME buggy news gov
 class NEWS_GOV:
     def __init__(self):
         self.today = get_today()
@@ -108,7 +118,7 @@ class NEWS_GOV:
 
     def _get_gov_policy_of_day(self, day, req_url):
         print("Fetching GOV Policy %s" % day)
-        result = self.s.get(req_url)
+        result = self.s.get(req_url, verify=False)
         b = result.content.decode('utf-8')
         soup = BeautifulSoup(b, 'lxml')
         c = soup.find('ul')
@@ -144,6 +154,8 @@ class NEWS_GOV:
                 self.all_data = pickle.load(f)
         except FileNotFoundError:
             return {}
+        except EOFError:
+            return {}
 
     def generate_html_of_day(self, day):
         policy = self.all_data[day]['policy']
@@ -175,13 +187,14 @@ class NEWS_GOV:
 
 if __name__ == "__main__":
     src = NEWS_SRC()
-    gov = NEWS_GOV()
+    # gov = NEWS_GOV()
     target_day = sys.argv[1]
     src.fetch_all_of_day(target_day)
-    gov.fetch_all_of_day(target_day)
-    result_html = generate_html(src.generate_html_of_day(target_day) + gov.generate_html_of_day(target_day))
+    # gov.fetch_all_of_day(target_day)
+    result_html = generate_html(src.generate_html_of_day(target_day))
     write_text_file('../stock_data/news/%s.html' % target_day, result_html)
-    subprocess.call("./send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
-                    "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
-    subprocess.call("./send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
-                    "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
+    if src.have_news(target_day):
+        subprocess.call("./send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
+                        "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
+        subprocess.call("./send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
+                        "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)

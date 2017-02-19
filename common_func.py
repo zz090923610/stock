@@ -176,6 +176,7 @@ def load_csv(path):
             final_list.append(row)
     return final_list
 
+
 def save_market_open_date_list(market_open_date_list):
     with open('../stock_data/market_open_date_list.pickle', 'wb') as f:
         pickle.dump(market_open_date_list, f, -1)
@@ -199,6 +200,7 @@ def load_market_open_date_list():
         logging('load_market_open_date_list(): File not found')
         return update_market_open_date_list()
 
+
 def mkdirs(symbol_list):
     for a_dir in DIR_LIST:
         subprocess.call('mkdir -p %s' % a_dir, shell=True)
@@ -221,7 +223,6 @@ class BasicInfoHDL:
         self.symbol_sse = [s for s in self.symbol_list if self.in_sse(s)]
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
         self.timestamp = time.time()
-
 
     def load_suspend_trade_date_list(self):  # FIXME
         for stock in self.symbol_list:
@@ -359,7 +360,6 @@ class BasicInfoHDL:
                  col_order=['code', 'name', 'market', 'outstanding', 'totals', 'timeToMarket'])
         self.timestamp = time.time()
 
-
     def load(self, update=False):
         if update:
             if return_weekday(get_today()) == 0:
@@ -400,7 +400,7 @@ class BasicInfoHDL:
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
 
-        # self.load_suspend_trade_date_list() FIXME suspend list not used for now
+            # self.load_suspend_trade_date_list() FIXME suspend list not used for now
 
     @staticmethod
     def _handle_an_uls(uls):
@@ -570,7 +570,6 @@ def load_symbol_list(symbol_file):
     return symbol_list
 
 
-
 # noinspection PyUnusedLocal
 def get_au_scaler_list_of_stock(stock):
     # FIXME fix using yahoo
@@ -628,8 +627,6 @@ def load_ma_for_stock(stock, ma_params):
             return pickle.load(f)
     except FileNotFoundError:
         return []
-
-
 
 
 MARKET_OPEN_DATE_LIST = load_market_open_date_list()
@@ -727,6 +724,9 @@ def load_atpd_data(stock):
     Average Trade Price daily.
     :param stock:
     :return:
+    {'date': day, 'atpd': atpd, 'tvi': tvi, 'tvi_large': tvi_large, 'volume_sum': vol_sum,
+            'cost_sum': float('%.2f' % cost_sum),
+            'tick_size': tick_size}
     """
     data_list = []
     try:
@@ -734,13 +734,16 @@ def load_atpd_data(stock):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['atpd'] = float(row['atpd'])
+                row['tvi'] = int(row['tvi'])
+                row['tvi_large'] = int(row['tvi_large'])
+                row['volume_sum'] = int(row['volume_sum'])
+                row['cost_sum'] = float(row['cost_sum'])
+                row['tick_size'] = int(row['tick_size'])
                 data_list.append(row)
         data_new_sorted = sorted(data_list, key=itemgetter('date'))
         return data_new_sorted
     except FileNotFoundError:
         return []
-
-
 
 
 def load_daily_data(stock, autype='qfq'):
@@ -788,3 +791,27 @@ def load_stock_for_plot(stock, days):
     daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
     daily_data = daily_data.sort_values(by='date', ascending=True)
     return daily_data.tail(days)
+
+
+def load_atpdr_data(stock):
+    """
+    Average Trade Price daily.
+    :param stock:
+    :return:
+    """
+    data_list = []
+    # noinspection PyBroadException
+    try:
+        with open('../stock_data/qa/atpdr/%s.csv' % stock) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                row['cost_per_vol_1'] = float(row['cost_per_vol_1'])
+                row['cost_per_vol_3'] = float(row['cost_per_vol_3'])
+                row['vol_per_tick_1'] = float(row['vol_per_tick_1'])
+                row['vol_per_tick_3'] = float(row['vol_per_tick_3'])
+                row['atpd_ratio'] = float(row['atpd_ratio'])
+                data_list.append(row)
+        data_new_sorted = sorted(data_list, key=itemgetter('date'))
+        return data_new_sorted
+    except:
+        return []

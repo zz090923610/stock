@@ -7,91 +7,6 @@ from data_announance_parsing import get_parsed_announcement_for_stock
 from qa_ma import ma_align
 
 
-def calc_average_trade_price_for_stock_one_day(stock, day):
-    tick_day = load_tick_data(stock, day)
-    vol_sum = 0
-    cost_sum = 0
-    for line in tick_day:
-        cost_sum += line['price'] * line['volume']
-        vol_sum += line['volume']
-    try:
-        result = '%.2f' % (cost_sum / vol_sum)
-    except ZeroDivisionError:
-        result = -1
-    return {'date': day, 'atpd': result}
-
-
-def calc_average_trade_price_for_stock(stock, refresh):
-    date_list = load_stock_date_list_from_tick_files(stock)
-    if refresh:
-        atpd_list = []
-    else:
-        atpd_list = load_atpd_data(stock)
-    atpd_calced_date_list = [d['date'] for d in atpd_list]
-    to_do_date_list = []
-    for d in date_list:
-        if d not in atpd_calced_date_list:
-            to_do_date_list.append(d)
-    if len(to_do_date_list) == 0:
-        return
-    print('calc atpd for %s' % stock)
-    for i in to_do_date_list:
-        atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i))
-    atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
-    b = pd.DataFrame(atpd_list_sorted)
-    column_order = ['date', 'atpd']
-    b[column_order].to_csv('../stock_data/qa/atpd/%s.csv' % stock, index=False)
-
-
-def calc_atpd_for_all_stock(refresh=False):
-    print('calc atpd for all stocks %s' % len(BASIC_INFO.symbol_list))
-    pool = mp.Pool()
-    for i in BASIC_INFO.symbol_list:
-        pool.apply_async(calc_average_trade_price_for_stock, args=(i, refresh))
-    pool.close()
-    pool.join()
-
-
-def calc_atpdr_for_stock(stock):
-
-    atpd_list = load_atpd_data(stock)
-    for (idx, line) in enumerate(atpd_list):
-        if idx > 0:
-            ratio = line['atpd'] / atpd_list[idx - 1]['atpd']
-        else:
-            ratio = 1
-        line['atpd_ratio'] = '%.4f' % ratio
-    b = pd.DataFrame(atpd_list)
-    column_order = ['date', 'atpd_ratio']
-    b[column_order].to_csv('../stock_data/qa/atpdr/%s.csv' % stock, index=False)
-
-
-def calc_atpdr_for_all_stock():
-    print('Calc atpdr for all stocks')
-    for i in BASIC_INFO.symbol_list:
-        calc_atpdr_for_stock(i)
-
-
-def load_atpdr_data(stock):
-    """
-    Average Trade Price daily.
-    :param stock:
-    :return:
-    """
-    data_list = []
-    # noinspection PyBroadException
-    try:
-        with open('../stock_data/qa/atpdr/%s.csv' % stock) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                row['atpd_ratio'] = float(row['atpd_ratio'])
-                data_list.append(row)
-        data_new_sorted = sorted(data_list, key=itemgetter('date'))
-        return data_new_sorted
-    except:
-        return []
-
-
 def recent_trend_stat(stock, trade_days, last_day):
     atpdr_list_raw = load_atpdr_data(stock)
     atpdr_list = [i for i in atpdr_list_raw if i['date'] <= last_day]
@@ -202,7 +117,7 @@ def generate_trend_report(trade_days, continue_days, end_day):
                 msg += '<br>\n'
             stock_list_of_plot_to_download.append(l['code'])
     html = generate_html(msg)
-    email_html = generate_html('http://115.28.142.56/plots/%s.html' % end_day)
+    email_html = generate_html('http://115.28.142.56/plots/%s.html<br>\nhttp://115.28.142.56/plots/<br>\n' % end_day)
     with open('../stock_data/report/five_days_trend/%s.txt' % end_day, 'wb') as myfile:
         myfile.write(bytes(email_html, encoding='utf-8'))
     download_plots(stock_list_of_plot_to_download)

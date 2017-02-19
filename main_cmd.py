@@ -7,7 +7,7 @@ from common_func import *
 from get_tick_data import align_tick_data_stock
 from qa_buy_point import get_buy_point_for_stock
 from qa_ma import calc_ma_for_stock
-from qa_trend_continue import calc_average_trade_price_for_stock
+
 from variables import *
 
 
@@ -147,14 +147,6 @@ class MyPrompt(Cmd):
                 from get_daily_data import get_daily_data_for_stock_yahoo
                 get_daily_data_for_stock_yahoo(s, get_today(), get_today())
 
-    @staticmethod
-    def do_qa_calc_average_trade_price(args):
-        args = _cvt_args_to_list(args)
-        if len(args) == 0:
-            pass
-        else:
-            for s in args:
-                calc_average_trade_price_for_stock(s,True)
 
     @staticmethod
     def do_data_check_missing_tick(args):
