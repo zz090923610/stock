@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import csv
 import pickle
+import subprocess
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ from mpl_finance import *
 from common_func import BASIC_INFO, logging
 from qa_linear_fit import get_fitted_data
 from variables import *
+from intraday_plot import intraday_plot
 
 
 def calc_tmi_series_for_stock(stock, days):
@@ -152,13 +154,15 @@ def k_plot(stock, days):
     plt.setp(p_cost_per_vol_3, linewidth=line_width)
     legend_list.append(p_cost_per_vol_3)
 
-    p_vol_per_tick_1, = ax3.plot(ind, df_atpdr.vol_per_tick_1, '-', label=u'1日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_1'].tolist()[-1]))
+    p_vol_per_tick_1, = ax3.plot(ind, df_atpdr.vol_per_tick_1, '-',
+                                 label=u'1日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_1'].tolist()[-1]))
     plt.setp(p_vol_per_tick_1, linewidth=line_width)
     legend_list2.append(p_vol_per_tick_1)
-    p_vol_per_tick_3, = ax3.plot(ind, df_atpdr.vol_per_tick_3, '-', label=u'3日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_3'].tolist()[-1]))
+    p_vol_per_tick_3, = ax3.plot(ind, df_atpdr.vol_per_tick_3, '-',
+                                 label=u'3日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_3'].tolist()[-1]))
     plt.setp(p_vol_per_tick_3, linewidth=line_width)
     legend_list2.append(p_vol_per_tick_3)
-    leg3 = ax3.legend(handles=legend_list2,loc=2 )
+    leg3 = ax3.legend(handles=legend_list2, loc=2)
     leg3.get_frame().set_alpha(0.1)
     p_df_tmi_accu, = ax4.plot(ind, df_tmi_accu.tmi_accu, '-', label=u'自坐标首日起累积资金流入(万元)')
     plt.setp(p_df_tmi_accu, linewidth=line_width)
@@ -197,7 +201,26 @@ def k_plot(stock, days):
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
     fig.savefig('../stock_data/plots/%s.png' % s_full_name, transparent=False)
+    intraday_plot(stock, df['date'].tolist()[-1])
+    combine_plots(s_full_name)
+    subprocess.call('rm ../stock_data/plots/%s_intraday.png' %
+                    s_full_name, shell=True)
     plt.close()
+
+
+def combine_plots(s_full_name):
+    images=[Image.open('../stock_data/plots/%s.png' % s_full_name), Image.open('../stock_data/plots/%s_intraday.png' % s_full_name)]
+    widths, heights = zip(*(i.size for i in images))
+
+    max_width = max(widths)
+    total_height = sum(heights)
+
+    new_im = Image.new('RGB', (max_width, total_height))
+    new_im.paste(images[0], (0, 0))
+    new_im.paste(images[1], (0, heights[0]))
+    new_im.resize((max_width, total_height), Image.ANTIALIAS)
+    new_im.save('../stock_data/plots/%s.png' % s_full_name,optimize=True,quality=95)
+
 
 
 def save_fig_pickle(path, fig_param):
@@ -219,3 +242,4 @@ def cvt2gif(stock):
     img = Image.open('../stock_data/plots/%s.png' % s_full_name)
     img = img.resize((545, 300))
     img.save('../stock_data/plots/%s.png' % s_full_name, 'png')
+

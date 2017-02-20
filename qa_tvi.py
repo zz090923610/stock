@@ -2,17 +2,7 @@
 from common_func import *
 
 
-def load_stock_tick_data(stock, target_date):
-    df = pd.read_csv('../stock_data/tick_data/%s/%s_%s.csv' % (stock, stock, target_date))
-    df = df.sort_values(by='time', ascending=True)
-    df = df.reset_index()
-    df = df.drop('index', 1)
-    # noinspection PyBroadException
-    try:
-        df = df.drop('Unnamed: 0', 1)
-    except:
-        pass
-    return df
+
 
 
 def calc_tvi_stock_day(stock, target_date):

@@ -19,6 +19,14 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
+def compress_plot(stock):
+    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    subprocess.call('convert +dither -colors 256 ../stock_data/plots/%s.png ../stock_data/plots/%s_small.png' %
+                    (s_full_name, s_full_name), shell=True)
+    subprocess.call('mv ../stock_data/plots/%s_small.png ../stock_data/plots/%s.png' %
+                    (s_full_name, s_full_name), shell=True)
+
+
 def make_plots():
     print('Plotting')
     subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
@@ -30,6 +38,12 @@ def make_plots():
         pool.apply_async(k_plot, args=(stock, 120,))
     pool.close()
     pool.join()
+    pool = mp.Pool()
+    for stock in BASIC_INFO.symbol_list:
+        pool.apply_async(compress_plot, args=(stock,))
+    pool.close()
+    pool.join()
+
     subprocess.call("cd  ../stock_data/; tar czf plots.tar.gz plots/ ;mv plots.tar.gz upload/", shell=True)
     subprocess.call("cd  ../stock_data/upload; bypy syncup -v", shell=True)
     subprocess.call(
@@ -93,13 +107,13 @@ if __name__ == "__main__":
                 print('Generating report')
                 subprocess.call("./qa_trend_continue.py 100 5 %s" % today, shell=True)
                 subprocess.call(
-                  " scp '/home/zhangzhao/data/stock_data/plots/%s.html' zhangzhao@115.28.142.56:/var/www/plots/" %
-                  today, shell=True)
+                    " scp '/home/zhangzhao/data/stock_data/plots/%s.html' zhangzhao@115.28.142.56:/var/www/plots/" %
+                    today, shell=True)
             if send_email:
                 subprocess.call("./send_mail.py -n -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
-                               "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
+                                "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
                 subprocess.call("./send_mail.py -n -s 'zzy6548@126.com' '连续五日日平均交易价格趋势 %s' "
-                               "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
+                                "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
                 subprocess.call("./data_news_handler.py %s" % today, shell=True)
             print('All set')
         time.sleep(30)
