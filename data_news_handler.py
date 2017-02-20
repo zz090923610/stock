@@ -139,12 +139,11 @@ class NEWS_GOV:
             policy = self._get_gov_policy_of_day(day, self.urls['policy'])
             bumen = self._get_gov_policy_of_day(day, self.urls['bumen'])
             zhuanjia = self._get_gov_policy_of_day(day, self.urls['zhuanjia'])
-            meiti = self._get_gov_policy_of_day(day, self.urls['meiti'])
+            # meiti = self._get_gov_policy_of_day(day, self.urls['meiti'])
 
             self.all_data[day] = dict(policy=policy,
                                       bumen=bumen,
-                                      zhuanjia=zhuanjia,
-                                      meiti=meiti)
+                                      zhuanjia=zhuanjia)
             with open('../stock_data/news/gov/gov.pickle', 'wb') as f:
                 pickle.dump(self.all_data, f, -1)
 
