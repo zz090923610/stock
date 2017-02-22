@@ -82,7 +82,9 @@ def generate_trend_report(trade_days, continue_days, end_day):
         l['timeToMarket'] = BASIC_INFO.time_to_market_dict[l['code']]
     for l in d:
         l['timeToMarket'] = BASIC_INFO.time_to_market_dict[l['code']]
+    print('sort u %d' %len(u))
     u = sorted(u, key=itemgetter('timeToMarket'))
+    print('sort d %d' % len(d))
     d = sorted(d, key=itemgetter('timeToMarket'))
     for l in u:
         if l['continue_days'] >= continue_days:

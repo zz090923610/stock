@@ -5,9 +5,14 @@ import subprocess
 import sys
 
 import requests
+import resource
 from bs4 import BeautifulSoup
 
 from common_func import get_today, generate_html
+
+max_rec = 0x100000
+resource.setrlimit(resource.RLIMIT_STACK, [0x100 * max_rec, resource.RLIM_INFINITY])
+sys.setrecursionlimit(max_rec)
 
 
 def write_text_file(file, content):
@@ -96,13 +101,14 @@ class NEWS_SRC:
         html_str += '\n'
         return html_str
 
-    def have_news(self,day):
+    def have_news(self, day):
         news = self.all_data[day]['news']
         announcement = self.all_data[day]['announcement']
         if (len(news) > 0) | (len(announcement) > 0):
             return True
         else:
             return False
+
 
 # FIXME buggy news gov
 class NEWS_GOV:
@@ -129,21 +135,26 @@ class NEWS_GOV:
             title = item.find('a').contents[0]
             date = re.search(r"([0-9]{4}-[0-9]{2}-[0-9]{2})", str(item.find('span'))).group(1)
             if date == day:
-                parsed_list.append({'link': link, 'title': title, 'date': date})
+                if req_url == self.urls['bumen']:
+                    parsed_list.append({'link': 'http://www.gov.cn%s' % link, 'title': title, 'date': date})
+                else:
+                    parsed_list.append({'link': link, 'title': title, 'date': date})
         return parsed_list
 
     def fetch_all_of_day(self, day):
         try:
-            _ = self.all_data[day]
+            len(self.all_data[day])
         except KeyError:
             policy = self._get_gov_policy_of_day(day, self.urls['policy'])
             bumen = self._get_gov_policy_of_day(day, self.urls['bumen'])
             zhuanjia = self._get_gov_policy_of_day(day, self.urls['zhuanjia'])
-            # meiti = self._get_gov_policy_of_day(day, self.urls['meiti'])
+            meiti = self._get_gov_policy_of_day(day, self.urls['meiti'])
 
-            self.all_data[day] = dict(policy=policy,
-                                      bumen=bumen,
-                                      zhuanjia=zhuanjia)
+            self.all_data[day] = {'policy': policy,
+                                  'bumen': bumen,
+                                  'zhuanjia': zhuanjia,
+                                  'meiti': meiti}
+
             with open('../stock_data/news/gov/gov.pickle', 'wb') as f:
                 pickle.dump(self.all_data, f, -1)
 
@@ -183,17 +194,36 @@ class NEWS_GOV:
         html_str += '\n'
         return html_str
 
+    def have_news(self, day):
+        policy = self.all_data[day]['policy']
+        bumen = self.all_data[day]['bumen']
+        zhuanjia = self.all_data[day]['zhuanjia']
+        meiti = self.all_data[day]['meiti']
+        result = False
+
+        if len(policy) > 0:
+            result = True
+        if len(bumen) > 0:
+            result = True
+        if len(zhuanjia) > 0:
+            result = True
+        if len(meiti) > 0:
+            result = True
+        return result
+
 
 if __name__ == "__main__":
     src = NEWS_SRC()
-    # gov = NEWS_GOV()
+    gov = NEWS_GOV()
     target_day = sys.argv[1]
     src.fetch_all_of_day(target_day)
-    # gov.fetch_all_of_day(target_day)
-    result_html = generate_html(src.generate_html_of_day(target_day))
+    gov.fetch_all_of_day(target_day)
+    result_html = generate_html(src.generate_html_of_day(target_day) + gov.generate_html_of_day(target_day))
     write_text_file('../stock_data/news/%s.html' % target_day, result_html)
-    if src.have_news(target_day):
+    if src.have_news(target_day) | gov.have_news(target_day):
         subprocess.call("./send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
-                        "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
+                       "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
         subprocess.call("./send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
-                        "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
+                       "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)
+        subprocess.call("./send_mail.py -n -s 'ustczyy@126.com' '今日要闻 %s' "
+                       "'../stock_data/news/%s.html'" % (target_day, target_day), shell=True)

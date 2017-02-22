@@ -806,14 +806,20 @@ def load_atpdr_data(stock):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['cost_per_vol_1'] = float(row['cost_per_vol_1'])
-                row['cost_per_vol_3'] = float(row['cost_per_vol_3'])
+                try:
+                    row['cost_per_vol_3'] = float(row['cost_per_vol_3'])
+                except ValueError:
+                    row['cost_per_vol_3'] = None
                 row['vol_per_tick_1'] = float(row['vol_per_tick_1'])
-                row['vol_per_tick_3'] = float(row['vol_per_tick_3'])
+                try:
+                    row['vol_per_tick_3'] = float(row['vol_per_tick_3'])
+                except ValueError:
+                    row['vol_per_tick_3'] = None
                 row['atpd_ratio'] = float(row['atpd_ratio'])
                 data_list.append(row)
         data_new_sorted = sorted(data_list, key=itemgetter('date'))
         return data_new_sorted
-    except:
+    except FileNotFoundError:
         return []
 
 

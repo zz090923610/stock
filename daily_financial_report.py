@@ -86,7 +86,9 @@ if __name__ == "__main__":
             if update:
                 update_basic_info()
                 update_market_open_date_list()
+                print("get daily data")
                 get_update_for_all_stock()
+                print('get tick')
                 subprocess.call("./get_tick_data.py %s" % today, shell=True)
                 # BASIC_INFO.get_announcement_all_stock_one_day(today)
             if calc:

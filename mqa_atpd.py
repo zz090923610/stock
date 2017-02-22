@@ -6,7 +6,7 @@ from common_func import *
 from scoop import futures
 
 data = BASIC_INFO.symbol_list
-REFRESH = False
+REFRESH_ATPD = False
 
 
 def calc_average_trade_price_for_stock_one_day(stock, day):
@@ -49,15 +49,15 @@ def calc_average_trade_price_for_stock_one_day(stock, day):
                 'cost_sum': 0,
                 'tick_size': tick_size}
     return {'date': day, 'atpd': atpd, 'tvi': tvi, 'tvi_large': tvi_large, 'tmi': float('%.2f' % (tmi/10000)),
-            'tmi_large':
-        float('%.2f' % (tmi_large / 10000)), 'volume_sum': vol_sum, 'cost_sum': float('%.2f' % cost_sum), 'tick_size': tick_size}
+            'tmi_large':float('%.2f' % (tmi_large / 10000)),
+            'volume_sum': vol_sum, 'cost_sum': float('%.2f' % cost_sum), 'tick_size': tick_size}
 
 
 def calc_average_trade_price_for_stock(idx):
     stock = data[idx]
     date_list = load_stock_date_list_from_tick_files(stock)
-    global REFRESH
-    if REFRESH:
+    global REFRESH_ATPD
+    if REFRESH_ATPD:
         atpd_list = []
     else:
         atpd_list = load_atpd_data(stock)
@@ -74,6 +74,8 @@ def calc_average_trade_price_for_stock(idx):
         atpd_list.append(calc_average_trade_price_for_stock_one_day(stock, i))
     atpd_list_sorted = sorted(atpd_list, key=itemgetter('date'))
     b = pd.DataFrame(atpd_list_sorted)
+    b = b.drop_duplicates('date', keep='last')
+    b = b.reset_index()
     column_order = ['date', 'atpd', 'tvi', 'tvi_large','tmi', 'tmi_large', 'volume_sum', 'cost_sum', 'tick_size']
     b[column_order].to_csv('../stock_data/qa/atpd/%s.csv' % stock, index=False)
 
