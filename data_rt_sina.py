@@ -37,8 +37,16 @@ def get_rt_data(once=500):
     return final_list
 
 
+def get_rt_data_dict():
+    rt_list = get_rt_data()
+    rt_dict = {}
+    for line in rt_list:
+        rt_dict.update({line['code']: line})
+    return rt_dict
+
+
 def get_rt_data_for_stock(s, stock):
-    print('Getting real time %s' %stock)
+    print('Getting real time %s' % stock)
     tmp_str = '%s%s' % ('sh' if BASIC_INFO.market_dict[stock] == 'sse' else 'sz', stock)
     req_url = 'http://hq.sinajs.cn/list=' + tmp_str
     get_headers = {'User-Agent': AGENT['User-Agent']}
@@ -55,6 +63,13 @@ def get_rt_data_for_stock(s, stock):
         b = DataFrame(parsed_line, index=[-1])
         return b[['date', 'open', 'high', 'close', 'low', 'volume']]
     else:
+        return None
+
+
+def get_pd_from_rt_data_dict_of_stock(rt_data_dict, stock):
+    try:
+        return DataFrame(rt_data_dict[stock], index=[-0])
+    except KeyError:
         return None
 
 

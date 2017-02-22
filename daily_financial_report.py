@@ -2,7 +2,7 @@
 import signal
 
 from common_func import *
-from get_daily_data import get_update_for_all_stock
+from new_get_data import get_update_for_all_stock
 from k_plot import k_plot
 from qa_ma import calc_ma_for_all_stock
 from qa_atpdr import calc_atpdr_for_all_stock
@@ -82,6 +82,7 @@ if __name__ == "__main__":
         close_days = load_market_close_days_for_year('2017')
         if sleep:
             sleep_until('19:00:00')
+            today = get_today()
         if today not in close_days:
             if update:
                 update_basic_info()
@@ -89,10 +90,12 @@ if __name__ == "__main__":
                 print("get daily data")
                 get_update_for_all_stock()
                 print('get tick')
-                subprocess.call("./get_tick_data.py %s" % today, shell=True)
+                subprocess.call("./new_get_tick_data.py", shell=True)
+                # subprocess.call("./get_tick_data.py %s" % today, shell=True)
                 # BASIC_INFO.get_announcement_all_stock_one_day(today)
             if calc:
-                subprocess.call('python3 -m scoop --hostfile hostfile mqa_atpd.py', shell=True)
+                # subprocess.call('python3 -m scoop --hostfile hostfile mqa_atpd.py', shell=True)
+                subprocess.call('./mqa_atpd.py', shell=True)
                 calc_atpdr_for_all_stock()
                 calc_ma_for_all_stock(3)
                 calc_ma_for_all_stock(10)
