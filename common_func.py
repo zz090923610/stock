@@ -40,10 +40,16 @@ def get_operator_fn(op):
     }[op]
 
 
-def logging(msg):
-    print(msg, file=sys.stderr)
+def eval_binary_expr(op1, optr, op2):
+    return get_operator_fn(optr)(op1, op2)
+
+
+def logging(msg, silence=False):
+    if not silence:
+        print(msg, file=sys.stderr)
     lock.acquire()
     fo = open('../stock_data/log.txt', "a")
+
     print('[%s] %s' % (get_time(), msg), file=fo)
     fo.close()
     lock.release()
@@ -64,10 +70,6 @@ def sleep_until(when):
     time.sleep(seconds.seconds)
 
 
-def eval_binary_expr(op1, optr, op2):
-    return get_operator_fn(optr)(op1, op2)
-
-
 def list2csv(data_list, out_file, col_order=None, add_index=False):
     if col_order is None:
         col_order = []
@@ -76,6 +78,14 @@ def list2csv(data_list, out_file, col_order=None, add_index=False):
         b.to_csv(out_file, index=add_index)
     else:
         b[col_order].to_csv(out_file, index=add_index)
+
+
+def load_market_close_days_for_year(year):
+    try:
+        with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return []
 
 
 def get_today():
@@ -120,7 +130,7 @@ def get_time_of_a_day():
 def load_stock_date_list_from_tick_files(stock):
     file_list = os.listdir('../stock_data/tick_data/%s' % stock)
     if len(file_list) == 0:
-        return None
+        return []
     date_list = []
     for f in file_list:
         day = f.split('_')[1].split('.')[0]
@@ -183,13 +193,23 @@ def save_market_open_date_list(market_open_date_list):
 
 
 def update_market_open_date_list():
-    b = ts.get_k_data('000001', index=True, start=START_DATE)
-    days_cnt = len(b.index)
-    days_list = []
-    for idx in range(0, days_cnt):
-        days_list.append(b.iloc[idx].date)
-    save_market_open_date_list(days_list)
-    return days_list
+    try:
+        with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
+            list_already = pickle.load(f)
+    except FileNotFoundError as e:
+        list_already = []
+    if get_today() in list_already:
+        print('Updated market dates list')
+        return list_already
+    else:
+        print('Updating market dates list')
+        b = ts.get_k_data('000001', index=True, start=START_DATE)
+        days_cnt = len(b.index)
+        days_list = []
+        for idx in range(0, days_cnt):
+            days_list.append(b.iloc[idx].date)
+        save_market_open_date_list(days_list)
+        return days_list
 
 
 def load_market_open_date_list():
@@ -223,6 +243,7 @@ class BasicInfoHDL:
         self.symbol_sse = [s for s in self.symbol_list if self.in_sse(s)]
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
         self.timestamp = time.time()
+        self.today = get_today()
 
     def load_suspend_trade_date_list(self):  # FIXME
         for stock in self.symbol_list:
@@ -363,6 +384,7 @@ class BasicInfoHDL:
     def load(self, update=False):
         if update:
             if return_weekday(get_today()) == 0:
+                print('Updating stock list')
                 self._get_sse_company_list()
                 self._get_szse_company_list()
                 self._merge_company_list()
@@ -399,7 +421,7 @@ class BasicInfoHDL:
             self.totals_dict[i['code']] = i['totals']
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
-
+        print('Fininshed BASIC_INFO loading')
             # self.load_suspend_trade_date_list() FIXME suspend list not used for now
 
     @staticmethod
@@ -554,14 +576,10 @@ class BasicInfoHDL:
 BASIC_INFO = BasicInfoHDL()
 
 
-def update_basic_info():
-    BASIC_INFO.load(update=True)
-
-
 def load_symbol_list(symbol_file):
     symbol_list = []
     if not os.path.isfile(symbol_file):
-        update_basic_info()
+        BASIC_INFO.load(update=True)
     with open(symbol_file) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -611,14 +629,6 @@ def load_market_open_date_list_from(given_day):
         if day >= given_day:
             result_list.append(day)
     return result_list
-
-
-def load_market_close_days_for_year(year):
-    try:
-        with open('../stock_data/dates/market_close_days_%s.pickle' % year, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return []
 
 
 def load_ma_for_stock(stock, ma_params):

@@ -194,7 +194,7 @@ def k_plot(stock, days):
     combine_plots(s_full_name)
     subprocess.call('rm ../stock_data/plots/%s_intraday.png' %
                     s_full_name, shell=True)
-    plt.close()
+    plt.close(fig)
 
 
 def combine_plots(s_full_name):

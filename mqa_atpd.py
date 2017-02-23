@@ -105,6 +105,11 @@ def calc_average_trade_price_for_stock(idx):
 if __name__ == '__main__':
     subprocess.call('mkdir -p ../stock_data/qa/atpd', shell=True)
     # FIXME buggy multi processing when re calculated
-    # results = list(futures.map(calc_average_trade_price_for_stock, range(len(data))))
-    for (idx, stock) in enumerate(BASIC_INFO.symbol_list):
-        calc_average_trade_price_for_stock(idx)
+    results = list(futures.map(calc_average_trade_price_for_stock, range(len(data))))
+
+    #pool = mp.Pool()
+    # noinspection PyShadowingNames
+    #for (idx, stock) in enumerate(BASIC_INFO.symbol_list):
+    #    pool.apply_async(calc_average_trade_price_for_stock, args=(idx,))
+    #pool.close()
+    #pool.join()

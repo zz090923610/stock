@@ -55,7 +55,7 @@ def print_trend(trade_days, continue_days, end_day):
 def load_basic_info_list():
     symbol_dict = {}
     if not os.path.isfile('../stock_data/basic_info.csv'):
-        update_basic_info()
+        BASIC_INFO.load(update=True)
     with open('../stock_data/basic_info.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:

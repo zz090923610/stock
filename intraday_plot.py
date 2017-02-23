@@ -47,7 +47,7 @@ def intraday_plot(stock, target_date):
     plt.subplots_adjust(top=0.92)
     fig.savefig('../stock_data/plots/%s_intraday.png' % s_full_name, transparent=False)
     # plt.plot(fig)
-    plt.close()
+    plt.close(fig)
 
 
 def save_fig_pickle(path, fig_param):
