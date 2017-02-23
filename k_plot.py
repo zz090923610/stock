@@ -96,17 +96,9 @@ def k_plot(stock, days):
     # df = load_stock(stock, days)
     df = get_fitted_data(stock, days, 15, 2)
     df_atpdr = load_atpdr_for_plot(stock, days)
-    df_ma3 = load_ma_for_stock_for_plot(stock, 'atpd_3', days)
-    df_ma10 = load_ma_for_stock_for_plot(stock, 'atpd_10', days)
     df_ma20 = load_ma_for_stock_for_plot(stock, 'atpd_20', days)
     df_ma40 = load_ma_for_stock_for_plot(stock, 'atpd_40', days)
     df_tmi_accu = calc_tmi_series_for_stock(stock, days)
-
-    last_open = df.tail(1).iloc[-1]['open']
-    last_close = df.tail(1).iloc[-1]['close']
-    last_high = df.tail(1).iloc[-1]['high']
-    last_low = df.tail(1).iloc[-1]['low']
-    last_day_msg = ' 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (last_open, last_close, last_high, last_low)
 
     # plt.ion()
     fig = plt.figure(figsize=(16, 9), dpi=100)
@@ -128,7 +120,10 @@ def k_plot(stock, days):
     ax3 = plt.subplot2grid((6, 1), (4, 0), sharex=ax1)
     ax4 = plt.subplot2grid((6, 1), (5, 0), sharex=ax1)
 
-    fig.suptitle(u'%s %s 日线图 %s %s' % (stock, BASIC_INFO.name_dict[stock], df_ma10['date'].tolist()[-1], last_day_msg),
+    fig.suptitle(u'%s %s 日线图 %s 开:%.02f 收:%.02f 高:%.02f 低:%.02f' % (stock, BASIC_INFO.name_dict[stock],
+                                                                    df.iloc[-1]['date'],
+                                                                    df.iloc[-1]['open'], df.iloc[-1]['close'],
+                                                                    df.iloc[-1]['high'], df.iloc[-1]['low']),
                  fontsize=fonts[1])
 
     ax1.xaxis.set_major_formatter(ticker.FuncFormatter(format_date))
@@ -145,21 +140,21 @@ def k_plot(stock, days):
     plt.setp(p_btl, linewidth=.5)
 
     p_cost_per_vol_1, = ax1.plot(ind, df_atpdr.cost_per_vol_1, '-',
-                                 label=u'1日成交均价： %s' % df_atpdr['cost_per_vol_1'].tolist()[-1])
+                                 label=u'1日成交均价： %s' % df_atpdr.iloc[-1]['cost_per_vol_1'])
     plt.setp(p_cost_per_vol_1, linewidth=line_width)
     legend_list.append(p_cost_per_vol_1)
 
     p_cost_per_vol_3, = ax1.plot(ind, df_atpdr.cost_per_vol_3, '-',
-                                 label=u'3日成交均价： %s' % df_atpdr['cost_per_vol_3'].tolist()[-1])
+                                 label=u'3日成交均价： %s' % df_atpdr.iloc[-1]['cost_per_vol_3'])
     plt.setp(p_cost_per_vol_3, linewidth=line_width)
     legend_list.append(p_cost_per_vol_3)
 
     p_vol_per_tick_1, = ax3.plot(ind, df_atpdr.vol_per_tick_1, '-',
-                                 label=u'1日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_1'].tolist()[-1]))
+                                 label=u'1日每单平均手数: %.2f' % float(df_atpdr.iloc[-1]['vol_per_tick_1']))
     plt.setp(p_vol_per_tick_1, linewidth=line_width)
     legend_list2.append(p_vol_per_tick_1)
     p_vol_per_tick_3, = ax3.plot(ind, df_atpdr.vol_per_tick_3, '-',
-                                 label=u'3日每单平均手数: %.2f' % float(df_atpdr['vol_per_tick_3'].tolist()[-1]))
+                                 label=u'3日每单平均手数: %.2f' % float(df_atpdr.iloc[-1]['vol_per_tick_3']))
     plt.setp(p_vol_per_tick_3, linewidth=line_width)
     legend_list2.append(p_vol_per_tick_3)
     leg3 = ax3.legend(handles=legend_list2, loc=2)
@@ -172,16 +167,10 @@ def k_plot(stock, days):
     legend_list3.append(p_df_tmi_large_accu)
     leg4 = ax4.legend(handles=legend_list3, loc=2)
     leg4.get_frame().set_alpha(0.1)
-    # p_ma3, = ax1.plot(ind, df_ma3.ma3, '-', label=u'MA3: %s' % df_ma3['ma3'].tolist()[-1])
-    # plt.setp(p_ma3, linewidth=line_width)
-    # legend_list.append(p_ma3)
-    # p_ma10, = ax1.plot(ind, df_ma10.ma10, '-', label=u'MA10: %s' % df_ma10['ma10'].tolist()[-1])
-    # plt.setp(p_ma10, linewidth=line_width)
-    # legend_list.append(p_ma10)
-    p_ma20, = ax1.plot(ind, df_ma20.ma20, '-', label=u'MA20: %s' % df_ma20['ma20'].tolist()[-1])
+    p_ma20, = ax1.plot(ind, df_ma20.ma20, '-', label=u'MA20: %s' % df_ma20.iloc[-1]['ma20'])
     plt.setp(p_ma20, linewidth=line_width)
     legend_list.append(p_ma20)
-    p_ma40, = ax1.plot(ind, df_ma40.ma40, '-', label=u'MA40: %s' % df_ma40['ma40'].tolist()[-1])
+    p_ma40, = ax1.plot(ind, df_ma40.ma40, '-', label=u'MA40: %s' % df_ma40.iloc[-1]['ma40'])
     plt.setp(p_ma40, linewidth=line_width)
     legend_list.append(p_ma40)
     leg = ax1.legend(handles=legend_list, )
@@ -209,7 +198,8 @@ def k_plot(stock, days):
 
 
 def combine_plots(s_full_name):
-    images=[Image.open('../stock_data/plots/%s.png' % s_full_name), Image.open('../stock_data/plots/%s_intraday.png' % s_full_name)]
+    images = [Image.open('../stock_data/plots/%s.png' % s_full_name),
+              Image.open('../stock_data/plots/%s_intraday.png' % s_full_name)]
     widths, heights = zip(*(i.size for i in images))
 
     max_width = max(widths)
@@ -219,8 +209,7 @@ def combine_plots(s_full_name):
     new_im.paste(images[0], (0, 0))
     new_im.paste(images[1], (0, heights[0]))
     new_im.resize((max_width, total_height), Image.ANTIALIAS)
-    new_im.save('../stock_data/plots/%s.png' % s_full_name,optimize=True,quality=95)
-
+    new_im.save('../stock_data/plots/%s.png' % s_full_name, optimize=True, quality=95)
 
 
 def save_fig_pickle(path, fig_param):
@@ -242,4 +231,3 @@ def cvt2gif(stock):
     img = Image.open('../stock_data/plots/%s.png' % s_full_name)
     img = img.resize((545, 300))
     img.save('../stock_data/plots/%s.png' % s_full_name, 'png')
-

@@ -2,7 +2,7 @@
 import signal
 
 from common_func import *
-from new_get_data import get_update_for_all_stock
+from get_daily_data import get_update_for_all_stock
 from k_plot import k_plot
 from qa_ma import calc_ma_for_all_stock
 from qa_atpdr import calc_atpdr_for_all_stock

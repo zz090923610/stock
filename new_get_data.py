@@ -6,7 +6,7 @@ from common_func import *
 from data_rt_sina import get_rt_data_for_stock, get_rt_data_dict, get_pd_from_rt_data_dict_of_stock
 
 TODAY = get_today()
-RT_DICT = get_rt_data_dict()
+RT_DICT = get_rt_data_dict() # FIXME global update
 
 
 def get_all_data_for_one_stock(stock):
