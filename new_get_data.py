@@ -35,7 +35,7 @@ def get_all_data_for_one_stock(stock):
     if TODAY not in df.date.tolist():
         rt_today = get_pd_from_rt_data_dict_of_stock(RT_DICT, stock)
         if rt_today is not None:
-            if rt_today['volume'][0] != 0:
+            if int(rt_today['volume'][0]) > 0:
                 df = df.append(rt_today, ignore_index=True)
     df = df.drop_duplicates('date', keep='last')
     df = df.sort_values(by='date', ascending=True)
@@ -79,7 +79,9 @@ def get_update_for_one_stock(stock):
         return
     rt_today = get_pd_from_rt_data_dict_of_stock(RT_DICT, stock)
     if rt_today is not None:
-        df = df.append(rt_today, ignore_index=True)
+        if rt_today is not None:
+            if int(rt_today['volume'][0]) > 0:
+                df = df.append(rt_today, ignore_index=True)
     df = df.sort_values(by='date', ascending=True)
     df = df.reset_index()
     cols = ['date', 'open', 'high', 'close', 'low', 'volume']
