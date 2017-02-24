@@ -193,23 +193,14 @@ def save_market_open_date_list(market_open_date_list):
 
 
 def update_market_open_date_list():
-    try:
-        with open('../stock_data/market_open_date_list.pickle', 'rb') as f:
-            list_already = pickle.load(f)
-    except FileNotFoundError as e:
-        list_already = []
-    if get_today() in list_already:
-        print('Updated market dates list')
-        return list_already
-    else:
-        print('Updating market dates list')
-        b = ts.get_k_data('000001', index=True, start=START_DATE)
-        days_cnt = len(b.index)
-        days_list = []
-        for idx in range(0, days_cnt):
-            days_list.append(b.iloc[idx].date)
-        save_market_open_date_list(days_list)
-        return days_list
+    print('Updating market dates list')
+    b = ts.get_k_data('000001', index=True, start=START_DATE)
+    days_cnt = len(b.index)
+    days_list = []
+    for idx in range(0, days_cnt):
+        days_list.append(b.iloc[idx].date)
+    save_market_open_date_list(days_list)
+    return days_list
 
 
 def load_market_open_date_list():
@@ -236,6 +227,7 @@ class BasicInfoHDL:
         self.totals_dict = {}
         self.time_to_market_dict = {}
         self.symbol_list = []
+
         self.market_open_days = []
         self.stock_suspend_day_list = {i: [] for i in self.symbol_list}
         self.stock_trade_day_list = {i: [] for i in self.symbol_list}
@@ -328,7 +320,7 @@ class BasicInfoHDL:
                       'areaName': None,
                       'stockType': 1}
         s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params)
+        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
         csv_data = result.text
         csv_data = csv_data.replace('\t', ',')
         csv_data = csv_data.replace(' ', '')
@@ -349,7 +341,7 @@ class BasicInfoHDL:
         get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
                       'TABKEY': market_type_dict[market_type][1]}
         s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params)
+        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
         with open('/tmp/szse_company.xlsx', 'wb') as f:
             f.write(result.content)
 
@@ -382,6 +374,8 @@ class BasicInfoHDL:
         self.timestamp = time.time()
 
     def load(self, update=False):
+        if not os.path.exists('../stock_data'):
+            subprocess.call('mkdir ../stock_data', shell=True)
         if update:
             if return_weekday(get_today()) == 0:
                 print('Updating stock list')
@@ -392,7 +386,8 @@ class BasicInfoHDL:
             mkdirs(self.symbol_list)
             # self.get_all_announcements()
             self.get_announcement_all_stock_one_day(get_today())  # FIXME
-            self.get_all_stock_suspend_list()
+            print('Finished loading announcements')
+            # self.get_all_stock_suspend_list()
         try:
             basic_info_list = load_csv('../stock_data/basic_info.csv')
         except FileNotFoundError:
@@ -422,7 +417,7 @@ class BasicInfoHDL:
             self.time_to_market_dict[i['code']] = i['timeToMarket']
             self.symbol_list.append(i['code'])
         print('Fininshed BASIC_INFO loading')
-            # self.load_suspend_trade_date_list() FIXME suspend list not used for now
+        # self.load_suspend_trade_date_list() FIXME suspend list not used for now
 
     @staticmethod
     def _handle_an_uls(uls):
@@ -446,7 +441,7 @@ class BasicInfoHDL:
         return final_list
 
     def _get_stock_suspend_list_of_day(self, day):
-        print("Fetching %s" % day)
+        print("Fetching Suspend List %s" % day)
         req_url = 'http://www.cninfo.com.cn/cninfo-new/memo-2'
         get_headers = {
             'Host': 'www.cninfo.com.cn',
@@ -456,7 +451,7 @@ class BasicInfoHDL:
         get_params = {'queryDate': day,
                       'queryType': 'queryType1'}
         s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params)
+        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
         b = result.text
         soup = BeautifulSoup(b, 'lxml')
         c = soup.find("div", {"id": "suspensionAndResumption1"})
@@ -525,6 +520,9 @@ class BasicInfoHDL:
         return final_data_list
 
     def get_announcement_all_stock_one_day(self, target_day):
+        if os.path.exists('../stock_data/announcements/%s.pickle' % target_day):
+            return
+        print('Fetching announcement of %s' % target_day)
         data = []
         data += self._get_announcement_one_day_one_stock(target_day, 'fulltext',
                                                          'szse')  # market doesn't matter, will fetch all markets
