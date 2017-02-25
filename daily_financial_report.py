@@ -119,7 +119,7 @@ if __name__ == "__main__":
                                 "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)
                 subprocess.call("./data_news_handler.py %s" % today, shell=True)
             print('All set')
-        time.sleep(30)
+        time.sleep(10)
         if sleep:
             sleep_until('18:00:00')
         else:

@@ -180,11 +180,14 @@ def str2date(str_date):
 
 def load_csv(path):
     final_list = []
-    with open(path) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            final_list.append(row)
-    return final_list
+    try:
+        with open(path) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                final_list.append(row)
+        return final_list
+    except FileNotFoundError:
+        return None
 
 
 def save_market_open_date_list(market_open_date_list):
@@ -201,6 +204,15 @@ def update_market_open_date_list():
         days_list.append(b.iloc[idx].date)
     save_market_open_date_list(days_list)
     return days_list
+
+
+def load_pickle(path):
+    try:
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError as e:
+        logging('load_market_open_date_list(): File not found')
+        return None
 
 
 def load_market_open_date_list():

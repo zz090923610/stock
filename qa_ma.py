@@ -236,10 +236,66 @@ def calc_ma_for_stock(stock: str, days: int, calc_type: str = 'atpd') -> list:
         if idx < days - 1:
             ma_list.append({'date': line['date'], 'ma%d' % days: None})
             continue
-        ma5 = sum(float(i[calc_type]) for i in data_list[idx - days + 1: idx + 1]) / days
-        ma_list.append({'date': line['date'], 'ma%d' % days: '%.3f' % ma5})
+        ma = sum(float(i[calc_type]) for i in data_list[idx - days + 1: idx + 1]) / days
+        ma_list.append({'date': line['date'], 'ma%d' % days: '%.3f' % ma})
     save_ma_for_stock(stock, ma_list, '%s_%d' % (calc_type, days))
     return ma_list
+
+
+# noinspection PyUnboundLocalVariable
+def calc_moving_averaging(data_source, column_to_calc, window_length, in_place_save=False,
+                          fillNan=False, need_increase_sort=False, need_decrease_sort=False,
+                          sort_by='date', out_cols=[]):
+    # Loading data
+    # noinspection PyUnresolvedReferences
+    if type(data_source) == pd.core.frame.DataFrame:
+        df = data_source
+    elif type(data_source) == str:
+        if data_source.find('csv') != -1:
+            df = pd.read_csv(data_source)
+        elif data_source.find('pickle') != -1:
+            df = pd.DataFrame(load_pickle(data_source))
+    elif type(data_source) == list:
+        df = pd.DataFrame(data_source)
+
+    # Sort if needed
+    if need_increase_sort:
+        df = df.sort_values(by=sort_by, ascending=True)
+    if need_decrease_sort:
+        df = df.sort_values(by=sort_by, ascending=False)
+    df = df.reset_index()
+    # noinspection PyBroadException
+    try:
+        df = df.drop('index', 1)
+    except:
+        pass
+    # calc ma
+    df['ma%d' % window_length] = 0
+    for shift_bit in range(window_length):
+        df['ma%d' % window_length] += df[column_to_calc].shift(shift_bit)
+    try:
+        df['ma%d' % window_length] /= window_length
+    except ZeroDivisionError:
+        logging('Zero window length')
+    df['ma%d' % window_length] = df['ma%d' % window_length].round(3)
+    if fillNan:
+        df = df.fillna(0)
+    if len(out_cols):
+        df = df[out_cols]
+    # Save if required
+    if in_place_save:
+        # noinspection PyUnresolvedReferences
+        if type(data_source) == pd.core.frame.DataFrame:
+            pass  # data_source = df # FIXME doesn't look like to work
+        elif type(data_source) == str:
+            if data_source.find('csv') != -1:
+                df.to_csv(data_source, index=False)
+            elif data_source.find('pickle') != -1:
+                with open(data_source, 'wb') as f:
+                    pickle.dump(list(df.T.to_dict().values()), f, -1)
+        elif type(data_source) == list:
+            df = list(df.T.to_dict().values())
+    return df
 
 
 def calc_ma_for_all_stock(days, calc_type='atpd'):

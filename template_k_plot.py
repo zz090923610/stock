@@ -35,47 +35,47 @@ plots_list = [
      'legend_label': None},
 
     {'indicator_name': 'upper_trend', 'data_source': 'df', 'column': ['upper_trend'], 'is_date_index': False,
-     'shared_x': True, 'span_ratio': 3, 'plot_with': 'main_k', 'plot_type': 'line_k-', 'legend': 'off',
+     'shared_x': True, 'span_ratio': 3, 'plot_with': 'main_k', 'plot_type': 'line_k-_.5', 'legend': 'off',
      'legend_label': None},
 
     {'indicator_name': 'bottom_trend', 'data_source': 'df', 'column': ['bottom_trend'], 'is_date_index': False,
-     'shared_x': True, 'span_ratio': 3, 'plot_with': 'main_k', 'plot_type': 'line_k-', 'legend': 'off',
+     'shared_x': True, 'span_ratio': 3, 'plot_with': 'main_k', 'plot_type': 'line_k-_.5', 'legend': 'off',
      'legend_label': None},
 
     {'indicator_name': 'cost_per_vol_1', 'data_source': 'df_atpdr', 'column': ['cost_per_vol_1'],
      'is_date_index': False,
-     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'1日成交均价： %s' % df_atpdr.iloc[-1]['cost_per_vol_1']"},
 
     {'indicator_name': 'cost_per_vol_3', 'data_source': 'df_atpdr', 'column': ['cost_per_vol_3'],
      'is_date_index': False,
-     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'3日成交均价： %s' % df_atpdr.iloc[-1]['cost_per_vol_3']"},
 
     {'indicator_name': 'vol_per_tick_1', 'data_source': 'df_atpdr', 'column': ['vol_per_tick_1'],
      'is_date_index': False,
-     'shared_x': True, 'span_ratio': 1, 'plot_with': 'self', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': 1, 'plot_with': 'self', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'1日每单平均手数: %.2f' % float(df_atpdr.iloc[-1]['vol_per_tick_1'])"},
 
     {'indicator_name': 'vol_per_tick_3', 'data_source': 'df_atpdr', 'column': ['vol_per_tick_3'],
      'is_date_index': False,
-     'shared_x': True, 'span_ratio': None, 'plot_with': 'vol_per_tick_1', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': None, 'plot_with': 'vol_per_tick_1', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'3日每单平均手数: %.2f' % float(df_atpdr.iloc[-1]['vol_per_tick_3'])"},
 
     {'indicator_name': 'ma20', 'data_source': 'df_ma20', 'column': ['ma20'], 'is_date_index': False,
-     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'MA20: %s' % df_ma20.iloc[-1]['ma20']"},
 
     {'indicator_name': 'ma40', 'data_source': 'df_ma40', 'column': ['ma40'], 'is_date_index': False,
-     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': None, 'plot_with': 'main_k', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'MA40: %s' % df_ma40.iloc[-1]['ma40']"},
 
     {'indicator_name': 'tmi_accu', 'data_source': 'df_tmi_accu', 'column': ['tmi_accu'], 'is_date_index': False,
-     'shared_x': True, 'span_ratio': 1, 'plot_with': 'self', 'plot_type': 'line_-', 'legend': 'on',
+     'shared_x': True, 'span_ratio': 1, 'plot_with': 'self', 'plot_type': 'line_-_1.5', 'legend': 'on',
      'legend_label': "u'自坐标首日起累积资金流入(万元)'"},
 
     {'indicator_name': 'tmi_large_accu', 'data_source': 'df_tmi_accu', 'column': ['tmi_large_accu'],
-     'is_date_index': False, 'shared_x': True, 'span_ratio': None, 'plot_with': 'tmi_accu', 'plot_type': 'line_-',
+     'is_date_index': False, 'shared_x': True, 'span_ratio': None, 'plot_with': 'tmi_accu', 'plot_type': 'line_-_1.5',
      'legend': 'on',
      'legend_label': "u'自坐标首日起累积大单资金流入(万元)'"}
 ]
@@ -142,6 +142,8 @@ def generate_plot_definition(figure_setting_list, plots_list, data_loader_list):
     for line in plots_list:
         final_str += add_indicator_to_fig(line, ax_dict, leg_dict)
     figure_setting_list['ax_list'].update(ax_dict)
+    for leg in leg_dict.keys():
+        final_str += 'leg_%s = %s.legend(handles=%s, loc=2)\n' % (leg, ax_dict[leg], leg_dict[leg])
     final_str += add_axis_grid(ax_dict)
     final_str += 'fig.autofmt_xdate()\n'
     final_str += 'fig.tight_layout()\n'
@@ -200,6 +202,7 @@ def add_indicator_to_fig(indi_line, ax_dict, leg_dict):
     if indi_line['plot_type'].split('_')[0] == 'line':
         indi_label = '' if indi_line['legend_label'] is None else ', label=%s' % indi_line['legend_label']
         line_param = indi_line['plot_type'].split('_')[1]
+        line_width = indi_line['plot_type'].split('_')[2]
         if indi_line['plot_with'] != 'self':
             final_str += "p_%s, = %s.plot(ind, %s.%s, '%s'%s)\n" % (
                 indi_line['indicator_name'], ax_dict[indi_line['plot_with']],
@@ -209,7 +212,7 @@ def add_indicator_to_fig(indi_line, ax_dict, leg_dict):
                 indi_line['indicator_name'], ax_dict[indi_line['indicator_name']],
                 indi_line['data_source'], indi_line['indicator_name'], line_param, indi_label)
 
-        final_str += "plt.setp(p_%s, linewidth=.5)\n" % indi_line['indicator_name']
+        final_str += "plt.setp(p_%s, linewidth=%s)\n" % (indi_line['indicator_name'], line_width)
         # plt.setp(p_utl, linewidth=.5)
         # legend_list.append(p_cost_per_vol_1)
         if indi_line['legend'] == 'on':
