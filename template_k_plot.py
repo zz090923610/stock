@@ -23,7 +23,8 @@ data_loader_list = [
     {'df_name': 'df_ma10', 'load_func': 'load_ma_for_stock_for_plot', 'params': "stock, 'atpd_10', days"},
     {'df_name': 'df_ma20', 'load_func': 'load_ma_for_stock_for_plot', 'params': "stock, 'atpd_20', days"},
     {'df_name': 'df_ma40', 'load_func': 'load_ma_for_stock_for_plot', 'params': "stock, 'atpd_40', days"},
-    {'df_name': 'df_tmi_accu', 'load_func': 'calc_tmi_series_for_stock', 'params': 'stock, days'}
+    {'df_name': 'df_tmi_accu', 'load_func': 'calc_tmi_series_for_stock', 'params': 'stock, days'},
+    {'df_name': 'df_vol_indi', 'load_func': 'load_vol_indi_for_plot', 'params': 'stock, days'}
 ]
 
 plots_list = [
@@ -103,7 +104,7 @@ def generate_block(header, body_str):
         script += '%s\n' % header
     body_list = body_str.split('\n')
     for body_item in body_list:
-        script += '\t%s\n' % body_item
+        script += '    %s\n' % body_item
     return script
 
 
@@ -167,16 +168,22 @@ def generate_ax(plots_list):
     for line in plots_list:
         if line['plot_with'] == 'self':
             total_row += line['span_ratio']
-
+    shared_ax = ''
     current_row = 0
     for line in plots_list:
         if line['plot_with'] == 'self':
             main_plot_cnt += 1
             # noinspection SpellCheckingInspection
             ax_dict.update({line['indicator_name']: 'ax%d' % main_plot_cnt})
-            final_str += 'ax%d = plt.subplot2grid((%d, 1), (%d, 0), rowspan=%d)\n' % (
+            if line['is_date_index'] is True:
+                shared_ax = 'ax%d' % main_plot_cnt
+            share_x_statement = ''
+            if line['is_date_index'] is False:
+                # noinspection SpellCheckingInspection
+                share_x_statement = ', sharex=%s' % shared_ax
+            final_str += 'ax%d = plt.subplot2grid((%d, 1), (%d, 0), rowspan=%d%s)\n' % (
                 main_plot_cnt, total_row, current_row,
-                line['span_ratio'])
+                line['span_ratio'], share_x_statement)
             current_row += line['span_ratio']
     leg_cnt = 0
     for line in plots_list:
@@ -252,6 +259,6 @@ func_body += (generate_data_load_sentence(data_loader_list))
 script += generate_block(func_header, func_body)
 script += generate_block('', generate_plot_definition(figure_setting, plots_list, data_loader_list))
 
-with open('./test.py', 'a') as f:
-    subprocess.call('cp ./k_plot_template_import.py test.py', shell=True)
+with open('./k_plot.py', 'a') as f:
+    subprocess.call('cp ./k_plot_template_import.py k_plot.py', shell=True)
     f.write(script)

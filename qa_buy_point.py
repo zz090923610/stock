@@ -4,7 +4,6 @@ import sys
 from datetime import timedelta
 
 from common_func import *
-from qa_trend_continue import load_atpd_data
 from variables import *
 
 

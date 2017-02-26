@@ -2,16 +2,15 @@
 import signal
 
 from common_func import *
-from k_plot import k_plot
 from qa_ma import calc_ma_for_all_stock
 from qa_atpdr import calc_atpdr_for_all_stock
-
-
+from qa_vol_indi import calc_vol_indi_for_all_stock
+from qa_trend5d import analysis_trend5d
 # noinspection PyUnusedLocal,PyShadowingNames
 def signal_handler(signal, frame):
     print('Ctrl+C detected, exiting')
     subprocess.call("killall python3 2>/dev/null", shell=True)
-    subprocess.call("killall qa_trend_continue.py 2>/dev/null", shell=True)
+    subprocess.call("killall report_generator.py 2>/dev/null", shell=True)
     exit(0)
 
 
@@ -20,13 +19,13 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def compress_plot(stock):
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-    subprocess.call('convert +dither -colors 256 ../stock_data/plots/%s.png ../stock_data/plots/%s_small.png' %
-                    (s_full_name, s_full_name), shell=True)
-    subprocess.call('mv ../stock_data/plots/%s_small.png ../stock_data/plots/%s.png' %
-                    (s_full_name, s_full_name), shell=True)
+    subprocess.call('[ -f ../stock_data/plots/%s.png ] && convert +dither -colors 256 ../stock_data/plots/%s.png ../stock_data/plots/%s.png' %
+                    (s_full_name,s_full_name, s_full_name), shell=True)
 
 
 def make_plots():
+    subprocess.call("./template_k_plot.py", shell=True)
+    from k_plot import k_plot
     print('Plotting')
     subprocess.call("mkdir -p ../stock_data/plots; rm ../stock_data/plots/*", shell=True)
     # for stock in BASIC_INFO.symbol_list:
@@ -37,11 +36,11 @@ def make_plots():
         pool.apply_async(k_plot, args=(stock, 120,))
     pool.close()
     pool.join()
-    pool = mp.Pool()
+    pool2 = mp.Pool()
     for stock in BASIC_INFO.symbol_list:
-        pool.apply_async(compress_plot, args=(stock,))
-    pool.close()
-    pool.join()
+        pool2.apply_async(compress_plot, args=(stock,))
+    pool2.close()
+    pool2.join()
 
     subprocess.call("cd  ../stock_data/; tar czf plots.tar.gz plots/ ;mv plots.tar.gz upload/", shell=True)
     subprocess.call("cd  ../stock_data/upload; bypy syncup -v", shell=True)
@@ -93,12 +92,14 @@ if __name__ == "__main__":
                 # BASIC_INFO.get_announcement_all_stock_one_day(today)
             if calc:
                 subprocess.call('python3 -m scoop --hostfile hostfile mqa_atpd.py', shell=True)
-                # subprocess.call('./mqa_atpd.py', shell=True)
+                subprocess.call('./mqa_atpd.py', shell=True)
                 calc_atpdr_for_all_stock()
                 calc_ma_for_all_stock(3)
                 calc_ma_for_all_stock(10)
                 calc_ma_for_all_stock(20)
                 calc_ma_for_all_stock(40)
+                calc_vol_indi_for_all_stock()
+                analysis_trend5d(100, 5, today)
                 subprocess.call("./qa_adl.py", shell=True)
                 subprocess.call("./qa_vhf.py", shell=True)
             if plot:
@@ -108,10 +109,9 @@ if __name__ == "__main__":
                 sleep_until('23:15:00')
             if calc:
                 print('Generating report')
-                subprocess.call("./qa_trend_continue.py 100 5 %s" % today, shell=True)
+                subprocess.call("./report_generator.py 5 %s" % today, shell=True)
                 subprocess.call(
-                    " scp '/home/zhangzhao/data/stock_data/plots/%s.html' zhangzhao@115.28.142.56:/var/www/plots/" %
-                    today, shell=True)
+                   " scp /home/zhangzhao/data/stock_data/plots/*.html zhangzhao@115.28.142.56:/var/www/plots/", shell=True)
             if send_email:
                 subprocess.call("./send_mail.py -n -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
                                 "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)

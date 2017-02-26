@@ -5,6 +5,7 @@ import pickle
 import subprocess
 
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 from PIL import Image
@@ -15,7 +16,7 @@ from common_func import BASIC_INFO, logging
 from qa_linear_fit import get_fitted_data
 from variables import *
 from intraday_plot import intraday_plot
-
+from qa_vol_indi import load_vol_indi_for_plot
 
 def calc_tmi_series_for_stock(stock, days):
     print('Calc TMI for %s' % stock)

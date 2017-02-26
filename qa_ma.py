@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+
 # Moving Average System
 
 import sys
@@ -245,8 +245,10 @@ def calc_ma_for_stock(stock: str, days: int, calc_type: str = 'atpd') -> list:
 # noinspection PyUnboundLocalVariable
 def calc_moving_averaging(data_source, column_to_calc, window_length, in_place_save=False,
                           fillNan=False, need_increase_sort=False, need_decrease_sort=False,
-                          sort_by='date', out_cols=[]):
+                          sort_by='date', out_cols=None):
     # Loading data
+    if out_cols is None:
+        out_cols = []
     # noinspection PyUnresolvedReferences
     if type(data_source) == pd.core.frame.DataFrame:
         df = data_source
@@ -270,11 +272,11 @@ def calc_moving_averaging(data_source, column_to_calc, window_length, in_place_s
     except:
         pass
     # calc ma
-    df['ma%d' % window_length] = 0
+    df['ma_%s_%d' % (column_to_calc, window_length)] = 0
     for shift_bit in range(window_length):
-        df['ma%d' % window_length] += df[column_to_calc].shift(shift_bit)
+        df['ma_%s_%d' % (column_to_calc, window_length)] += df[column_to_calc].shift(shift_bit)
     try:
-        df['ma%d' % window_length] /= window_length
+        df['ma_%s_%d' % (column_to_calc, window_length)] /= window_length
     except ZeroDivisionError:
         logging('Zero window length')
     df['ma%d' % window_length] = df['ma%d' % window_length].round(3)
