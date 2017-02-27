@@ -12,6 +12,7 @@ def sorting_attributes(day):
     trend5d_up = []
     trend5d_down = []
     vol_indi = []
+    vol_indi_large = []
     for stock in BASIC_INFO.symbol_list:
         a = AnalysisResult(stock)
         try:
@@ -23,13 +24,19 @@ def sorting_attributes(day):
                         trend5d_up.append({'code':stock,'continue_days':days})
                     else:
                         trend5d_down.append({'code':stock,'continue_days':days})
+                elif attr.find('buy_vol_indi_cont_large') != -1:
+                    vi_large = attr.split('_')[5]
+                    vi_small = attr.split('_')[6]
+                    cont_days = attr.split('_')[7]
+                    vol_indi_large.append({'code': stock, 'vol_indi': (vi_large, vi_small, cont_days)})
                 elif attr.find('buy_vol_indi') != -1:
                     vi_large = attr.split('_')[3]
                     vi_small = attr.split('_')[4]
                     vol_indi.append({'code': stock, 'vol_indi': (vi_large, vi_small)})
+
         except KeyError:
             pass
-    return trend5d_up, trend5d_down, vol_indi
+    return trend5d_up, trend5d_down, vol_indi, vol_indi_large
 
 
 # noinspection PyShadowingNames
@@ -48,6 +55,25 @@ def generate_html_vol_indi(vol_indi, day):
     html = generate_html(msg)
     with open('../stock_data/plots/%s_vol_indi.html' % day, 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
+
+
+def generate_html_vol_indi_large(vol_indi_large, day):
+    print("Generating VOL_INDI_LARGE Report")
+    msg = u''
+    for l in vol_indi_large:
+        s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+        large, small, cont_days = l['vol_indi']
+        msg += \
+            u'<font color="red">连增 %s 天。大单增量比: %s 小单增量比: %s [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (cont_days,
+            large, small, BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+            BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
+        anmt = get_parsed_announcement_for_stock(l['code'], day)
+        if len(anmt) > 0:
+            msg += '%s<br>\n' % anmt
+    html = generate_html(msg)
+    with open('../stock_data/plots/%s_vol_indi_large.html' % day, 'wb') as myfile:
+        myfile.write(bytes(html, encoding='utf-8'))
+
 
 
 def generate_html_trend5d(trend5d_up, trend5d_down, day):
@@ -90,7 +116,8 @@ def generate_email(day):
     email_html = generate_html(
         '<a href="http://115.28.142.56/plots/%s.html">连续五日日平均交易价格变动股票</a><br>\n'
         '<a href="http://115.28.142.56/plots/%s_vol_indi.html">发出大小单增量买入信号股票</a><br>\n'
-        '<a href="http://115.28.142.56/plots/">所有股票最新图线</a><br>\n' % (day, day))
+        '<a href="http://115.28.142.56/plots/%s_vol_indi_large.html">近五日大单增量大于三天股票</a><br>\n'
+        '<a href="http://115.28.142.56/plots/">所有股票最新图线</a><br>\n' % (day,day, day))
     with open('../stock_data/report/five_days_trend/%s.txt' % day, 'wb') as myfile:
         myfile.write(bytes(email_html, encoding='utf-8'))
 
@@ -98,7 +125,8 @@ def generate_email(day):
 if __name__ == '__main__':
     continue_days = int(sys.argv[1])
     day = sys.argv[2]
-    trend5d_up, trend5d_down, vol_indi = sorting_attributes(day)
+    trend5d_up, trend5d_down, vol_indi, vol_indi_large = sorting_attributes(day)
     generate_html_vol_indi(vol_indi, day)
+    generate_html_vol_indi_large(vol_indi_large, day)
     generate_html_trend5d(trend5d_up, trend5d_down, day)
     generate_email(day)

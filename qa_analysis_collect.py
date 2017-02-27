@@ -26,9 +26,15 @@ class AnalysisResult:
         except KeyError:
             current_result = []
         if result not in current_result:
-            self.result[day].append(result)
-            with open('../stock_data/analysis_result/%s.pickle' % self.stock, 'wb') as f:
-                pickle.dump(self.result, f, -1)
+            try:
+                self.result[day].append(result)
+                with open('../stock_data/analysis_result/%s.pickle' % self.stock, 'wb') as f:
+                    pickle.dump(self.result, f, -1)
+            except KeyError:
+                self.result[day] = []
+                self.result[day].append(result)
+                with open('../stock_data/analysis_result/%s.pickle' % self.stock, 'wb') as f:
+                    pickle.dump(self.result, f, -1)
 
 
 def add_analysis_result_one_stock_one_day(stock, day, result):

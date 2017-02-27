@@ -36,6 +36,8 @@ def calc_tmi_series_for_stock(stock, days):
     return atpd_data
 
 
+
+
 def load_stock_for_plot(stock, days):
     daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
     daily_data = daily_data.sort_values(by='date', ascending=True)
@@ -191,12 +193,12 @@ def k_plot(stock, days):
     leg_main_k = ax1.legend(handles=legend_list0, loc=2)
     ax4.xaxis.grid(color='gray', linestyle='-')
     ax4.yaxis.grid(color='gray', linestyle='-')
-    ax2.xaxis.grid(color='gray', linestyle='-')
-    ax2.yaxis.grid(color='gray', linestyle='-')
     ax3.xaxis.grid(color='gray', linestyle='-')
     ax3.yaxis.grid(color='gray', linestyle='-')
     ax1.xaxis.grid(color='gray', linestyle='-')
     ax1.yaxis.grid(color='gray', linestyle='-')
+    ax2.xaxis.grid(color='gray', linestyle='-')
+    ax2.yaxis.grid(color='gray', linestyle='-')
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
@@ -205,3 +207,4 @@ def k_plot(stock, days):
     combine_plots(s_full_name)
     subprocess.call('rm ../stock_data/plots/%s_intraday.png' % s_full_name, shell=True)
     plt.close(fig)
+    

@@ -4,7 +4,7 @@ import sys
 from common_func import *
 from qa_analysis_collect import AnalysisResult, add_analysis_result_one_stock_one_day
 from variables import *
-
+import numpy as np
 # data input: '../stock_data/qa/atpd/%s.csv' % stock
 # data_input_type: csv
 # data_input_column: []
@@ -34,6 +34,7 @@ def calc_vol_indi_for_stock(stock):
     df['vol_indi_small'] = (df['vol_buy_small_sum'] - df['vol_buy_small_sum_0']) / \
                            (df['vol_sell_small_sum'] - df['vol_sell_small_sum_0'])
     df = df.round({'vol_indi_small': 2, 'vol_indi_large': 2})
+    df.replace(np.inf, np.nan)
     df = df.fillna(0)
     df['buy_vol_indi'] = False
     for idx in df.loc[(df['vol_indi_small'] > 1) & (df['vol_indi_large'] > 1)].index:
@@ -45,6 +46,14 @@ def calc_vol_indi_for_stock(stock):
                                               'buy_vol_indi_%.2f_%.2f' % (
                                                   df[df['date'] == day]['vol_indi_large'].values[0],
                                                   df[df['date'] == day]['vol_indi_small'].values[0]))
+
+    df_tail = df.tail(3)
+    if (len(df_tail.loc[df_tail['vol_indi_large'] > 1].date.tolist()) >= 3) & (df_tail.iloc[-1]['vol_indi_large'] > 1):
+        add_analysis_result_one_stock_one_day(stock, df_tail.iloc[-1]['date'],
+                                              'buy_vol_indi_cont_large_%.2f_%.2f_%d' % (
+                                                  df[df['date'] == df_tail.iloc[-1]['date']]['vol_indi_large'].values[0],
+                                                  df[df['date'] == df_tail.iloc[-1]['date']]['vol_indi_small'].values[0],
+                                                  len(df_tail.loc[df_tail['vol_indi_large'] > 1].date.tolist())))
 
 
 def calc_vol_indi_for_all_stock():

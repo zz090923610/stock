@@ -153,7 +153,7 @@ def generate_plot_definition(figure_setting_list, plots_list, data_loader_list):
     final_str += "intraday_plot(stock, df['date'].tolist()[-1])\n"
     final_str += "combine_plots(s_full_name)\n"
     final_str += "subprocess.call('rm ../stock_data/plots/%s_intraday.png' % s_full_name, shell=True)\n"
-    final_str += "plt.close(fig)"
+    final_str += "plt.close(fig)\n"
     return final_str
 
 

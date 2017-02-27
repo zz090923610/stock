@@ -6,6 +6,8 @@ from qa_ma import calc_ma_for_all_stock
 from qa_atpdr import calc_atpdr_for_all_stock
 from qa_vol_indi import calc_vol_indi_for_all_stock
 from qa_trend5d import analysis_trend5d
+
+
 # noinspection PyUnusedLocal,PyShadowingNames
 def signal_handler(signal, frame):
     print('Ctrl+C detected, exiting')
@@ -18,9 +20,11 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def compress_plot(stock):
+    print('Compressing %s' % stock)
     s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
-    subprocess.call('[ -f ../stock_data/plots/%s.png ] && convert +dither -colors 256 ../stock_data/plots/%s.png ../stock_data/plots/%s.png' %
-                    (s_full_name,s_full_name, s_full_name), shell=True)
+    subprocess.call(
+        'echo "convert +dither -colors 256 ../stock_data/plots/%s.png ../stock_data/plots/%s.png" >> ./compress.sh' %
+        (s_full_name, s_full_name), shell=True)
 
 
 def make_plots():
@@ -36,11 +40,11 @@ def make_plots():
         pool.apply_async(k_plot, args=(stock, 120,))
     pool.close()
     pool.join()
-    pool2 = mp.Pool()
+    subprocess.call('echo "#!/bin/bash" > ./compress.sh', shell=True)
+
     for stock in BASIC_INFO.symbol_list:
-        pool2.apply_async(compress_plot, args=(stock,))
-    pool2.close()
-    pool2.join()
+        compress_plot(stock)
+    subprocess.call("./compress.sh", shell=True)
 
     subprocess.call("cd  ../stock_data/; tar czf plots.tar.gz plots/ ;mv plots.tar.gz upload/", shell=True)
     subprocess.call("cd  ../stock_data/upload; bypy syncup -v", shell=True)
@@ -78,7 +82,7 @@ if __name__ == "__main__":
     while True:
         today = get_today()
         close_days = load_market_close_days_for_year('2017')
-        #if sleep:
+        # if sleep:
         #    sleep_until('19:00:00')
         #    today = get_today()
         if today not in close_days:
@@ -111,7 +115,8 @@ if __name__ == "__main__":
                 print('Generating report')
                 subprocess.call("./report_generator.py 5 %s" % today, shell=True)
                 subprocess.call(
-                   " scp /home/zhangzhao/data/stock_data/plots/*.html zhangzhao@115.28.142.56:/var/www/plots/", shell=True)
+                    " scp /home/zhangzhao/data/stock_data/plots/*.html zhangzhao@115.28.142.56:/var/www/plots/",
+                    shell=True)
             if send_email:
                 subprocess.call("./send_mail.py -n -s '610153443@qq.com' '连续五日日平均交易价格趋势 %s' "
                                 "'../stock_data/report/five_days_trend/%s.txt'" % (today, today), shell=True)

@@ -36,6 +36,8 @@ def calc_tmi_series_for_stock(stock, days):
     return atpd_data
 
 
+
+
 def load_stock_for_plot(stock, days):
     daily_data = pd.read_csv('../stock_data/data/%s.csv' % stock)
     daily_data = daily_data.sort_values(by='date', ascending=True)
