@@ -82,9 +82,9 @@ if __name__ == "__main__":
     while True:
         today = get_today()
         close_days = load_market_close_days_for_year('2017')
-        # if sleep:
-        #    sleep_until('19:00:00')
-        #    today = get_today()
+        if sleep:
+            sleep_until('19:00:00')
+            today = get_today()
         if today not in close_days:
             if update:
                 BASIC_INFO.load(update=True)
