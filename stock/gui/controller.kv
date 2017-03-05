@@ -1,0 +1,99 @@
+#:set default_font_name "./fonts/WenQuanYi_Micro_Hei.ttf"
+<Widget>:
+    font_name: './fonts/WenQuanYi_Micro_Hei.ttf'
+<Controller>:
+    PageLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            canvas:
+                Color:
+                    rgba: 32/255., 32/255., 32/255., 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: 'page 1'
+            Button:
+                text: 'Login'
+                on_press: root.show_popup()
+        BoxLayout:
+            orientation: 'vertical'
+            canvas:
+                Color:
+                    rgba: 22/255., 22/255., 22/255., 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: 'page 2'
+<StockBrokerLoginPopup>:
+    size_hint: .5, .5
+    auto_dismiss: False
+    title: '券商登录'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+
+            text: '国泰君安'
+
+        BoxLayout:
+            Label:
+                text: '资金帐号'
+            TextInput:
+                id: Account
+                multiline:False
+        BoxLayout:
+            Label:
+                text: '交易密码'
+            TextInput:
+                id: Passwd
+                multiline:False
+                password:True
+        BoxLayout:
+            Label:
+                text: '验证码'
+            AsyncImage:
+                id: captcha_img
+            TextInput:
+                id: Captcha
+                multiline:False
+        BoxLayout:
+            Button:
+                text: 'Login'
+                id: Login_btn
+                on_press: print("Login")
+            Button:
+                text: 'Cancel'
+                on_press: root.dismiss()
+
+<ActionBar>:
+    pos_hint: {'top':1}
+    ActionView:
+        use_separator: True
+        ActionPrevious:
+            title: 'Action Bar'
+            with_previous: False
+        ActionOverflow:
+        ActionButton:
+            text: 'Btn0'
+            icon: 'atlas://data/images/defaulttheme/audio-volume-high'
+        ActionButton:
+            text: 'Btn1'
+        ActionButton:
+            text: 'Btn2'
+        ActionButton:
+            text: 'Btn3'
+        ActionButton:
+            text: 'Btn4'
+        ActionGroup:
+            text: 'Group1'
+            ActionButton:
+                text: 'Btn5'
+            ActionButton:
+                text: 'Btn6'
+            ActionButton:
+                text: '设置'
+                on_press: app.open_settings()
+            ActionButton:
+                text: '退出'
+                on_press: app.stop()

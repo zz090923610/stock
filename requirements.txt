@@ -1,0 +1,17 @@
+pandas >= 0.19.2
+lxml >= 3.5.0
+requests >= 2.13.0
+tushare >= 0.6.8
+bs4 >= 0.0.1
+tzlocal >= 1.3
+matplotlib >= 2.0.0
+bypy >= 1.3.8
+pylzma >= 0.4.8
+termcolor >= 1.1.0
+scipy >= 0.18.1
+xlrd >= 1.0.0
+scoop >= 0.7.1.1
+progressbar2 >= 3.12.0
+Kivy >= 1.9.1
+Pillow >= 4.0.0
+Twisted >= 17.1.0

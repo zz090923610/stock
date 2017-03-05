@@ -1,13 +1,18 @@
-from distutils.core import setup
-
+from setuptools import setup, find_packages
+import codecs
+import os
+import stock
 setup(
     name='stock',
     version='',
-    packages=[''],
     url='',
     license='',
     author='zhangzhao',
-    author_email='',
-    description='', requires=['pandas', 'lxml','requests', 'tushare', 'bs4', 'tzlocal', 'matplotlib', 'pillow', 'bypy',
-                              'pylzma', 'termcolor', 'scipy', 'xlrd', 'scoop', 'progressbar2']
+    author_email='zhao.zhang.glacier@gmail.com',
+    classifiers=['Development Status :: 4 - Beta',
+                 'Programming Language :: Python :: 3.6'],
+    packages=['stock', 'stock.gui', 'stock.common', 'stock.data', 'stock.gui', 'stock.quantitative_analysis',
+              'stock.trade_api',
+              'stock.visualization'],
+    description=''
 )
