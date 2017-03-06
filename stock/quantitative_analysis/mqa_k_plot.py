@@ -98,7 +98,7 @@ def load_vhf_for_stock_for_plot(stock, days):
 def k_plot(idx):
     stock = data[idx]
     fonts = [14, 16]
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     # load data from file
     # df = load_stock(stock, days)
     df = get_fitted_data(stock, days, 15, 2)
@@ -226,7 +226,7 @@ def load_fig_pickle(s_full_name):
 
 
 def cvt2gif(stock):
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
     img = img.resize((545, 300))
     img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')

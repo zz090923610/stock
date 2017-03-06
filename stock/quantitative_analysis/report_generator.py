@@ -44,10 +44,10 @@ def generate_html_vol_indi(vol_indi, day):
     print("Generating VOL_INDI Report")
     msg = u''
     for l in vol_indi:
-        s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+        s_full_name = BASIC_INFO.market_code_of_stock(l['code'])
         large, small = l['vol_indi']
         msg += u'<font color="red">大单增量比: %s 小单增量比: %s [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (
-            large, small, BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+            large, small, BASIC_INFO.link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
             BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
         anmt = get_parsed_announcement_for_stock(l['code'], day)
         if len(anmt) > 0:
@@ -61,12 +61,12 @@ def generate_html_vol_indi_large(vol_indi_large, day):
     print("Generating VOL_INDI_LARGE Report")
     msg = u''
     for l in vol_indi_large:
-        s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+        s_full_name = BASIC_INFO.market_code_of_stock(l['code'])
         large, small, cont_days = l['vol_indi']
         msg += \
             u'<font color="red">连增 %s 天。大单增量比: %s 小单增量比: %s [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (cont_days,
-            large, small, BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
-            BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
+                                                                                                                   large, small, BASIC_INFO.link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+                                                                                                                   BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
         anmt = get_parsed_announcement_for_stock(l['code'], day)
         if len(anmt) > 0:
             msg += '%s<br>\n' % anmt
@@ -89,18 +89,18 @@ def generate_html_trend5d(trend5d_up, trend5d_down, day):
     u = sorted(u, key=itemgetter('timeToMarket'))
     d = sorted(d, key=itemgetter('timeToMarket'))
     for l in u:
-        s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+        s_full_name = BASIC_INFO.market_code_of_stock(l['code'])
         msg_up += u'<font color="red">连涨 %s 天 [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (
-            l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+            l['continue_days'], BASIC_INFO.link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
             BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
         anmt = get_parsed_announcement_for_stock(l['code'], day)
         if len(anmt) > 0:
             msg_up += anmt
             msg_up += '<br>\n'
     for l in d:
-        s_full_name = BASIC_INFO.get_market_code_of_stock(l['code'])
+        s_full_name = BASIC_INFO.market_code_of_stock(l['code'])
         msg_down += u'<font color="green">连跌 %s 天 [%s] %s</font> %s 上市<br><img src="./%s.png"><br>\n' % (
-            l['continue_days'], BASIC_INFO.get_link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
+            l['continue_days'], BASIC_INFO.link_of_stock(l['code']), BASIC_INFO.name_dict[l['code']],
             BASIC_INFO.time_to_market_dict[l['code']], s_full_name)
         anmt = get_parsed_announcement_for_stock(l['code'], day)
         if len(anmt) > 0:

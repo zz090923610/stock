@@ -19,8 +19,8 @@ from oauth2client.file import Storage
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
-from stock.common.variables import stock_data_root
 
+stock_data_root= '/home/zhangzhao/data/stock_data'
 SCOPES = 'https://mail.google.com/'
 CLIENT_SECRET_FILE = '%s/mail/client_secret.json' % stock_data_root
 APPLICATION_NAME = 'Gmail API Python Quickstart'

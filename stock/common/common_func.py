@@ -13,590 +13,26 @@ from datetime import datetime, date
 import multiprocessing as mp
 from bs4 import BeautifulSoup
 
+from stock.common.basic_stock_info_hdl import BasicInfoHDL
+from stock.common.calculations import eval_binary_expr
+from stock.common.file_operation import logging
+from stock.common.time_util import load_last_date, TimeUtil, str2date
 from stock.common.variables import *
 import pandas as pd
 from datetime import timedelta as td
-import operator
+
 import threading
 import sys
 
-lock = threading.Lock()
 
+MARKET_OPEN_DATE_LIST = TimeUtil.load_historical_market_open_date_list()
 
-def get_operator_fn(op):
-    return {
-        '+': operator.add,
-        '-': operator.sub,
-        '*': operator.mul,
-        '/': operator.truediv,
-        '//': operator.floordiv,
-        '%': operator.mod,
-        '^': operator.xor,
-        '==': operator.eq,
-        '>': operator.gt,
-        '>=': operator.ge,
-        '<': operator.lt,
-        '<=': operator.le
-    }[op]
 
 
-def eval_binary_expr(op1, optr, op2):
-    return get_operator_fn(optr)(op1, op2)
 
 
-def logging(msg, silence=False):
-    if not silence:
-        print(msg, file=sys.stderr)
-    lock.acquire()
-    fo = open('%s/log.txt' % stock_data_root, "a")
 
-    print('[%s] %s' % (get_time(), msg), file=fo)
-    fo.close()
-    lock.release()
 
-
-def sleep_until(when):
-    h, m, s = int(when.split(':')[0]), int(when.split(':')[1]), int(when.split(':')[2])
-    date_today = get_today()
-    next_wake_up_time = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]),
-                                 int(date_today.split('-')[2]), h,
-                                 m, s) + td(days=1)
-    local_time = get_time_of_a_day()
-    ln = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]), int(date_today.split('-')[2]),
-                  int(local_time.split(':')[0]), int(local_time.split(':')[1]), int(local_time.split(':')[2]))
-    seconds = next_wake_up_time - ln
-    print("now is " + get_time_of_a_day())
-    print("sleeping %d" % seconds.seconds)
-    time.sleep(seconds.seconds)
-
-
-def list2csv(data_list, out_file, col_order=None, add_index=False):
-    if col_order is None:
-        col_order = []
-    b = pd.DataFrame(data_list)
-    if len(col_order) == 0:
-        b.to_csv(out_file, index=add_index)
-    else:
-        b[col_order].to_csv(out_file, index=add_index)
-
-
-def load_market_close_days_for_year(year):
-    try:
-        with open('%s/dates/market_close_days_%s.pickle' % (stock_data_root, year), 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return []
-
-
-def get_today():
-    from datetime import datetime
-    current_time = time.time()
-    utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
-    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    year = local_now.strftime("%Y")
-    local_now = local_now.strftime("%Y-%m-%d")
-    market_close_list = load_market_close_days_for_year(year)
-    history_market_open_list = load_market_open_date_list()
-    time_of_the_day = get_time_of_a_day()
-    if local_now in market_close_list:
-        result = max(history_market_open_list)
-        # print('Market close today %s' % result)
-    else:
-        if time_of_the_day >= '17:30:00':
-            result = local_now
-            # print('Market open today, new data released %s' % result)
-        else:
-            result = max(history_market_open_list)
-            # print('Market open today, but new data not available, now has %s' % result)
-    return result
-
-
-def get_time():
-    from datetime import datetime
-    current_time = time.time()
-    utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
-    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    return local_now.strftime("%Y-%m-%d %H:%M:%S")
-
-
-def get_time_of_a_day():
-    from datetime import datetime
-    current_time = time.time()
-    utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
-    local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(china_tz)
-    return local_now.strftime("%H:%M:%S")
-
-
-def load_stock_date_list_from_tick_files(stock):
-    file_list = os.listdir('%s/tick_data/%s' % (stock_data_root, stock))
-    if len(file_list) == 0:
-        return []
-    date_list = []
-    for f in file_list:
-        day = f.split('_')[1].split('.')[0]
-        (y, m, d) = int(day.split('-')[0]), int(day.split('-')[1]), int(day.split('-')[2])
-        date_list.append(datetime(y, m, d).strftime("%Y-%m-%d"))
-    return date_list
-
-
-def check_weekday(date_str):
-    (y, m, d) = int(date_str.split('-')[0]), int(date_str.split('-')[1]), int(date_str.split('-')[2])
-    if datetime(y, m, d).weekday() in range(0, 5):
-        return True
-    else:
-        return False
-
-
-def return_weekday(date_str):
-    (y, m, d) = int(date_str.split('-')[0]), int(date_str.split('-')[1]), int(date_str.split('-')[2])
-    return datetime(y, m, d).weekday()
-
-
-def get_weekends_of_a_year(year):
-    d1 = date(int(year), 1, 1)
-    d2 = date(int(year), 12, 31)
-    days = []
-    delta = d2 - d1
-    for i in range(delta.days + 1):
-        if not check_weekday((d1 + td(days=i)).strftime('%Y-%m-%d')):
-            days.append((d1 + td(days=i)).strftime('%Y-%m-%d'))
-    return days
-
-
-def create_market_close_days_for_year(year, other_close_dates_list):
-    weekends_list = get_weekends_of_a_year(year)
-    for d in other_close_dates_list:
-        if d not in weekends_list:
-            weekends_list.append(d)
-    weekends_list.sort()
-    with open('%s/dates/market_close_days_%s.pickle' % (stock_data_root, year), 'wb') as f:
-        pickle.dump(weekends_list, f)
-
-
-def str2date(str_date):
-    (y, m, d) = int(str_date.split('-')[0]), int(str_date.split('-')[1]), int(str_date.split('-')[2])
-    return date(y, m, d)
-
-
-def load_csv(path, col_type=None):
-    if col_type is None:
-        col_type = {}
-    final_list = []
-    try:
-        with open(path) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                # noinspection PyTypeChecker
-                if len(col_type.keys()) > 0:
-                    try:
-                        for key in col_type.keys():
-                            if col_type[key] == 'float':
-                                row[key] = float(row[key])
-                            elif col_type[key] == 'int':
-                                row[key] = int(row[key])
-                        final_list.append(row)
-                    except ValueError as e:
-                        logging('Loading csv error: %s %s' % (e, '%s %r' % (path, row)))
-                else:
-                    final_list.append(row)
-            for row in reader:
-                final_list.append(row)
-        return final_list
-    except FileNotFoundError:
-        return None
-
-
-def save_market_open_date_list(market_open_date_list):
-    with open('%s/market_open_date_list.pickle' % stock_data_root, 'wb') as f:
-        pickle.dump(market_open_date_list, f, -1)
-
-
-def update_market_open_date_list():
-    print('Updating market dates list')
-    b = ts.get_k_data('000001', index=True, start=START_DATE)
-    days_cnt = len(b.index)
-    days_list = []
-    for idx in range(0, days_cnt):
-        days_list.append(b.iloc[idx].date)
-    save_market_open_date_list(days_list)
-    return days_list
-
-
-def load_pickle(path):
-    try:
-        with open(path, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError as e:
-        logging('load_pickle: File not found %s' % path)
-        return None
-
-
-def load_market_open_date_list():
-    try:
-        with open('%s/market_open_date_list.pickle' % stock_data_root, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError as e:
-        logging('load_market_open_date_list(): File not found')
-        return update_market_open_date_list()
-
-
-def mkdirs(symbol_list):
-    for a_dir in DIR_LIST:
-        subprocess.call('mkdir -p %s' % a_dir, shell=True)
-    for s_code in symbol_list:
-        subprocess.call('mkdir -p %s/tick_data/%s' % (stock_data_root, s_code), shell=True)
-
-
-class BasicInfoHDL:
-    def __init__(self):
-        self.market_dict = {}
-        self.name_dict = {}
-        self.outstanding_dict = {}
-        self.totals_dict = {}
-        self.time_to_market_dict = {}
-        self.symbol_list = []
-
-        self.market_open_days = []
-        self.stock_suspend_day_list = {i: [] for i in self.symbol_list}
-        self.stock_trade_day_list = {i: [] for i in self.symbol_list}
-        self.load()
-        self.symbol_sse = [s for s in self.symbol_list if self.in_sse(s)]
-        self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
-        self.timestamp = time.time()
-        self.today = get_today()
-
-    def load_suspend_trade_date_list(self):  # FIXME
-        for stock in self.symbol_list:
-            try:
-                with open('%s/dates/stock_suspend_days/%s.pickle' % (stock_data_root, stock), 'rb') as f:
-                    self.stock_suspend_day_list[stock] = pickle.load(f)
-            except FileNotFoundError:
-                logging('load_suspend_trade_date_list(): File not found,%s' %
-                        ('%s/dates/stock_suspend_days/%s.pickle' % (stock_data_root, stock)))
-                self.stock_suspend_day_list[stock] = []
-            self.stock_trade_day_list[stock] = list(
-                set(self.market_open_days) - set(self.stock_suspend_day_list[stock]))
-            self.stock_trade_day_list[stock].sort()
-            self.stock_suspend_day_list[stock].sort()
-
-    def get_link_of_stock(self, stock):
-        mkt = ''
-        if self.market_dict[stock] == 'sse':
-            mkt = 'sh'
-        elif self.market_dict[stock] == 'szse':
-            mkt = 'sz'
-        link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, stock, stock)
-        return link
-
-    @staticmethod
-    def get_newest_price_of_stock(stock, price_limit=''):
-        data = load_daily_data(stock)
-        min_close = min([l['close'] for l in data])
-        min_date = ''
-        if price_limit != '':
-            a = price_limit.split(' ')[0]
-            o = price_limit.split(' ')[1]
-            b = price_limit.split(' ')[2]
-            if a.isdigit():
-                a = float(a)
-            else:
-                a = data[-1][a]
-            if b.isdigit():
-                b = float(b)
-            else:
-                b = data[-1][b]
-            if not eval_binary_expr(a, o, b):
-                return ''
-        for i in data:
-
-            if i['close'] == min_close:
-                min_date = i['date']
-        return '%s %s收盘价 %.02f 2012以来最低收盘价 %s %.02f' % (stock, data[-1]['date'], data[-1]['close'], min_date, min_close)
-
-    def get_market_code_of_stock(self, stock):
-        mkt = ''
-        if self.market_dict[stock] == 'sse':
-            mkt = 'sh'
-        elif self.market_dict[stock] == 'szse':
-            mkt = 'sz'
-        return '%s%s' % (mkt, stock)
-
-    def in_sse(self, stock):
-        if self.market_dict[stock] == 'sse':
-            return True
-        else:
-            return False
-
-    def in_szse(self, stock):
-        if self.market_dict[stock] == 'szse':
-            return True
-        else:
-            return False
-
-    def _get_sse_company_list(self):
-        print('Updating Shanghai Stock Exchange List')
-        req_url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do'
-        get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                       'Accept-Encoding': 'gzip, deflate, sdch',
-                       'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
-                       'Host': 'query.sse.com.cn',
-                       'Referer': 'http://www.sse.com.cn/assortment/stock/list/share/',
-                       'Upgrade-Insecure-Requests': '1',
-                       'User-Agent': AGENT['User-Agent']}
-        get_params = {'csrcCode': None,
-                      'stockCode': None,
-                      'areaName': None,
-                      'stockType': 1}
-        s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
-        csv_data = result.text
-        csv_data = csv_data.replace('\t', ',')
-        csv_data = csv_data.replace(' ', '')
-        with open('%s/sse_company.csv' % stock_data_root, 'wb') as f:
-            f.write(csv_data.encode('utf8'))
-        self.timestamp = time.time()
-
-    def _get_szse_sub_company_list(self, market_type):
-        market_type_dict = {'a': ['tab2PAGENUM', 'tab2', 'A股列表'],
-                            'zxb': ['tab5PAGENUM', 'tab5', '中小企业板'],
-                            'cyb': ['tab6PAGENUM', 'tab6', '创业板']}
-        req_url = 'https://www.szse.cn/szseWeb/ShowReport.szse'
-        get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                       'Accept-Encoding': 'gzip, deflate, sdch',
-                       'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
-                       'Upgrade-Insecure-Requests': '1',
-                       'User-Agent': AGENT['User-Agent']}
-        get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
-                      'TABKEY': market_type_dict[market_type][1]}
-        s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
-        with open('/tmp/szse_company.xlsx', 'wb') as f:
-            f.write(result.content)
-
-        data_xls = pd.read_excel('/tmp/szse_company.xlsx', market_type_dict[market_type][2], index_col=None,
-                                 converters={'A股代码': str, 'A股上市日期': str})
-        data_xls.to_csv('%s/szse_company_%s.csv' % (stock_data_root, market_type), encoding='utf-8')
-        self.timestamp = time.time()
-
-    def _get_szse_company_list(self):
-        print('Updating Shenzhen Stock Exchange List')
-        self._get_szse_sub_company_list('a')
-
-    def _merge_company_list(self):
-        final_list = []
-        with open('%s/sse_company.csv' % stock_data_root) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                final_list.append(
-                    {'market': 'sse', 'code': row['A股代码'], 'name': row['A股简称'], 'timeToMarket': row['A股上市日期'],
-                     'totals': float(row['A股总股本']) / 10000, 'outstanding': float(row['A股流通股本']) / 10000})
-        with open('%s/szse_company_a.csv' % stock_data_root) as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                final_list.append(
-                    {'market': 'szse', 'code': row['A股代码'], 'name': row['公司简称'], 'timeToMarket': row['A股上市日期'],
-                     'totals': float(row['A股总股本'].replace(',', '')) / 100000000,
-                     'outstanding': float(row['A股流通股本'].replace(',', '')) / 100000000})
-        list2csv(final_list, '%s/basic_info.csv' % stock_data_root,
-                 col_order=['code', 'name', 'market', 'outstanding', 'totals', 'timeToMarket'])
-        self.timestamp = time.time()
-
-    def load(self, update=False):
-        if not os.path.exists(stock_data_root):
-            subprocess.call('mkdir %s' % stock_data_root, shell=True)
-        if update:
-            if return_weekday(get_today()) == 0:
-                print('Updating stock list')
-                self._get_sse_company_list()
-                self._get_szse_company_list()
-                self._merge_company_list()
-            update_market_open_date_list()
-            mkdirs(self.symbol_list)
-            # self.get_all_announcements()
-            self.get_announcement_all_stock_one_day(get_today())  # FIXME
-            print('Finished loading announcements')
-            # self.get_all_stock_suspend_list()
-        try:
-            basic_info_list = load_csv('%s/basic_info.csv' % stock_data_root)
-        except FileNotFoundError:
-            self._get_sse_company_list()
-            self._get_szse_company_list()
-            self._merge_company_list()
-            basic_info_list = load_csv('%s/basic_info.csv' % stock_data_root)
-
-        self.market_open_days = load_market_open_date_list()
-        for i in basic_info_list:
-            try:
-                assert i['market'] in ['sse', 'szse']
-                assert (re.match(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", i['timeToMarket']) is not None)
-                assert (re.match(r"[0-9]{6}", i['code']) is not None)
-            except AssertionError as e:
-                if i['code'] == '600996':
-                    i['timeToMarket'] = '2016-12-26'
-                else:
-                    e.args += i
-                    raise
-            if i['timeToMarket'] > NEW_STOCK_IPO_DATE_THRESHOLD:
-                continue
-            self.market_dict[i['code']] = i['market']
-            self.name_dict[i['code']] = i['name']
-            self.outstanding_dict[i['code']] = i['outstanding']
-            self.totals_dict[i['code']] = i['totals']
-            self.time_to_market_dict[i['code']] = i['timeToMarket']
-            self.symbol_list.append(i['code'])
-        print('Fininshed BASIC_INFO loading')
-        # self.load_suspend_trade_date_list() FIXME suspend list not used for now
-
-    @staticmethod
-    def _handle_an_uls(uls):
-        final_list = []
-        for line in uls:
-            stock = line.find("li", {"class": "ta-1"}).get_text()
-            if stock == '代码':
-                continue
-            name = line.find("li", {"class": "ta-2"}).get_text()
-            start_time = line.find("li", {"class": "ta-3"}).get_text()
-            end_time = line.find("li", {"class": "ta-4"}).get_text()
-            try:
-                start_time = re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', start_time).group(0)
-            except AttributeError:
-                start_time = None
-            try:
-                end_time = re.search(r'([0-9]{4}-[0-9]{2}-[0-9]{2})', end_time).group(0)
-            except AttributeError:
-                end_time = None
-            final_list.append({'code': stock, 'name': name, 'start_time': start_time, 'end_time': end_time})
-        return final_list
-
-    def _get_stock_suspend_list_of_day(self, day):
-        print("Fetching Suspend List %s" % day)
-        req_url = 'http://www.cninfo.com.cn/cninfo-new/memo-2'
-        get_headers = {
-            'Host': 'www.cninfo.com.cn',
-            'Referer': 'http://www.cninfo.com.cn/cninfo-new/memo-2',
-            'Upgrade-Insecure-Requests': '1',
-            'User-Agent': AGENT['1']}
-        get_params = {'queryDate': day,
-                      'queryType': 'queryType1'}
-        s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
-        b = result.text
-        soup = BeautifulSoup(b, 'lxml')
-        c = soup.find("div", {"id": "suspensionAndResumption1"})
-        d = c.findAll("div", {"class": "column2"})
-        start_idx = 0
-        end_idx = 1
-        if re.search(u'今起停牌', b) is None:
-            start_idx = -999
-            end_idx = 0
-        if re.search(u'今起复牌', b) is None:
-            end_idx = -999
-        try:
-            start_from_day = self._handle_an_uls(d[start_idx].findAll('ul'))
-        except IndexError:
-            start_from_day = []
-        try:
-            end_from_day = self._handle_an_uls(d[end_idx].findAll('ul'))
-        except IndexError:
-            end_from_day = []
-        return start_from_day, end_from_day
-
-    def get_all_stock_suspend_list(self):
-        try:
-            with open('%s/dates/raw_suspend_date_list.pickle' % stock_data_root, 'rb') as f:
-                final_dict = pickle.load(f)
-        except FileNotFoundError:
-            final_dict = {}
-        for day in self.market_open_days:
-            try:
-                _ = final_dict[day]
-            except KeyError:
-                s, e = self._get_stock_suspend_list_of_day(day)
-                final_dict[day] = {'start': s, 'end': e}
-                with open('%s/dates/raw_suspend_date_list.pickle' % stock_data_root, 'wb') as f:
-                    pickle.dump(final_dict, f, -1)
-
-    def _get_announcement_one_day_one_stock(self, target_day, fetch_type, market):
-        fetch_type = fetch_type
-        req_url = 'http://www.cninfo.com.cn/cninfo-new/announcement/query'
-
-        page_num = 1
-        final_data_list = []
-        post_params = {"Accept": "application/json, text/javascript, */*; q=0.01", "Accept-Encoding": "gzip, deflate",
-                       "Accept-Language": "en-US,en;q=0.8,zh-CN;q=0.6",
-                       "Cache-Control": "no-cache",
-                       "Connection": "keep-alive",
-                       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                       "User-Agent": AGENT['1'],
-                       "X-Requested-With": "XMLHttpRequest"}
-        while True:
-            post_data = {'stock': None, 'searchkey': None, 'plate': None, 'category': None, 'trade': None,
-                         'column': market,
-                         'columnTitle': '历史公告查询',
-                         'pageNum': page_num, 'pageSize': 30, 'tabName': fetch_type, 'sortName': None, 'sortType': None,
-                         'limit': None,
-                         'showTitle': None, 'seDate': target_day}
-            s = requests.session()
-            result = s.post(req_url, data=post_data, params=post_params)
-            result_dict = json.loads(result.text)
-            final_data_list += result_dict['announcements']
-            if result_dict['hasMore']:
-                page_num += 1
-            else:
-                break
-        print('Fetched all announcements %d %s' % (len(final_data_list), target_day))
-        return final_data_list
-
-    def get_announcement_all_stock_one_day(self, target_day):
-        if os.path.exists('%s/announcements/%s.pickle' % (stock_data_root, target_day)):
-            return
-        print('Fetching announcement of %s' % target_day)
-        data = []
-        data += self._get_announcement_one_day_one_stock(target_day, 'fulltext',
-                                                         'szse')  # market doesn't matter, will fetch all markets
-        for i in data:
-            i['adjunctUrl'] = 'http://www.cninfo.com.cn/%s' % i['adjunctUrl']
-        self._save_announcements(target_day, data)
-        return data
-
-    def get_all_announcements(self):
-        try:
-            with open('%s/announcements/fetched_days.pickle' % stock_data_root, 'rb') as f:
-                fetched_days = pickle.load(f)
-        except FileNotFoundError:
-            fetched_days = []
-        target_days = self.market_open_days
-        # for day in target_days:
-        #    if day <= '2017-01-01':#FIXME temp workaround
-        #        target_days.remove(day)
-        for day in target_days:
-            if day not in fetched_days:
-                try:
-                    self.get_announcement_all_stock_one_day(day)
-                    with open('%s/announcements/fetched_days.pickle' % stock_data_root, 'wb') as f:
-                        pickle.dump(fetched_days, f, -1)
-                    fetched_days.append(day)
-                except:
-                    raise
-
-    @staticmethod
-    def _save_announcements(target_day, data_list):
-        subprocess.call("mkdir -p %s/announcements" % stock_data_root, shell=True)
-        with open('%s/announcements/%s.pickle' % (stock_data_root, target_day), 'wb') as f:
-            pickle.dump(data_list, f, -1)
-
-    @staticmethod
-    def load_announcements_for(stock, target_day):
-        result = []
-        try:
-            with open('%s/announcements/%s.pickle' % (stock_data_root, target_day), 'rb') as f:
-                loaded = pickle.load(f)
-        except FileNotFoundError:
-            loaded = []
-        for i in loaded:
-            if i['secCode'] == stock:
-                result.append(i)
-        return result
 
 
 BASIC_INFO = BasicInfoHDL()
@@ -605,7 +41,7 @@ BASIC_INFO = BasicInfoHDL()
 def load_symbol_list(symbol_file):
     symbol_list = []
     if not os.path.isfile(symbol_file):
-        BASIC_INFO.load(update=True)
+        BASIC_INFO.load()
     with open(symbol_file) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
@@ -627,7 +63,7 @@ def get_au_scaler_list_of_stock(stock):
 
 def load_tick_data(stock, day):
     data_list = []
-    with open('%s/tick_data/%s/%s_%s.csv' % (stock_data_root, stock, stock, day)) as csvfile:
+    with open('%s/tick_data/%s/%s_%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock, stock, day)) as csvfile:
         reader = csv.DictReader(csvfile)
         try:
             for row in reader:
@@ -644,33 +80,18 @@ def load_tick_data(stock, day):
     return data_list
 
 
-def load_market_open_date_list_from(given_day):
-    try:
-        with open('%s/market_open_date_list.pickle' % stock_data_root, 'rb') as f:
-            raw_date = pickle.load(f)
-    except FileNotFoundError:
-        raw_date = update_market_open_date_list()
-    result_list = []
-    for day in raw_date:
-        if day >= given_day:
-            result_list.append(day)
-    return result_list
-
-
 def load_ma_for_stock(stock, ma_params):
     try:
-        with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (stock_data_root, ma_params, stock), 'rb') as f:
+        with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (COMMON_VARS_OBJ.stock_data_root, ma_params, stock),
+                  'rb') as f:
             return pickle.load(f)
     except FileNotFoundError:
         return []
 
 
-MARKET_OPEN_DATE_LIST = load_market_open_date_list()
-
-
 def load_trade_pause_date_list_for_stock(stock):
     try:
-        with open('%s/trade_pause_date/%s.pickle' % (stock_data_root, stock), 'rb') as f:
+        with open('%s/trade_pause_date/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, stock), 'rb') as f:
             return pickle.load(f)
     except FileNotFoundError:
         return []
@@ -678,7 +99,7 @@ def load_trade_pause_date_list_for_stock(stock):
 
 def load_basic_info_list():
     basic_info_list = []
-    with open('%s/basic_info.csv' % stock_data_root) as csvfile:
+    with open('%s/basic_info.csv' % COMMON_VARS_OBJ.stock_data_root) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             basic_info_list.append(row)
@@ -724,7 +145,7 @@ def print_basic_info(stock):
 
 
 def save_trade_pause_date_date_list_for_stock(stock, pause_list):
-    with open('%s/trade_pause_date/%s.pickle' % (stock_data_root, stock), 'wb') as f:
+    with open('%s/trade_pause_date/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, stock), 'wb') as f:
         pickle.dump(pause_list, f, -1)
 
 
@@ -748,7 +169,7 @@ def get_date_list(start, end, delta):
 
 def load_stock_date_list_from_daily_data(stock):
     date_list = []
-    with open('%s/data/%s.csv' % (stock_data_root, stock)) as csvfile:
+    with open('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             date_list.append(row['date'])
@@ -766,7 +187,7 @@ def load_atpd_data(stock):
     """
     data_list = []
     try:
-        with open('%s/quantitative_analysis/atpd/%s.csv' % (stock_data_root, stock)) as csvfile:
+        with open('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['atpd'] = float(row['atpd'])
@@ -785,7 +206,7 @@ def load_atpd_data(stock):
 def load_daily_data(stock, autype='qfq'):
     data_list = []
     if autype == 'qfq':
-        with open('%s/data/%s.csv' % (stock_data_root, stock)) as csvfile:
+        with open('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['open'] = float(row['open'])
@@ -795,7 +216,7 @@ def load_daily_data(stock, autype='qfq'):
                 row['volume'] = round(float(row['volume']))
                 data_list.append(row)
     elif autype == 'non_fq':
-        with open('%s/data/%s_non_fq.csv' % (stock_data_root, stock)) as csvfile:
+        with open('%s/data/%s_non_fq.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['open'] = float(row['open'])
@@ -824,7 +245,7 @@ def generate_html(msg):
 
 
 def load_stock_for_plot(stock, days):
-    daily_data = pd.read_csv('%s/data/%s.csv' % (stock_data_root, stock))
+    daily_data = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     daily_data = daily_data.sort_values(by='date', ascending=True)
     return daily_data.tail(days)
 
@@ -838,7 +259,7 @@ def load_atpdr_data(stock):
     data_list = []
     # noinspection PyBroadException
     try:
-        with open('%s/quantitative_analysis/atpdr/%s.csv' % (stock_data_root, stock)) as csvfile:
+        with open('%s/quantitative_analysis/atpdr/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 row['cost_per_vol_1'] = float(row['cost_per_vol_1'])
@@ -860,7 +281,7 @@ def load_atpdr_data(stock):
 
 
 def load_stock_tick_data(stock, target_date):
-    df = pd.read_csv('%s/tick_data/%s/%s_%s.csv' % (stock_data_root, stock, stock, target_date))
+    df = pd.read_csv('%s/tick_data/%s/%s_%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock, stock, target_date))
     df = df.sort_values(by='time', ascending=True)
     df = df.reset_index()
     df = df.drop('index', 1)

@@ -1,3 +1,6 @@
+daemon
+python-daemon
+nose
 pandas >= 0.19.2
 lxml >= 3.5.0
 requests >= 2.13.0

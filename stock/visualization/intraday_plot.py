@@ -14,7 +14,7 @@ from stock.common.common_func import *
 
 def intraday_plot(stock, target_date):
     fonts = [14, 16]
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     df = load_stock_tick_data(stock, target_date)
     fig = plt.figure(figsize=(16, 6), dpi=100)
     N = len(df.time)
@@ -65,7 +65,7 @@ def load_fig_pickle(s_full_name):
 
 
 def cvt2gif(stock):
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
     img = img.resize((545, 300))
     img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')

@@ -21,7 +21,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 def compress_plot(stock):
     print('Compressing %s' % stock)
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     subprocess.call(
         'echo "convert +dither -colors 256 %s/plots/%s.png %s/plots/%s.png" >> ./compress.sh' %
         (stock_data_root, s_full_name, stock_data_root, s_full_name), shell=True)

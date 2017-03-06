@@ -122,7 +122,7 @@ def load_fig_pickle(s_full_name):
 
 
 def cvt2gif(stock):
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
     img = img.resize((545, 300))
     img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')

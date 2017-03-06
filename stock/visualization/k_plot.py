@@ -122,7 +122,7 @@ def load_fig_pickle(s_full_name):
 
 
 def cvt2gif(stock):
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
     img = img.resize((545, 300))
     img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')
@@ -136,7 +136,7 @@ def k_plot(stock, days):
     df_tmi_accu=calc_tmi_series_for_stock(stock, days)
     df_vol_indi=load_vol_indi_for_plot(stock, days)
     
-    s_full_name = BASIC_INFO.get_market_code_of_stock(stock)
+    s_full_name = BASIC_INFO.market_code_of_stock(stock)
     fig = plt.figure(figsize=(16, 9), dpi=100)
     fonts = [14, 16]
     N = len(df.date)
