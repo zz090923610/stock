@@ -4,6 +4,7 @@ import time
 import paho.mqtt.client as mqtt
 from stock.common.file_operation import logging
 from stock.common.variables import *
+import paho.mqtt.publish as single_publish
 
 
 class DaemonClass:
@@ -31,8 +32,14 @@ class DaemonClass:
     def mqtt_on_message(self, mqttc, obj, msg):
         pass
 
-    def publish(self, msg, qos=1):
+    def publish(self, msg, qos=0):
         (result, mid) = self.client.publish(self.mqtt_topic_pub, msg, qos)
+
+    def unblock_publish(self, msg, qos=0):
+        single_publish.single(self.mqtt_topic_pub, payload=msg,
+                              qos=qos, retain=False, hostname="localhost",
+                              port=1883, client_id="", keepalive=60, will=None, auth=None,
+                              tls=None, protocol=mqtt.MQTTv31)
 
     def mqtt_on_publish(self, mqttc, obj, mid):
         pass
@@ -57,7 +64,7 @@ class DaemonClass:
 
     def daemon_main(self):
         self.MQTT_START()
-        self.publish('alive')
+        self.publish('alive_%d' % os.getpid())
         while not self.cancel_daemon:
             pid_dir = COMMON_VARS_OBJ.DAEMON['time_util']['pid_path']
             if not os.path.isdir(pid_dir):

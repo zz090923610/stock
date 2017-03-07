@@ -1,3 +1,4 @@
+import kivy.input.providers.probesysfs
 import threading
 
 import paho.mqtt.client as mqtt
@@ -13,17 +14,20 @@ from kivy.base import runTouchApp
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.core.text import LabelBase
 
-from stock.common.variables import stock_data_root
+from stock.common.variables import COMMON_VARS_OBJ
+
+from stock.trade_api.trade_api import TradeAPI
 
 LabelBase.register(name="msyh",
-                   fn_regular="./fonts/msyh.ttf")
+                   fn_regular="./stock/gui/fonts/msyh.ttf")
 
 
 class StockBrokerLoginPopup(Popup):
-    def __init__(self, trade_api, **kwargs):
-        super.__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        trade_api = TradeAPI('gtja')
         md5 = trade_api.get_captcha()
-        self.ids['captcha_img'].source = '%s/trade_api/Captcha_%s/%s.jpg' % (stock_data_root, trade_api.broker, md5)
+        self.ids['captcha_img'].source = '%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, trade_api.broker, md5)
 
 
 class CustomDropDown(DropDown):

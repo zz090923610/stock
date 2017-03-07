@@ -4,19 +4,23 @@ import os
 import pickle
 import re
 import subprocess
+import threading
 import time
 from datetime import datetime
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import daemon.pidfile
 
+from stock.common.common_func import simple_publish
 from stock.common.file_operation import list2csv
 from stock.common.file_operation import mkdirs, load_csv, logging
 from stock.common.time_util import load_last_date, TimeUtil, return_weekday, update_market_open_date_list, \
     load_market_open_date_list_from
 from stock.common.variables import *
 from stock.common.daemon_class import DaemonClass
+
 
 # noinspection PyUnboundLocalVariable
 class BasicInfoUpdater:
@@ -27,6 +31,7 @@ class BasicInfoUpdater:
 
     @staticmethod
     def _get_sse_company_list():
+        simple_publish('basic_info_update', 'update_sse_list')
         print('Updating Shanghai Stock Exchange List')
         req_url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do'
         get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -58,7 +63,7 @@ class BasicInfoUpdater:
                        'Accept-Encoding': 'gzip, deflate, sdch',
                        'Accept-Language': 'en-US,en;q=0.8,zh-CN;q=0.6',
                        'Upgrade-Insecure-Requests': '1',
-                       'User-Agent': COMMON_VARS_OBJ.AGENT['User-Agent']}
+                       'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
         get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
                       'TABKEY': market_type_dict[market_type][1]}
         s = requests.session()
@@ -72,6 +77,7 @@ class BasicInfoUpdater:
 
     def _get_szse_company_list(self):
         print('Updating Shenzhen Stock Exchange List')
+        simple_publish('basic_info_update', 'update_szse_list')
         self._get_szse_sub_company_list('a')
 
     @staticmethod
@@ -133,6 +139,7 @@ class BasicInfoUpdater:
                        "X-Requested-With": "XMLHttpRequest"}
         while True:
             print('Getting %d of %s' % (page_num, target_day))
+            simple_publish('basic_info_update', 'announcements_%s_%d' % (target_day, page_num))
             post_data = {'stock': None, 'searchkey': None, 'plate': None, 'category': None, 'trade': None,
                          'column': market,
                          'columnTitle': '历史公告查询',
@@ -158,6 +165,7 @@ class BasicInfoUpdater:
             else:
                 break
         print('Fetched all announcements %d %s' % (len(final_data_list), target_day))
+        simple_publish('basic_info_update', 'allannouncements_%s_%d' % (target_day, len(final_data_list)))
         return final_data_list
 
     def get_announcement_all_stock_one_day(self, target_day):
@@ -176,7 +184,10 @@ class BasicInfoUpdater:
         self.market_open_days = load_market_open_date_list_from()
         file_list = os.listdir('%s/announcements' % COMMON_VARS_OBJ.stock_data_root)
         fetched_days = []
-        file_list.remove('fetched_days.pickle')
+        try:
+            file_list.remove('fetched_days.pickle')
+        except ValueError:
+            pass
         for f in file_list:
             day = f.split('.')[0]
             fetched_days.append(day)
@@ -205,4 +216,49 @@ class BasicInfoUpdater:
 
 class BasicInfoUpdaterDaemon(DaemonClass):
     def __init__(self):
-        super().__init__(topic_sub=['basic_info_req','time_util_update'], topic_pub='basic_info_update')
+        super().__init__(topic_sub=['basic_info_req', 'time_util_update'], topic_pub='basic_info_update')
+        self.client.on_message = self.mqtt_on_message
+        self.dates = {'last_trade_day_cn': load_last_date('last_trade_day_cn'),
+                      'last_day_cn': load_last_date('last_day_cn')}
+        self.a = BasicInfoUpdater()
+
+    def mqtt_on_message(self, mqttc, obj, msg):
+        try:
+            if msg.topic == "time_util_update":
+                payload = json.loads(msg.payload.decode('utf8'))
+                # if payload['last_trade_day_cn'] != self.dates['last_trade_day_cn']:
+                #    self.publish('Updating Basic Info %s' % payload['last_trade_day_cn'])
+                #    a = BasicInfoUpdater()
+                #    a.update()
+                #    a.get_all_announcements()
+                #    self.publish('Finished Updating Basic Info %s' % payload['last_trade_day_cn'])
+            elif msg.topic == "basic_info_req":
+                payload = msg.payload.decode('utf8')
+                if payload == 'is_alive':
+                    self.publish('alive_%d' % os.getpid())
+                elif payload == 'update':
+                    last_trade_day_cn = load_last_date('last_trade_day_cn')
+                    self.unblock_publish('Updating Basic Info %s' % last_trade_day_cn)
+
+                    self.a.update()
+                    self.a.get_all_announcements()
+                    self.publish('Finished Updating Basic Info %s' % last_trade_day_cn)
+                elif payload == 'exit':
+                    self.publish('basic_info_hdl exit')
+                    self.cancel_daemon = True
+        except Exception as e:
+            self.publish(os.getpid(), e)
+
+
+def main(args=None):
+    if args is None:
+        args = []
+    pid_dir = COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path']
+    if not os.path.isdir(pid_dir):
+        os.makedirs(pid_dir)
+    with daemon.DaemonContext(
+            pidfile=daemon.pidfile.PIDLockFile('%s/basic_info_hdl.pid' %
+                                                       COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
+
+        a = BasicInfoUpdaterDaemon()
+        a.daemon_main()

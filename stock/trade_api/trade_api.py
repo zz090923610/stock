@@ -13,9 +13,9 @@ import pickle
 
 import requests
 
-import trade_vars as vs
+import stock.trade_api.trade_vars as vs
 
-from stock.common.variables import stock_data_root
+from stock.common.variables import COMMON_VARS_OBJ
 
 
 class TradeAPI(object):
@@ -34,7 +34,7 @@ class TradeAPI(object):
     def get_captcha(self):
         res_captcha = self.s.get(vs.CAPTCHA[self.broker])
         md5 = hashlib.md5(res_captcha.content).hexdigest()
-        with open('%s/trade_api/Captcha_%s/%s.jpg' % (stock_data_root,  self.broker, md5), "wb") as file:
+        with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root,  self.broker, md5), "wb") as file:
             file.write(res_captcha.content)
         return md5
 

@@ -12,7 +12,7 @@ import resource
 import time
 from bs4 import BeautifulSoup
 
-from stock.common.common_func import generate_html
+from stock.common.common_func import generate_html, simple_publish
 from stock.common.time_util import load_last_date
 from stock.common.variables import COMMON_VARS_OBJ
 import paho.mqtt.client as mqtt
@@ -235,7 +235,7 @@ class NEWS_GOV:
         if len(meiti) > 0:
             html_str += '<div class="news">%s 媒体解读</div><br>\n' % day
             for i in meiti:
-                html_str += '<a href="%s">%s</a><br>\n' % (i['link'], i['title'])
+                html_str += '<a href="%s">%s</a><br>\n' % ('http://www.gov.cn' + i['link'], i['title'])
         html_str += '\n'
         return html_str
 
@@ -267,13 +267,15 @@ def news_getter(args=None):
     gov.fetch_all_of_day(target_day)
     result_html = generate_html(src.generate_html_of_day(target_day) + gov.generate_html_of_day(target_day))
     write_text_file('%s/news/%s.html' % (COMMON_VARS_OBJ.stock_data_root, target_day), result_html)
+    simple_publish('news_hdl_update', '%r %r' %(src.have_news(target_day), gov.have_news(target_day)))
     if src.have_news(target_day) | gov.have_news(target_day):
-        subprocess.call("./stock/data/send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
+        subprocess.call("/home/zhangzhao/data/stock/stock/data/send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
                         "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
         # subprocess.call("./stock/data/send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
         #                "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
         # subprocess.call("./stock/data/send_mail.py -n -s 'ustczyy@126.com' '今日要闻 %s' "
         #                "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
+        simple_publish('news_hdl_update', 'mail_sent')
 
 
 # noinspection PyMethodMayBeStatic
@@ -295,19 +297,27 @@ class NewsDaemon:
     def mqtt_on_connect(self, mqttc, obj, flags, rc):
         for t in self.mqtt_topic_sub:
             mqttc.subscribe(t)
-        self.publish('alive')
+        self.publish('alive_%d' % os.getpid())
 
     def mqtt_on_message(self, mqttc, obj, msg):
         if msg.topic == "time_util_update":
             payload = json.loads(msg.payload.decode('utf8'))
-            if payload != self.dates:
-                self.publish('Getting %s' % payload['last_day_cn'])
-                news_getter(args=[payload['last_day_cn']])
-                self.publish('Finished getting %s' % payload['last_day_cn'])
+            # if payload != self.dates:
+            #    self.publish('Getting %s' % payload['last_day_cn'])
+            #    news_getter(args=[payload['last_day_cn']])
+            #    self.publish('Finished getting %s' % payload['last_day_cn'])
         elif msg.topic == "news_hdl_req":
             payload = msg.payload.decode('utf8')
             if payload == 'is_alive':
-                self.publish('alive')
+                self.publish('alive_%d' % os.getpid())
+            elif payload == 'update':
+                last_day_cn = load_last_date('last_day_cn')
+                simple_publish('news_hdl_update', 'Getting %s' % last_day_cn)
+                news_getter(args=[last_day_cn])
+                self.publish('Finished getting %s' % last_day_cn)
+            elif payload == 'exit':
+                self.publish('news_hdl exit')
+                self.cancel_daemon = True
 
     def publish(self, msg, qos=1):
         (result, mid) = self.client.publish(self.mqtt_topic_pub, msg, qos)

@@ -15,7 +15,9 @@ class CommonVars:
         self.DAEMON = {'time_util': {'pid_path': '/tmp/stock/daemon/pid', 'data_path':
             '/tmp/stock/daemon/data/time_util'},
                        'news_hdl': {'pid_path': '/tmp/stock/daemon/pid', 'data_path':
-                           '/tmp/stock/daemon/data/news_hdl'}
+                           '/tmp/stock/daemon/data/news_hdl'},
+                       'basic_info_hdl': {'pid_path': '/tmp/stock/daemon/pid', 'data_path':
+                           '/tmp/stock/daemon/data/basic_info_hdl'}
                        }
         self.POOL_SIZE = 128
         self.NEW_STOCK_IPO_DATE_THRESHOLD = '2017-01-01'
