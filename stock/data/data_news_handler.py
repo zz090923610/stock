@@ -271,10 +271,10 @@ def news_getter(args=None):
     if src.have_news(target_day) | gov.have_news(target_day):
         subprocess.call("/home/zhangzhao/data/stock/stock/data/send_mail.py -n -s '610153443@qq.com' '今日要闻 %s' "
                         "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
-        # subprocess.call("./stock/data/send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
-        #                "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
-        # subprocess.call("./stock/data/send_mail.py -n -s 'ustczyy@126.com' '今日要闻 %s' "
-        #                "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
+        subprocess.call("/home/zhangzhao/data/stock/stock/data/send_mail.py -n -s 'zzy6548@126.com' '今日要闻 %s' "
+                       "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
+        subprocess.call("/home/zhangzhao/data/stock/stock/data/send_mail.py -n -s 'ustczyy@126.com' '今日要闻 %s' "
+                       "'%s/news/%s.html'" % (target_day, COMMON_VARS_OBJ.stock_data_root, target_day), shell=True)
         simple_publish('news_hdl_update', 'mail_sent')
 
 

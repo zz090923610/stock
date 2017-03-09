@@ -1,9 +1,75 @@
 #:set default_font_name "./fonts/WenQuanYi_Micro_Hei.ttf"
 <Widget>:
     font_name: './fonts/WenQuanYi_Micro_Hei.ttf'
+
+
+<Sticker>:
+    size_hint:(.4,.4)
+    title: '券商登录'
+    BoxLayout:
+        padding:(20,20,20,20)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '券商登录'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Spinner:
+                text: '国泰君安'
+                values:('国泰君安', '银河证券')
+
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '资金帐号'
+            TextInput:
+                id: Account
+                multiline:False
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '交易密码'
+            TextInput:
+                id: Passwd
+                multiline:False
+                password:True
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '验证码'
+                size_hint:(.5,1)
+            ImageButton:
+                id: captcha_img
+                on_press:root.update_captcha()
+                height: 22
+                width: 70
+                allow_stretch: True
+                source:'/home/zhangzhao/data/stock_data/trade_api/Captcha_gtja/waiting_captcha.jpg'
+                size_hint:(.25,1)
+            TextInput:
+                id: Captcha
+                multiline:False
+                size_hint:(.25,1)
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Login'
+                id: Login_btn
+                on_press: print("Login")
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
 <Controller>:
     PageLayout:
-        BoxLayout:
+        FloatLayout:
             orientation: 'vertical'
             canvas:
                 Color:
@@ -11,11 +77,6 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
-            Label:
-                text: 'page 1'
-            Button:
-                text: 'Login'
-                on_press: root.show_popup()
         BoxLayout:
             orientation: 'vertical'
             canvas:
@@ -32,9 +93,9 @@
     title: '券商登录'
     BoxLayout:
         orientation: 'vertical'
-        Label:
-
+        Spinner:
             text: '国泰君安'
+            values:('国泰君安', '银河证券')
 
         BoxLayout:
             Label:
@@ -52,8 +113,13 @@
         BoxLayout:
             Label:
                 text: '验证码'
-            AsyncImage:
+            ImageButton:
                 id: captcha_img
+                on_press:root.update_captcha()
+                height: dp(1.1)
+                width: dp(3.5)
+                allow_stretch: True
+                source:'/home/zhangzhao/data/stock_data/trade_api/Captcha_gtja/waiting_captcha.jpg'
             TextInput:
                 id: Captcha
                 multiline:False
@@ -75,10 +141,8 @@
             with_previous: False
         ActionOverflow:
         ActionButton:
-            text: 'Btn0'
-            icon: 'atlas://data/images/defaulttheme/audio-volume-high'
-        ActionButton:
-            text: 'Btn1'
+            text: '券商登录'
+            on_press: app.main_layout.add_login_sticker()
         ActionButton:
             text: 'Btn2'
         ActionButton:

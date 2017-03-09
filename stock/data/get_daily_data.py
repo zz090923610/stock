@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 from multiprocessing import Pool
 from io import StringIO
-
 from stock.common.common_func import *
 from stock.data.data_rt_sina import get_rt_data_for_stock
 
-TODAY = get_today()
+TODAY = load_last_date()
 
 
 def get_all_data_for_one_stock(stock):
     print('getting %s' % stock)
-    start = max(BASIC_INFO.time_to_market_dict[stock], START_DATE)
+    start = max(BASIC_INFO.time_to_market_dict[stock], COMMON_VARS_OBJ.START_DATE)
     df = ts.get_k_data(stock, autype='qfq', start=start, end=TODAY)
     if TODAY not in df.date.tolist():
         s = requests.session()
@@ -22,20 +21,23 @@ def get_all_data_for_one_stock(stock):
     df = df.round({'open': 3, 'high': 3, 'close': 3, 'low': 3})
     df.volume = df.volume.astype(int)
     cols = ['date', 'open', 'high', 'close', 'low', 'volume']
-    df[cols].to_csv('%s/data/%s.csv' % (stock_data_root, stock), index=False)
+    df[cols].to_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
+    simple_publish('daily_data_update', '%s_all' % stock)
 
 
 def get_all_data_for_all_stock():
+    simple_publish('daily_data_update', 'start_all')
     pool = mp.Pool(64)
     for i in BASIC_INFO.symbol_list:
         pool.apply_async(get_all_data_for_one_stock, args=(i,))
     pool.close()
     pool.join()
+    simple_publish('daily_data_update', 'finished_all')
 
 
 def get_update_for_one_stock(stock):
     try:
-        df = pd.read_csv('%s/data/%s.csv' % (stock_data_root, stock))
+        df = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     except FileNotFoundError:
         get_all_data_for_one_stock(stock)
         return
@@ -51,16 +53,19 @@ def get_update_for_one_stock(stock):
     df = df.drop_duplicates('date', keep='last')
     df = df.round({'open': 3, 'high': 3, 'close': 3, 'low': 3})
     df.volume = df.volume.astype(int)
-    df[cols].to_csv('%s/data/%s.csv' % (stock_data_root, stock), index=False)
+    df[cols].to_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
+    simple_publish('daily_data_update', '%s_oneday' % stock)
 
 
 def get_update_for_all_stock():
+    simple_publish('daily_data_update', 'start_oneday')
     pool = mp.Pool(64)
     for i in BASIC_INFO.symbol_list:
         pool.apply_async(get_update_for_one_stock, args=(i,))
     pool.close()
     pool.join()
     print('Finished Updating daily data', file=sys.stderr)
+    simple_publish('daily_data_update', 'finished_oneday')
 
 
 def get_daily_data_for_stock_one_day_yahoo(stock, day):
@@ -69,7 +74,7 @@ def get_daily_data_for_stock_one_day_yahoo(stock, day):
 
 def get_daily_data_for_stock_yahoo(stock, start_day, end_day):
     try:
-        df_already = pd.read_csv('%s/yahoo/%s.csv' % (stock_data_root, stock))
+        df_already = pd.read_csv('%s/yahoo/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     except FileNotFoundError:
         df_already = pd.DataFrame(columns=['date', 'open', 'high', 'close', 'low', 'volume'])
     if start_day == end_day:
@@ -82,7 +87,7 @@ def get_daily_data_for_stock_yahoo(stock, start_day, end_day):
         end_day.split('-')[2])
     print('Get %s daily data from yahoo' % stock)
     req_url = 'http://chart.finance.yahoo.com/table.csv'
-    get_headers = {'User-Agent': AGENT['User-Agent']}
+    get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
     if BASIC_INFO.market_dict[stock] == 'sse':
         market = 'SS'
     else:
@@ -107,7 +112,7 @@ def get_daily_data_for_stock_yahoo(stock, start_day, end_day):
     column_order = ['date', 'open', 'high', 'close', 'low', 'volume']
     df = df[df.volume != 0]
     df = df.sort_values(by='date', ascending=True)
-    df[column_order].to_csv('%s/yahoo/%s.csv' % (stock_data_root, stock), index=False)
+    df[column_order].to_csv('%s/yahoo/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
 
 
 def get_daily_data_for_all_stock_one_day_yahoo(day):

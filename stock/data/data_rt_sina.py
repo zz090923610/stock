@@ -2,8 +2,9 @@
 from pandas import DataFrame
 
 from stock.common.common_func import *
+from stock.common.file_operation import load_csv
 
-TODAY = get_today()
+TODAY = load_last_date()
 
 
 def get_rt_data(once=500):
@@ -22,7 +23,7 @@ def get_rt_data(once=500):
     tmp_result = ''
     for line in stock_list:
         req_url = 'http://hq.sinajs.cn/list=' + line
-        get_headers = {'User-Agent': AGENT['User-Agent']}
+        get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
         result = s.get(req_url, headers=get_headers, verify=False)
         if result.status_code != 200:
             print('Exception %d' % result.status_code)
@@ -49,7 +50,7 @@ def get_rt_data_for_stock(s, stock):
     print('Getting real time %s' % stock)
     tmp_str = '%s%s' % ('sh' if BASIC_INFO.market_dict[stock] == 'sse' else 'sz', stock)
     req_url = 'http://hq.sinajs.cn/list=' + tmp_str
-    get_headers = {'User-Agent': AGENT['User-Agent']}
+    get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
     result = s.get(req_url, headers=get_headers, verify=False)
     if result.status_code != 200:
         print('Exception %d' % result.status_code)
@@ -114,10 +115,8 @@ def parse_one_line(line):
         final_dict['total_bid_size'] = sum([final_dict['bid_%d_size' % d] for d in range(1, 6)])
         return final_dict
     except IndexError:
-        print(line)
         return None
     except AttributeError:
-        print(line)
         return None
 
 
@@ -144,7 +143,7 @@ def print_a_dict(a_dict):
 
 
 def update_daily_list_today():
-    tm = get_time_of_a_day()
+    tm = TimeUtil.get_time_of_a_day()
     if tm >= '13:01:00':
         a = get_rt_data()
         for record in a:
@@ -157,7 +156,7 @@ def update_daily_list_record(stock, record):
     final_record = dict(date=record['date'], open=record['open'], high=record['high'], close=record['close'],
                         low=record['low'],
                         volume=record['volume'])
-    data_already_have = load_csv('%s/data/%s.csv' % (stock_data_root, stock))
+    data_already_have = load_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     if final_record['date'] not in [i['date'] for i in data_already_have]:
         data_already_have.append(final_record)
     else:
@@ -165,4 +164,4 @@ def update_daily_list_record(stock, record):
     b = pd.DataFrame(data_already_have)
     b = b.sort_values(by='date', ascending=True)
     column_order = ['date', 'open', 'high', 'close', 'low', 'volume']
-    b[column_order].to_csv('%s/data/%s.csv' % (stock_data_root, stock), index=False)
+    b[column_order].to_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)

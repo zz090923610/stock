@@ -258,7 +258,7 @@ def main(args=None):
         os.makedirs(pid_dir)
     with daemon.DaemonContext(
             pidfile=daemon.pidfile.PIDLockFile('%s/basic_info_hdl.pid' %
-                                                       COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
+                                                    COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
 
         a = BasicInfoUpdaterDaemon()
         a.daemon_main()

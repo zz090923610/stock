@@ -21,6 +21,7 @@ class DaemonClass:
         self.mqtt_topic_sub = topic_sub
         self.mqtt_topic_pub = topic_pub
         self.cancel_daemon = False
+        self.msg_on_exit = ''
 
     def mqtt_on_connect(self, mqttc, obj, flags, rc):
         if type(self.mqtt_topic_sub) == list:
@@ -30,7 +31,10 @@ class DaemonClass:
             mqttc.subscribe(self.mqtt_topic_sub)
 
     def mqtt_on_message(self, mqttc, obj, msg):
-        pass
+        payload = msg.payload.decode('utf8')
+        if payload == 'exit':
+            self.publish(self.msg_on_exit)
+            self.cancel_daemon = True
 
     def publish(self, msg, qos=0):
         (result, mid) = self.client.publish(self.mqtt_topic_pub, msg, qos)
