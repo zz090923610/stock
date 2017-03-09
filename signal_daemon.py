@@ -33,6 +33,7 @@ schedule.every().day.at("11:55").do(update_news_info)
 # schedule.every().wednesday.at("13:15").do(job)
 
 def main():
+    os.system('python3 ./main.py --touch')
     os.system('python3 ./main.py --td')
     os.system('python3 ./main.py --news')
     os.system('python3 ./main.py --basic')
