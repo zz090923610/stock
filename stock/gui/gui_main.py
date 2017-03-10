@@ -1,10 +1,16 @@
+import multiprocessing
+
 import kivy.input.providers.probesysfs
 import threading
 
 import paho.mqtt.client as mqtt
+import pygame
+from kivy import Config
+Config.set('graphics', 'position', 'custom')
+Config.set('graphics', 'left', '1920')  # FIXME monitor workaround
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.properties import OptionProperty, ObjectProperty, BooleanProperty
+from kivy.properties import OptionProperty, ObjectProperty, BooleanProperty, NumericProperty
 from kivy.properties import StringProperty
 from kivy.uix.actionbar import ActionBar
 from kivy.uix.dropdown import DropDown
@@ -12,17 +18,19 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 from kivy.base import runTouchApp
+from kivy.uix.progressbar import ProgressBar
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.core.text import LabelBase
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.image import Image, AsyncImage
-
-from stock.common.common_func import simple_publish
+from kivy.core.window import Window
+from stock.common.common_func import simple_publish, BASIC_INFO
 from stock.common.variables import COMMON_VARS_OBJ
 
 from stock.trade_api.trade_api import TradeAPI
+
 
 LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
@@ -59,6 +67,27 @@ class Sticker(ScatterLayout):
         super().__init__(**kwargs)
 
 
+class ProgressBarSticker(Sticker):
+    progress_hint = StringProperty('')
+    progress = NumericProperty(0)
+    title = StringProperty('')
+
+    def __init__(self, sid='', max=100, title='', **kwargs):
+        super().__init__(**kwargs)
+        self.ids['Progress_bar'].max = max
+        self.title = title
+
+        if sid != '':
+            self.sticker_id = sid
+
+    def update_progress(self):
+        if self.progress < self.ids['Progress_bar'].max:
+            self.progress += 1
+
+    def update_info(self, info):
+        self.progress_hint = info
+
+
 class BrokerLoginSticker(Sticker):
     def __init__(self, sid='', **kwargs):
         super().__init__(**kwargs)
@@ -77,7 +106,6 @@ class BrokerLoginSticker(Sticker):
 class Controller(FloatLayout):
     current_state = StringProperty()
     display_type = OptionProperty('normal', options=['normal', 'popup'])
-
     settings_popup = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
@@ -89,7 +117,7 @@ class Controller(FloatLayout):
         self.client.on_connect = self.mqtt_on_connect
         self.client.on_message = self.mqtt_on_message
         self.client.connect("localhost", 1883, 60)
-        self.mqtt_topic_sub = ['trade_api_update', 'ui_update']
+        self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update','tick_update','tick_detail']
         self.current_state = 'Not connected'
         self.popup = StockBrokerLoginPopup()
         self.cancel_daemon = False
@@ -113,6 +141,35 @@ class Controller(FloatLayout):
 
     def mqtt_on_message(self, mqttc, obj, msg):
         payload = msg.payload.decode('utf8')
+        if msg.topic == 'daily_data_update':
+            if payload.split('_')[0] == 'start':
+                if 'daily_data_update_progress_bar_sticker' in self.widget_dict.keys():
+                    self.remove_widget(self.widget_dict['daily_data_update_progress_bar_sticker'])
+                    del self.widget_dict['daily_data_update_progress_bar_sticker']
+                new_sticker = ProgressBarSticker(do_rotation=False, sid='daily_data_update_progress_bar_sticker',
+                                                 max=len(BASIC_INFO.symbol_list), title='日线信息更新')
+                self.add_widget(new_sticker)
+                self.widget_dict['daily_data_update_progress_bar_sticker'] = new_sticker
+                self.widget_cnt += 1
+            else:
+                self.widget_dict['daily_data_update_progress_bar_sticker'].update_info(payload)
+                self.widget_dict['daily_data_update_progress_bar_sticker'].update_progress()
+        elif msg.topic == 'tick_update':
+            if payload.rsplit('_', 1)[0] == 'analysis_finished':
+                if 'tick_progress_bar_sticker' in self.widget_dict.keys():
+                    self.remove_widget(self.widget_dict['tick_progress_bar_sticker'])
+                    del self.widget_dict['tick_progress_bar_sticker']
+                new_sticker = ProgressBarSticker(do_rotation=False, sid='tick_progress_bar_sticker',
+                                                 max=int(payload.rsplit('_', 1)[1]), title='分笔信息更新')
+                self.add_widget(new_sticker)
+                self.widget_dict['tick_progress_bar_sticker'] = new_sticker
+                self.widget_cnt += 1
+            elif payload != 'analysis_start':
+                self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+        elif msg.topic == 'tick_detail':
+            self.widget_dict['tick_progress_bar_sticker'].update_progress()
+            self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+
         if payload == 'exit':
             self.publish(self.msg_on_exit)
             self.cancel_daemon = True
@@ -162,11 +219,13 @@ class ControllerApp(App):
     main_layout = None
 
     def build(self):
+
         self.display_type = 'popup'
         self.main_layout = Controller()
         layout_bar = ActionBar()
         self.main_layout.add_widget(layout_bar)
         self.set_settings_cls(SettingsWithSidebar)
+
         return self.main_layout
 
     def on_settings_cls(self, *args):
@@ -202,5 +261,8 @@ class ControllerApp(App):
 
 
 if __name__ == '__main__':
+
+    Window.maximize()
     a = ControllerApp()
+
     a.run()

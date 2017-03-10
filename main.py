@@ -20,4 +20,4 @@ if __name__ == '__main__':
         for i in os.listdir('/tmp/stock/daemon/pid'):
             os.system('kill `cat %s/%s`' % ('/tmp/stock/daemon/pid', i))
     elif sys.argv[1] == '--touch':
-        os.system("xsetwacom set `xinput list | grep 'Weida' | grep -Po '(?<=id=)[0-9]+'` MapToOutput DP1")
+        os.system("xsetwacom set `xinput list | grep 'Weida' | grep -Po '(?<=id=)[0-9]+'` MapToOutput DP2")

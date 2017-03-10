@@ -3,11 +3,12 @@
     font_name: './fonts/WenQuanYi_Micro_Hei.ttf'
 
 
-<Sticker>:
-    size_hint:(.4,.4)
+<BrokerLoginSticker>:
+    size_hint:(None, None)
+    size: (300,250)
     title: '券商登录'
     BoxLayout:
-        padding:(20,20,20,20)
+        padding:(10,10,10,10)
         canvas:
             Color:
                 rgba: 150/255., 150/255., 150/255., 1
@@ -67,6 +68,41 @@
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
+
+
+<ProgressBarSticker>:
+    size_hint:(None, None)
+    size: (300,300)
+    title: '进度条'
+    BoxLayout:
+        padding:(10,10,10,10)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        BoxLayout:
+            padding:(5,1,5,1)
+            ProgressBar:
+                id: Progress_bar
+                value: root.progress
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.progress_hint
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
+
 <Controller>:
     PageLayout:
         FloatLayout:
@@ -87,50 +123,7 @@
                     size: self.size
             Label:
                 text: 'page 2'
-<StockBrokerLoginPopup>:
-    size_hint: .5, .5
-    auto_dismiss: False
-    title: '券商登录'
-    BoxLayout:
-        orientation: 'vertical'
-        Spinner:
-            text: '国泰君安'
-            values:('国泰君安', '银河证券')
 
-        BoxLayout:
-            Label:
-                text: '资金帐号'
-            TextInput:
-                id: Account
-                multiline:False
-        BoxLayout:
-            Label:
-                text: '交易密码'
-            TextInput:
-                id: Passwd
-                multiline:False
-                password:True
-        BoxLayout:
-            Label:
-                text: '验证码'
-            ImageButton:
-                id: captcha_img
-                on_press:root.update_captcha()
-                height: dp(1.1)
-                width: dp(3.5)
-                allow_stretch: True
-                source:'/home/zhangzhao/data/stock_data/trade_api/Captcha_gtja/waiting_captcha.jpg'
-            TextInput:
-                id: Captcha
-                multiline:False
-        BoxLayout:
-            Button:
-                text: 'Login'
-                id: Login_btn
-                on_press: print("Login")
-            Button:
-                text: 'Cancel'
-                on_press: root.dismiss()
 
 <ActionBar>:
     pos_hint: {'top':1}

@@ -8,6 +8,7 @@ import progressbar
 TODAY = load_last_date()
 
 
+# noinspection PyShadowingNames
 class DailyDataFetcher:
     def __init__(self, fetch_type='all', show_bar=False):
         self.RT_DICT = {}
@@ -45,6 +46,7 @@ class DailyDataFetcher:
         df = df.drop_duplicates('date', keep='last')
         df = df.sort_values(by='date', ascending=True)
         df = df.reset_index()
+        df = df.drop(df[df['date'] == '2016-11-25'].index)
         df = df.round({'open': 3, 'high': 3, 'close': 3, 'low': 3})
         df.volume = df.volume.astype(int)
         cols = ['date', 'open', 'high', 'close', 'low', 'volume']
@@ -86,6 +88,7 @@ class DailyDataFetcher:
         if TODAY in df.date.tolist():
             if self.show_bar:
                 self.adding_bar_cnt('/tmp/stock_daily_bar_cnt.pickle')
+            simple_publish('daily_data_update', '%s_update' % stock)
             return
         rt_today = get_pd_from_rt_data_dict_of_stock(self.RT_DICT, stock)
         if rt_today is not None:
@@ -96,6 +99,7 @@ class DailyDataFetcher:
         df = df.reset_index()
         cols = ['date', 'open', 'high', 'close', 'low', 'volume']
         df = df.drop_duplicates('date', keep='last')
+        df = df.drop(df[df['date'] == '2016-11-25'].index)
         df = df.round({'open': 3, 'high': 3, 'close': 3, 'low': 3})
         df.volume = df.volume.astype(int)
         df[cols].to_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
@@ -104,8 +108,8 @@ class DailyDataFetcher:
         simple_publish('daily_data_update', '%s_update' % stock)
 
 
-def get_daily_data_signal_daemon_callable():
-    b = DailyDataFetcher(fetch_type='update', show_bar=False)
+def get_daily_data_signal_daemon_callable(fetch_type='update'):
+    b = DailyDataFetcher(fetch_type=fetch_type, show_bar=False)
     b.get_all_data_for_all_stock()
 
 
