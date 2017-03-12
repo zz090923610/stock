@@ -103,6 +103,36 @@
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
 
+
+
+<NotificationSticker>:
+    size_hint:(None, None)
+    size: (300,300)
+    title: root.title
+    BoxLayout:
+        padding:(10,10,10,10)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.msg
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
+
 <Controller>:
     PageLayout:
         FloatLayout:
@@ -137,7 +167,8 @@
             text: '券商登录'
             on_press: app.main_layout.add_login_sticker()
         ActionButton:
-            text: 'Btn2'
+            text: '交割信息'
+            on_press: app.main_layout.trade_detail_hdl.mqtt_report()
         ActionButton:
             text: 'Btn3'
         ActionButton:

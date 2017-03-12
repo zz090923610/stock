@@ -1,36 +1,29 @@
-import multiprocessing
-
-import kivy.input.providers.probesysfs
 import threading
 
 import paho.mqtt.client as mqtt
-import pygame
 from kivy import Config
+
+from stock.real_time.trade_detail import HistoryTradeDetail
+
 Config.set('graphics', 'position', 'custom')
 Config.set('graphics', 'left', '1920')  # FIXME monitor workaround
 from kivy.app import App
-from kivy.lang import Builder
-from kivy.properties import OptionProperty, ObjectProperty, BooleanProperty, NumericProperty
+from kivy.properties import OptionProperty, ObjectProperty, NumericProperty
 from kivy.properties import StringProperty
 from kivy.uix.actionbar import ActionBar
 from kivy.uix.dropdown import DropDown
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
-from kivy.base import runTouchApp
-from kivy.uix.progressbar import ProgressBar
-from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.settings import SettingsWithSidebar
 from kivy.core.text import LabelBase
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.uix.image import Image, AsyncImage
+from kivy.uix.image import AsyncImage
 from kivy.core.window import Window
 from stock.common.common_func import simple_publish, BASIC_INFO
 from stock.common.variables import COMMON_VARS_OBJ
 
 from stock.trade_api.trade_api import TradeAPI
-
 
 LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
@@ -102,6 +95,21 @@ class BrokerLoginSticker(Sticker):
         simple_publish('trade_api_req', 'captcha_req')
 
 
+class NotificationSticker(Sticker):
+    msg = StringProperty('')
+    title = StringProperty('')
+
+    def __init__(self, sid='', title='', msg='', **kwargs):
+        super().__init__(**kwargs)
+        self.title = title
+        self.msg = msg
+        if sid != '':
+            self.sticker_id = sid
+
+    def update_msg(self, msg):
+        self.msg = msg
+
+
 # noinspection PyMethodMayBeStatic,PyUnusedLocal
 class Controller(FloatLayout):
     current_state = StringProperty()
@@ -117,7 +125,8 @@ class Controller(FloatLayout):
         self.client.on_connect = self.mqtt_on_connect
         self.client.on_message = self.mqtt_on_message
         self.client.connect("localhost", 1883, 60)
-        self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update','tick_update','tick_detail']
+        self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update', 'tick_update', 'tick_detail',
+                               'basic_info_update', 'news_hdl_update','trade_detail_update']
         self.current_state = 'Not connected'
         self.popup = StockBrokerLoginPopup()
         self.cancel_daemon = False
@@ -125,6 +134,7 @@ class Controller(FloatLayout):
         self.MQTT_START()
         self.widget_cnt = 0
         self.widget_dict = {}
+        self.trade_detail_hdl = HistoryTradeDetail()
 
     def show_popup(self):
         self.popup.open()
@@ -169,6 +179,29 @@ class Controller(FloatLayout):
         elif msg.topic == 'tick_detail':
             self.widget_dict['tick_progress_bar_sticker'].update_progress()
             self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+        elif msg.topic == 'basic_info_update':
+            new_sticker = NotificationSticker(do_rotation=False, sid='basic_info_notification_sticker_%d' % self.widget_cnt,
+                                              title='基本信息更新', msg=payload)
+            self.add_widget(new_sticker)
+            self.widget_dict['basic_info_notification_sticker_%d' % self.widget_cnt] = new_sticker
+            print(self.widget_dict)
+            self.widget_cnt += 1
+        elif msg.topic == 'news_hdl_update':
+            new_sticker = NotificationSticker(do_rotation=False, sid='news_notification_sticker_%d' % self.widget_cnt,
+                                              title='时政新闻更新', msg=payload)
+            self.add_widget(new_sticker)
+            self.widget_dict['news_notification_sticker_%d' % self.widget_cnt] = new_sticker
+            print(self.widget_dict)
+            self.widget_cnt += 1
+
+        elif msg.topic == 'trade_detail_update':
+            new_sticker = NotificationSticker(do_rotation=False, sid='trade_detail_notification_sticker_%d' % self.widget_cnt,
+                                              title='交割信息', msg=payload)
+            self.add_widget(new_sticker)
+            self.widget_dict['trade_detail_notification_sticker_%d' % self.widget_cnt] = new_sticker
+            print(self.widget_dict)
+            self.widget_cnt += 1
+
 
         if payload == 'exit':
             self.publish(self.msg_on_exit)
@@ -220,7 +253,7 @@ class ControllerApp(App):
 
     def build(self):
 
-        self.display_type = 'popup'
+        self.display_type = 'normal'
         self.main_layout = Controller()
         layout_bar = ActionBar()
         self.main_layout.add_widget(layout_bar)
@@ -256,12 +289,12 @@ class ControllerApp(App):
             p = self.settings_popup
             if p is not None:
                 p.dismiss()
+
         else:
             super(ControllerApp, self).close_settings()
 
 
 if __name__ == '__main__':
-
     Window.maximize()
     a = ControllerApp()
 
