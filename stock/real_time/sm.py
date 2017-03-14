@@ -8,7 +8,9 @@ from termcolor import colored
 import sys
 
 import signal
-from stock.common.common_func import get_time
+
+from stock.common.common_func import BASIC_INFO
+from stock.common.time_util import TimeUtil
 
 import tushare as ts
 
@@ -22,7 +24,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 def bell():
-    subprocess.call(["bell.sh", "2>>/dev/null"])
+    subprocess.call(["/home/zhangzhao/data/stock/stock/common/bell.sh", "2>>/dev/null"])
 
 
 def run_monitor(the_trade_list):
@@ -34,16 +36,10 @@ def run_monitor(the_trade_list):
 
 # noinspection PyShadowingNames
 def check_belonging_market(code):
-    file = 'shanghai_list.txt'
-    with open(file, 'rb') as f:
-        sh_data = str(f.readlines()).strip()
-    file = 'shenzhen_list.txt'
-    with open(file, 'rb') as f:
-        sz_data = str(f.readlines()).strip()
-    if code in sh_data:
-        return 'H'
-    elif code in sz_data:
-        return 'S'
+    if BASIC_INFO.in_sse(code):
+        return '沪'
+    elif BASIC_INFO.in_szse(code):
+        return '深'
     else:
         return 'N'
 
@@ -182,7 +178,7 @@ def show_gain(trade_list, cls=False):
     if cls:
         os.system('clear')
     print('%s, 已成交净收益: %.02f, 当前浮动收益: %.02f, 当前清仓收益: %.02f' % (
-        get_time(), netgain.val, totalfloatgain, totalcleargain))
+        TimeUtil.get_time(), netgain.val, totalfloatgain, totalcleargain))
     for trade in trade_list:
         if trade.quantity > 100:
             print_gain_of_trade(trade)

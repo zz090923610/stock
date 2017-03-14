@@ -39,6 +39,9 @@ class HistoryTradeDetail:
                                                                 line['净佣金'],
                                                                 line['规费'], line['印花税'], line['过户费'])
 
+    def reload(self):
+        self.__init__()
+
     def generate_long_dict(self):
         for stock in self.history_dict.keys():
             if self.history_dict[stock].current_quant != 0:
@@ -59,12 +62,26 @@ class HistoryTradeDetail:
                 print(self.history_dict[stock].generate_report())
 
     def mqtt_report(self):
+        self.reload()
         msg = ''
         msg += '已平仓净收益 %.2f\n' % self.finished_net_gain
         for stock in self.history_dict.keys():
             if self.history_dict[stock].current_quant != 0:
                 msg += '%s\n' % self.history_dict[stock].generate_report()
         simple_publish('trade_detail_update', msg)
+
+
+def calc_arbitrary_safe_price(stock, price):
+    if BASIC_INFO.in_sse(stock):
+        fee_ratio = .00205 + .00001 + .001 + .00002  # 佣金 规费 印花税 过户费
+    else:
+        fee_ratio = .00205 + .00001 + .001  # 佣金 规费 印花税
+    try:
+        unfinished_cost = price * (1 + fee_ratio)
+        safe_price = unfinished_cost / (1 - fee_ratio)
+    except ZeroDivisionError:
+        safe_price = 0
+    return safe_price
 
 
 class StockTradeHistory:
