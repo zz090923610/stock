@@ -30,6 +30,7 @@ LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
 
 
+# noinspection PyCompatibility
 class StockBrokerLoginPopup(Popup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -40,7 +41,6 @@ class StockBrokerLoginPopup(Popup):
         super().open(*largs)
 
     def update_captcha(self):
-        print('clicked')
         self.ids['captcha_img'].source = ''
         simple_publish('trade_api_req', 'captcha_req')
 
@@ -53,6 +53,7 @@ class CustomDropDown(DropDown):
     pass
 
 
+# noinspection PyCompatibility
 class Sticker(ScatterLayout):
     title = StringProperty()
     sticker_id = StringProperty()
@@ -61,6 +62,7 @@ class Sticker(ScatterLayout):
         super().__init__(**kwargs)
 
 
+# noinspection PyCompatibility,PyShadowingBuiltins
 class ProgressBarSticker(Sticker):
     progress_hint = StringProperty('')
     progress = NumericProperty(0)
@@ -82,6 +84,7 @@ class ProgressBarSticker(Sticker):
         self.progress_hint = info
 
 
+# noinspection PyCompatibility
 class BrokerLoginSticker(Sticker):
     def __init__(self, sid='', **kwargs):
         super().__init__(**kwargs)
@@ -91,7 +94,6 @@ class BrokerLoginSticker(Sticker):
             self.sticker_id = sid
 
     def update_captcha(self):
-        print('clicked')
         self.ids['captcha_img'].source = ''
         simple_publish('trade_api_req', 'captcha_req')
 
@@ -111,7 +113,7 @@ class NotificationSticker(Sticker):
         self.msg = msg
 
 
-# noinspection PyMethodMayBeStatic,PyUnusedLocal
+# noinspection PyMethodMayBeStatic,PyUnusedLocal,PyCompatibility
 class Controller(FloatLayout):
     current_state = StringProperty()
     display_type = OptionProperty('normal', options=['normal', 'popup'])
@@ -127,7 +129,7 @@ class Controller(FloatLayout):
         self.client.on_message = self.mqtt_on_message
         self.client.connect("localhost", 1883, 60)
         self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update', 'tick_update', 'tick_detail',
-                               'basic_info_update', 'news_hdl_update','trade_detail_update']
+                               'basic_info_update', 'news_hdl_update', 'trade_detail_update']
         self.current_state = 'Not connected'
         self.popup = StockBrokerLoginPopup()
         self.cancel_daemon = False
@@ -181,7 +183,8 @@ class Controller(FloatLayout):
             self.widget_dict['tick_progress_bar_sticker'].update_progress()
             self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
         elif msg.topic == 'basic_info_update':
-            new_sticker = NotificationSticker(do_rotation=False, sid='basic_info_notification_sticker_%d' % self.widget_cnt,
+            new_sticker = NotificationSticker(do_rotation=False,
+                                              sid='basic_info_notification_sticker_%d' % self.widget_cnt,
                                               title='基本信息更新', msg=payload)
             self.add_widget(new_sticker)
             self.widget_dict['basic_info_notification_sticker_%d' % self.widget_cnt] = new_sticker
@@ -194,15 +197,14 @@ class Controller(FloatLayout):
             self.widget_dict['news_notification_sticker_%d' % self.widget_cnt] = new_sticker
             print(self.widget_dict)
             self.widget_cnt += 1
-
         elif msg.topic == 'trade_detail_update':
-            new_sticker = NotificationSticker(do_rotation=False, sid='trade_detail_notification_sticker_%d' % self.widget_cnt,
+            new_sticker = NotificationSticker(do_rotation=False,
+                                              sid='trade_detail_notification_sticker_%d' % self.widget_cnt,
                                               title='交割信息', msg=payload)
             self.add_widget(new_sticker)
             self.widget_dict['trade_detail_notification_sticker_%d' % self.widget_cnt] = new_sticker
             print(self.widget_dict)
             self.widget_cnt += 1
-
 
         if payload == 'exit':
             self.publish(self.msg_on_exit)
@@ -217,11 +219,27 @@ class Controller(FloatLayout):
                 except KeyError:
                     pass
         elif payload.find('add_sticker_login') != -1:
-            new_sticker = BrokerLoginSticker(do_rotation=False, sid='broker_login_sticker_%d' % self.widget_cnt)
+            new_sticker = BrokerLoginSticker(do_rotation=False, sid='broker_login_sticker')
+            self.trade_api.pre_login()
             self.add_widget(new_sticker)
-            self.widget_dict['broker_login_sticker_%d' % self.widget_cnt] = new_sticker
+            if 'broker_login_sticker' in self.widget_dict:
+                self.remove_widget(self.widget_dict['broker_login_sticker'])
+                del self.widget_dict['broker_login_sticker']
+                self.widget_cnt -= 1
+            self.widget_dict['broker_login_sticker'] = new_sticker
             print(self.widget_dict)
             self.widget_cnt += 1
+        elif payload.find('try_login') != -1:
+            self.trade_api.user = self.widget_dict['broker_login_sticker'].ids['Account'].text
+            self.trade_api.passwd = self.widget_dict['broker_login_sticker'].ids['Passwd'].text
+            self.trade_api.v_code = self.widget_dict['broker_login_sticker'].ids['Captcha'].text
+            print(self.trade_api.user, self.trade_api.passwd, self.trade_api.v_code)
+            self.trade_api.login()
+        elif payload.find('login_success') != -1:
+            if 'broker_login_sticker' in self.widget_dict:
+                self.remove_widget(self.widget_dict['broker_login_sticker'])
+                del self.widget_dict['broker_login_sticker']
+                self.widget_cnt -= 1
 
     def mqtt_on_publish(self, mqttc, obj, mid):
         print("mid: " + str(mid))
@@ -241,6 +259,9 @@ class Controller(FloatLayout):
 
     def add_login_sticker(self):
         simple_publish('ui_update', 'add_sticker_login')
+
+    def try_login(self):
+        simple_publish('ui_update', 'try_login')
 
     def remove_login_sticker(self, sticker_id):
         self.remove_widget(self.widget_dict[sticker_id])

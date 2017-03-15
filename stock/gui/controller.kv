@@ -63,7 +63,7 @@
             Button:
                 text: 'Login'
                 id: Login_btn
-                on_press: print("Login")
+                on_press: app.main_layout.try_login()
             Button:
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)

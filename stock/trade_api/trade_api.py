@@ -8,15 +8,23 @@ import threading
 
 import requests
 from urllib.parse import urlencode, quote_plus
-
+from PIL import Image, ImageTk
+import tkinter as tk
 import time
-
+import random
 import stock.trade_api.trade_vars as vs
 from stock.common.daemon_class import DaemonClass
 
 from stock.common.variables import COMMON_VARS_OBJ
 import daemon.pidfile
-
+def load_image(path):
+    root = tk.Tk()
+    canvas = tk.Canvas(root, width=500, height=500)
+    canvas.pack()
+    img = Image.open(path)
+    tk_img = ImageTk.PhotoImage(img)
+    canvas.create_image(250, 250, image=tk_img)
+    root.mainloop()
 
 class TradeAPI(DaemonClass):
     def __init__(self, broker='gtja', topic_sub='trade_api_req', topic_pub='trade_api_update'):
@@ -24,30 +32,32 @@ class TradeAPI(DaemonClass):
         if broker == '':
             return None
         self.broker = broker
-        self.trade_prefix = '%s%s%s' % (vs.P_TYPE[self.broker],
-                                        vs.DOMAINS[self.broker],
-                                        vs.ACTION_PORTAL[self.broker])
         self.heart_active = True
-        self.s = requests.session()
         self.captcha_db = {}
-        self.s.headers.update(vs.AGENT)
+
         self.msg_on_exit = 'trade_api_exit'
         self.user = ''
         self.passwd = ''
         self.v_code = ''
 
-    def get_captcha(self):
-        res_captcha = self.s.get(vs.CAPTCHA[self.broker])
+        self.s = requests.session()
+        self.s.headers.update(vs.AGENT)
+        self.heart_thread = threading.Thread(target=self.send_heartbeat,
+                                             daemon=True)
+        self.load_captcha_db()
+
+    def get_captcha(self): # FIXME refresh captcha always failed
+        res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
+                                 random.uniform(0, 1))
         md5 = hashlib.md5(res_captcha.content).hexdigest()
         with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, self.broker, md5), "wb") as file:
             file.write(res_captcha.content)
         self.unblock_publish('md5_fetched_%s' % md5)
-        return md5
+
 
     def download_captcha_lib(self):
         while True:
             try:
-                self.load_captcha_db()
                 res_captcha = self.s.get(vs.CAPTCHA[self.broker])
                 md5 = hashlib.md5(res_captcha.content).hexdigest()
                 with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, self.broker, md5),
@@ -67,72 +77,92 @@ class TradeAPI(DaemonClass):
             return None
 
     def add_new_captcha(self, md5, code):
-        self.load_captcha_db()
         if md5 not in self.captcha_db:
             self.captcha_db[md5] = code
             self.save_captcha_db()
 
+    def pre_login(self):
+        self.s.headers.update(vs.AGENT)
+        self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin')
+        res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp')
+        md5 = hashlib.md5(res_captcha.content).hexdigest()
+        with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, self.broker, md5), "wb") as file:
+            file.write(res_captcha.content)
+        self.unblock_publish('md5_fetched_%s' % md5)
 
     def login(self):
-        md5 = self.get_captcha()
-        v_code = input()
-        self.v_code = v_code
-        self.add_new_captcha(md5, v_code)
-        return self._login(self.v_code, self.user, self.passwd)
-        # if self._login(utils.get_vcode('csc', res)) is False:
-        #    print('请确认账号或密码是否正确 ，或券商服务器是否处于维护中。 ')
-        # self.keepalive()
+        vcode = self.v_code
+        login_status = self._login(vcode)
 
-    def _login(self, v_code, user, passwd):
-        print(v_code, user, passwd)
-        trdpwd = base64.b64encode(bytes(passwd, 'utf8')).decode('utf8')
+        if login_status is False:
+            print('Login failed')
+        else:
+            print('Login success')
+            self.keepalive()
 
-        post_data = {'method': 'login',
-                     'uid': self.passwd,
-                     'pwdtype': '',
-                     'hardInfo': '',
-                     'logintype': 'common',
-                     'flowno': '',
-                     'usbkeySn': '',
-                     'usbkeyData': '',
-                     'mac': '',
-                     'gtja_dating_login_type': 0,
-                     'availHeight': 432,
-                     'YYBFW': 10,
-                     'BranchCode': '1401',
-                     'BranchName': '山西太原并州北路证券营业部',
-                     'Page': '',
-                     'selectBranchCode': '7001',
-                     'countType': 'Z',
-                     'inputid': user,
-                     'trdpwd': trdpwd,
-                     'AppendCode': v_code
-                     }
+    def _login(self, v_code):
+        trdpwd = base64.b64encode(bytes(self.passwd, 'utf8')).decode('utf8')
+        login_params = {'method': 'login',
+                        'uid': self.passwd,
+                        'pwdtype': '',
+                        'hardInfo': '',
+                        'logintype': 'common',
+                        'flowno': '',
+                        'usbkeySn': '',
+                        'usbkeyData': '',
+                        'mac': '',
+                        'gtja_dating_login_type': 0,
+                        'availHeight': 432,
+                        'YYBFW': 10,
+                        'BranchCode': '1401',
+                        'BranchName': '山西太原并州北路证券营业部',
+                        'Page': '',
+                        'selectBranchCode': '7001',
+                        'countType': 'Z',
+                        'inputid': self.user,
+                        'trdpwd': trdpwd,
+                        'AppendCode': v_code
+                        }
+        logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
+                              data=login_params)
+        if logined.text.find(u'国泰君安证券欢迎您') != -1:
+            self.unblock_publish('login_success')
+            return True
+        self.unblock_publish('login_failed')
+        return False
 
-        post_data = urlencode(post_data, quote_via=quote_plus)
-        print(post_data)
-        get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent'],
-                       'Upgrade-Insecure-Requests':'1',
-                       'Content-Type':'application/x-www-form-urlencoded',
-                       'Connection':'keep-alive',
-                       'Cache-Control':'max-age=0',
-                       'Accept-Encoding':'gzip, deflate, br',
-                       'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
-        login_res = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
-                               headers=get_headers, data=post_data)
-        return login_res
-        # logined = self.s.post()
-        # if logined.text.find(u'消息中心') != -1:
-        #    return True
-        # return False
+    def keepalive(self):
+        if self.heart_thread.is_alive():
+            self.heart_active = True
+        else:
+            self.heart_thread.start()
+
+    def send_heartbeat(self):
+        while True:
+            if self.heart_active:
+                try:
+                    b = self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail')
+                    if b.text.find('资金帐户状况') == '-1':
+                        print('dead')
+                        raise LookupError
+                    else:
+                        print('alive')
+                except:
+                    self.login()
+                time.sleep(100)
+            else:
+                time.sleep(10)
 
     def load_captcha_db(self):
-        if os.path.exists('%s/db.pickle' % vs.CAPTCHA_DB):
+        if os.path.exists('%s/db.pickle' % vs.CAPTCHA_DB[self.broker]):
             try:
                 with open('%s/db.pickle' % vs.CAPTCHA_DB[self.broker], 'rb') as f:
                     self.captcha_db = pickle.load(f)
             except FileNotFoundError:
                 self.captcha_db = {}
+        file_list = os.listdir('%s' % vs.CAPTCHA_DB[self.broker])
+        for f in file_list:
+            self.captcha_db[f.split('.')[0]] = ''
 
     def save_captcha_db(self):
         with open('%s/db.pickle' % vs.CAPTCHA_DB[self.broker], 'wb') as f:

@@ -1,8 +1,12 @@
 #!/usr/bin/python3
+import re
+
+import requests
 from pandas import DataFrame
 
 from stock.common.common_func import *
 from stock.common.file_operation import load_csv
+from stock.common.time_util import load_last_date
 
 TODAY = load_last_date()
 

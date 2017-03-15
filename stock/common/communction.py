@@ -1,6 +1,5 @@
-from paho import mqtt
-from paho.mqtt import publish as s_publish, client
-
+import paho.mqtt.client as mqtt
+import paho.mqtt.publish as s_publish
 
 def simple_publish(topic, payload):
     s_publish.single(topic, payload=payload, qos=0, retain=False, hostname="localhost",

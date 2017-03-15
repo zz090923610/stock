@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import multiprocessing
+import subprocess
 from multiprocessing import Pool
 
 import progressbar
+import sys
 
 from stock.common.common_func import *
 from stock.common.communction import simple_publish
+from stock.common.time_util import load_last_date
 from stock.data.data_rt_sina import get_rt_data_dict, get_pd_from_rt_data_dict_of_stock
-
+import tushare as ts
 TODAY = load_last_date()
 
 
