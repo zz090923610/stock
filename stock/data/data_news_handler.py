@@ -12,7 +12,8 @@ import resource
 import time
 from bs4 import BeautifulSoup
 
-from stock.common.common_func import generate_html, simple_publish
+from stock.common.common_func import generate_html
+from stock.common.communction import simple_publish
 from stock.common.time_util import load_last_date
 from stock.common.variables import COMMON_VARS_OBJ
 import paho.mqtt.client as mqtt

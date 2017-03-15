@@ -1,4 +1,5 @@
-from stock.common.common_func import BASIC_INFO, simple_publish
+from stock.common.common_func import BASIC_INFO
+from stock.common.communction import simple_publish
 from stock.common.file_operation import load_csv
 from stock.common.variables import COMMON_VARS_OBJ
 

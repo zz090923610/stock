@@ -83,8 +83,9 @@ def load_csv(path, col_type=None):
 def mkdirs(symbol_list):
     for a_dir in COMMON_VARS_OBJ.DIR_LIST:
         subprocess.call('mkdir -p %s' % a_dir, shell=True)
-    for s_code in symbol_list:
-        subprocess.call('mkdir -p %s/tick_data/%s' % (COMMON_VARS_OBJ.stock_data_root, s_code), shell=True)
+    if symbol_list is not None:
+        for s_code in symbol_list:
+            subprocess.call('mkdir -p %s/tick_data/%s' % (COMMON_VARS_OBJ.stock_data_root, s_code), shell=True)
 
 
 def list2csv(data_list, out_file, col_order=None, add_index=False):

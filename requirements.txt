@@ -1,5 +1,7 @@
+schedule
 daemon
 python-daemon
+paho-mqtt
 nose
 pandas >= 0.19.2
 lxml >= 3.5.0

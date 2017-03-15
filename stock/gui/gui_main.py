@@ -20,7 +20,8 @@ from kivy.core.text import LabelBase
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.image import AsyncImage
 from kivy.core.window import Window
-from stock.common.common_func import simple_publish, BASIC_INFO
+from stock.common.common_func import BASIC_INFO
+from stock.common.communction import simple_publish
 from stock.common.variables import COMMON_VARS_OBJ
 
 from stock.trade_api.trade_api import TradeAPI

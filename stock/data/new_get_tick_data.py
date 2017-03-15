@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-import multiprocessing
 # noinspection PyCompatibility
 from pathlib import Path
 
-import progressbar
-
 from stock.common.common_func import *
+from stock.common.communction import simple_publish
 from stock.common.file_operation import mkdirs
 from stock.common.time_util import load_stock_date_list_from_tick_files
-
 
 TODAY = load_last_date()
 

@@ -1,40 +1,17 @@
 import csv
-import os
-import re
-import subprocess
-import time
-from operator import itemgetter
-import requests
-import json
-import tushare as ts
-import pickle
-from datetime import datetime, date
-# noinspection PyUnresolvedReferences
 import multiprocessing as mp
-from bs4 import BeautifulSoup
-import paho.mqtt.client as mqtt
+import os
+import pickle
+from operator import itemgetter
+
+import pandas as pd
 
 from stock.common.basic_stock_info_hdl import BasicInfoHDL
-from stock.common.calculations import eval_binary_expr
 from stock.common.file_operation import logging
-from stock.common.time_util import load_last_date, TimeUtil, str2date
+from stock.common.time_util import TimeUtil, str2date
 from stock.common.variables import *
-import pandas as pd
-from datetime import timedelta as td
-
-import threading
-import sys
 
 MARKET_OPEN_DATE_LIST = TimeUtil.load_historical_market_open_date_list()
-
-import paho.mqtt.publish as s_publish
-
-
-def simple_publish(topic, payload):
-    s_publish.single(topic, payload=payload, qos=0, retain=False, hostname="localhost",
-                     port=1883, client_id="", keepalive=60, will=None, auth=None,
-                     tls=None, protocol=mqtt.MQTTv31)
-
 
 BASIC_INFO = BasicInfoHDL()
 

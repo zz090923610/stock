@@ -13,7 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 import daemon.pidfile
 
-from stock.common.common_func import simple_publish
+from stock.common.communction import simple_publish
 from stock.common.file_operation import list2csv
 from stock.common.file_operation import mkdirs, load_csv, logging
 from stock.common.time_util import load_last_date, TimeUtil, return_weekday, update_market_open_date_list, \

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import multiprocessing
 from multiprocessing import Pool
-from stock.common.common_func import *
-from stock.data.data_rt_sina import get_rt_data_dict, get_pd_from_rt_data_dict_of_stock
+
 import progressbar
+
+from stock.common.common_func import *
+from stock.common.communction import simple_publish
+from stock.data.data_rt_sina import get_rt_data_dict, get_pd_from_rt_data_dict_of_stock
 
 TODAY = load_last_date()
 

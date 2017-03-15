@@ -4,7 +4,7 @@ import subprocess
 import schedule
 import time
 import daemon.pidfile
-from stock.common.common_func import simple_publish
+from stock.common.communction import simple_publish
 from stock.common.time_util import update_market_open_date_list
 from stock.common.variables import COMMON_VARS_OBJ
 from stock.data.new_get_data import get_daily_data_signal_daemon_callable

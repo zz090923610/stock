@@ -2,10 +2,12 @@ import os
 import sys
 import signal_daemon
 from stock.common import time_util, basic_stock_info_fetcher
+from stock.common.file_operation import mkdirs
 from stock.data import data_news_handler
 from stock.trade_api import trade_api
 
 if __name__ == '__main__':
+    mkdirs(None)
     if sys.argv[1] == '--all':
         signal_daemon.main()
     if sys.argv[1] == '--td':
