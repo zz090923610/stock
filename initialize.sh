@@ -1,6 +1,7 @@
 #!/bin/bash
 sudo sh ./requirements_apt.txt
 sudo pip3 install --upgrade pip
+sudo pip3 install pandas
 sudo pip3 install -r ./requirements.txt
 cd ./stock/common
 sudo ./stock/common/install_font.sh
