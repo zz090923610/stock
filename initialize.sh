@@ -2,6 +2,7 @@
 sudo sh ./requirements_apt.txt
 sudo pip3 install --upgrade pip
 sudo pip3 install pandas
+sudo pip3 install Cython==0.23
 sudo pip3 install -r ./requirements.txt
 sudo apt-get install python-kivy-examples
 cd ./stock/common
