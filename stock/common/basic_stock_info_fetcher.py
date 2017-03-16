@@ -104,9 +104,15 @@ class BasicInfoUpdater:
         if not os.path.exists(COMMON_VARS_OBJ.stock_data_root):
             not_exist = True
             os.makedirs(COMMON_VARS_OBJ.stock_data_root)
+        elif load_last_date() is None:
+            not_exist = True
         else:
             not_exist = False
-        if (return_weekday(load_last_date()) == 0) | not_exist:
+        if not_exist :
+            self._get_sse_company_list()
+            self._get_szse_company_list()
+            self._merge_company_list()
+        elif return_weekday(load_last_date()) == 0:
             self._get_sse_company_list()
             self._get_szse_company_list()
             self._merge_company_list()
@@ -238,11 +244,11 @@ class BasicInfoUpdaterDaemon(DaemonClass):
                     self.publish('alive_%d' % os.getpid())
                 elif payload == 'update':
                     last_trade_day_cn = load_last_date('last_trade_day_cn')
-                    self.unblock_publish('Updating Basic Info %s' % last_trade_day_cn)
+                    self.unblock_publish('start_updating_basic_info_%s' % last_trade_day_cn)
 
                     self.a.update()
                     self.a.get_all_announcements()
-                    self.publish('Finished Updating Basic Info %s' % last_trade_day_cn)
+                    self.publish('finish_updating_basic_info_%s' % last_trade_day_cn)
                 elif payload == 'exit':
                     self.publish('basic_info_hdl exit')
                     self.cancel_daemon = True

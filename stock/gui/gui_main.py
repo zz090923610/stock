@@ -183,13 +183,24 @@ class Controller(FloatLayout):
             self.widget_dict['tick_progress_bar_sticker'].update_progress()
             self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
         elif msg.topic == 'basic_info_update':
-            new_sticker = NotificationSticker(do_rotation=False,
-                                              sid='basic_info_notification_sticker_%d' % self.widget_cnt,
-                                              title='基本信息更新', msg=payload)
-            self.add_widget(new_sticker)
-            self.widget_dict['basic_info_notification_sticker_%d' % self.widget_cnt] = new_sticker
-            print(self.widget_dict)
-            self.widget_cnt += 1
+            if payload.find('alive') != -1:
+                pass
+            elif payload.find('start_updating_basic_info') != -1:
+                if 'basic_info_update_progress_bar_sticker' in self.widget_dict.keys():
+                    self.remove_widget(self.widget_dict['basic_info_update_progress_bar_sticker'])
+                    del self.widget_dict['basic_info_update_progress_bar_sticker']
+                new_sticker = ProgressBarSticker(do_rotation=False, sid='basic_info_update_progress_bar_sticker',
+                                                 max=100, title='基本信息更新')
+                self.add_widget(new_sticker)
+                self.widget_dict['basic_info_update_progress_bar_sticker'] = new_sticker
+                self.widget_cnt += 1
+            else:
+                self.widget_dict['basic_info_update_progress_bar_sticker'].update_info(payload)
+                self.widget_dict['basic_info_update_progress_bar_sticker'].update_progress()
+
+
+
+
         elif msg.topic == 'news_hdl_update':
             new_sticker = NotificationSticker(do_rotation=False, sid='news_notification_sticker_%d' % self.widget_cnt,
                                               title='时政新闻更新', msg=payload)

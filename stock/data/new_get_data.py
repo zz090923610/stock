@@ -115,6 +115,8 @@ class DailyDataFetcher:
 
 
 def get_daily_data_signal_daemon_callable(fetch_type='update'):
+    if not os.path.isdir('%s/data' % COMMON_VARS_OBJ.stock_data_root):
+        os.makedirs('%s/data' % COMMON_VARS_OBJ.stock_data_root)
     b = DailyDataFetcher(fetch_type=fetch_type, show_bar=False)
     b.get_all_data_for_all_stock()
 

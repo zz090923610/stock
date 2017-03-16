@@ -160,6 +160,8 @@ class TradeAPI(DaemonClass):
                     self.captcha_db = pickle.load(f)
             except FileNotFoundError:
                 self.captcha_db = {}
+        if not os.path.isdir('%s' % vs.CAPTCHA_DB[self.broker]):
+            os.makedirs('%s' % vs.CAPTCHA_DB[self.broker])
         file_list = os.listdir('%s' % vs.CAPTCHA_DB[self.broker])
         for f in file_list:
             self.captcha_db[f.split('.')[0]] = ''

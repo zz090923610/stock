@@ -20,7 +20,7 @@ def load_last_date(date_type='last_trade_day_cn'):
         a = load_pickle('/tmp/stock/daemon/data/time_util/time_data.pickle')
         return a[date_type]
     else:
-        pass  # FIXME
+        return None  # FIXME
 
 
 def load_stock_date_list_from_tick_files(stock):
