@@ -165,8 +165,11 @@ class Controller(FloatLayout):
                 self.widget_dict['daily_data_update_progress_bar_sticker'] = new_sticker
                 self.widget_cnt += 1
             else:
-                self.widget_dict['daily_data_update_progress_bar_sticker'].update_info(payload)
-                self.widget_dict['daily_data_update_progress_bar_sticker'].update_progress()
+                try:
+                    self.widget_dict['daily_data_update_progress_bar_sticker'].update_info(payload)
+                    self.widget_dict['daily_data_update_progress_bar_sticker'].update_progress()
+                except:
+                    pass
         elif msg.topic == 'tick_update':
             if payload.rsplit('_', 1)[0] == 'analysis_finished':
                 if 'tick_progress_bar_sticker' in self.widget_dict.keys():
@@ -178,10 +181,16 @@ class Controller(FloatLayout):
                 self.widget_dict['tick_progress_bar_sticker'] = new_sticker
                 self.widget_cnt += 1
             elif payload != 'analysis_start':
-                self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+                try:
+                    self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+                except:
+                    pass
         elif msg.topic == 'tick_detail':
-            self.widget_dict['tick_progress_bar_sticker'].update_progress()
-            self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+            try:
+                self.widget_dict['tick_progress_bar_sticker'].update_progress()
+                self.widget_dict['tick_progress_bar_sticker'].update_info(payload)
+            except:
+                pass
         elif msg.topic == 'basic_info_update':
             if payload.find('alive') != -1:
                 pass
@@ -195,11 +204,11 @@ class Controller(FloatLayout):
                 self.widget_dict['basic_info_update_progress_bar_sticker'] = new_sticker
                 self.widget_cnt += 1
             else:
-                self.widget_dict['basic_info_update_progress_bar_sticker'].update_info(payload)
-                self.widget_dict['basic_info_update_progress_bar_sticker'].update_progress()
-
-
-
+                try:
+                    self.widget_dict['basic_info_update_progress_bar_sticker'].update_info(payload)
+                    self.widget_dict['basic_info_update_progress_bar_sticker'].update_progress()
+                except:
+                    pass
 
         elif msg.topic == 'news_hdl_update':
             new_sticker = NotificationSticker(do_rotation=False, sid='news_notification_sticker_%d' % self.widget_cnt,
@@ -273,6 +282,15 @@ class Controller(FloatLayout):
 
     def try_login(self):
         simple_publish('ui_update', 'try_login')
+
+    def update_daily_all(self):
+        simple_publish('data_req', 'daily_update_all')
+
+    def update_daily(self):
+        simple_publish('data_req', 'daily_update')
+
+    def update_tick(self):
+        simple_publish('data_req', 'tick_update')
 
     def remove_login_sticker(self, sticker_id):
         self.remove_widget(self.widget_dict[sticker_id])

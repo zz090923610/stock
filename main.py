@@ -4,6 +4,7 @@ import signal_daemon
 from stock.common import time_util, basic_stock_info_fetcher
 from stock.common.file_operation import mkdirs
 from stock.data import data_news_handler
+from stock.data import new_get_data
 from stock.trade_api import trade_api
 
 if __name__ == '__main__':
@@ -16,6 +17,8 @@ if __name__ == '__main__':
         data_news_handler.main()
     elif sys.argv[1] == '--basic':
         basic_stock_info_fetcher.main()
+    elif sys.argv[1] == '--data':
+        new_get_data.main()
     elif sys.argv[1] == '--trade':
         trade_api.main()
     elif sys.argv[1] == '--exit':
