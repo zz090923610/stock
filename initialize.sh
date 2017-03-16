@@ -1,5 +1,6 @@
 #!/bin/bash
 sudo sh ./requirements_apt.txt
+sudo pip3 install -r ./requirements.txt
 sudo ./stock/common/install_font.sh
 python3 ./init_path.py
 
