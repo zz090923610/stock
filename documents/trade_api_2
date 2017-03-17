@@ -1,0 +1,29 @@
+from stock.trade_api.trade_api import *
+a=TradeAPI('gtja')
+a.user = '343879'
+a.passwd = '370103'
+a.pre_login()
+b=a.login()
+b=a.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchExchangeBill')
+
+with open('/tmp/a.xls','wb') as f:
+     f.write(b.content)
+
+
+b=a.s.get('https://trade.gtja.com/webtrade/trade/excelExport.jsp?ftype=7')
+
+
+type 1 dui zhang dan
+type 2 dan qian chi cang
+type 3 dang ri wei tuo
+type 4 dang ri cheng jiao
+type 5 li shi cheng jiao
+type 7 jiao ge dan
+
+type 6 ji jin
+type 8 ji jin li shi que ren ming xi
+type 9 ji jin zi chan ming xi
+type 10 ji jin che xiao ming xi
+type 11 dang ri sheng qing xin xi
+type 13 zi jin hua zhuan xin xi
+type 14 ji hua zhuan zhang xin xi

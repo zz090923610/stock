@@ -1,7 +1,9 @@
+import os
 import threading
 
 import paho.mqtt.client as mqtt
 from kivy import Config
+from kivy.uix.textinput import TextInput
 
 from stock.real_time.trade_detail import HistoryTradeDetail
 
@@ -30,19 +32,15 @@ LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
 
 
-# noinspection PyCompatibility
-class StockBrokerLoginPopup(Popup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.trade_api = TradeAPI('gtja')
-        self.captcha_md5 = ''
+class TabTextInput(TextInput):
+    next = ObjectProperty()
 
-    def open(self, *largs):
-        super().open(*largs)
+    def __init__(self, *args, **kwargs):
+        self.next = kwargs.pop('next', None)
+        super().__init__(*args, **kwargs)
 
-    def update_captcha(self):
-        self.ids['captcha_img'].source = ''
-        simple_publish('trade_api_req', 'captcha_req')
+    def set_next(self, next):
+        self.next = next
 
 
 class ImageButton(ButtonBehavior, AsyncImage):
@@ -84,18 +82,43 @@ class ProgressBarSticker(Sticker):
         self.progress_hint = info
 
 
-# noinspection PyCompatibility
+# noinspection PyCompatibility,PyMethodMayBeStatic
 class BrokerLoginSticker(Sticker):
+    current_focus = ObjectProperty()
+
     def __init__(self, sid='', **kwargs):
         super().__init__(**kwargs)
         self.trade_api = TradeAPI('gtja')
         self.captcha_md5 = ''
         if sid != '':
             self.sticker_id = sid
+        self._keyboard = Window.request_keyboard(
+            self._keyboard_closed, self, 'text')
+        if self._keyboard.widget:
+            # If it exists, this widget is a VKeyboard object which you can use
+            # to change the keyboard layout.
+            pass
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
     def update_captcha(self):
         self.ids['captcha_img'].source = ''
         simple_publish('trade_api_req', 'captcha_req')
+
+    def _keyboard_closed(self):
+        print('My keyboard have been closed!')
+        # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        # self._keyboard = None
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        print('The key', keycode, 'have been pressed')
+        print(' - text is %r' % text)
+        print(' - modifiers are %r' % modifiers)
+        # Keycode is composed of an integer + a string
+        # If we hit escape, release the keyboard
+        # if keycode[1] == 13:
+        #    print('enter')
+        #if keycode[1] == 'escape':
+        #    keyboard.release()
 
 
 class NotificationSticker(Sticker):
@@ -131,7 +154,6 @@ class Controller(FloatLayout):
         self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update', 'tick_update', 'tick_detail',
                                'basic_info_update', 'news_hdl_update', 'trade_detail_update']
         self.current_state = 'Not connected'
-        self.popup = StockBrokerLoginPopup()
         self.cancel_daemon = False
         self.msg_on_exit = ''
         self.MQTT_START()
@@ -292,6 +314,9 @@ class Controller(FloatLayout):
     def update_tick(self):
         simple_publish('data_req', 'tick_update')
 
+    def update_announcement(self):
+        simple_publish('basic_info_req', 'update')
+
     def remove_login_sticker(self, sticker_id):
         self.remove_widget(self.widget_dict[sticker_id])
         del self.widget_dict[sticker_id]
@@ -340,9 +365,11 @@ class ControllerApp(App):
             p = self.settings_popup
             if p is not None:
                 p.dismiss()
-
         else:
             super(ControllerApp, self).close_settings()
+
+    def on_stop(self):
+        os.system('python3 main.py --exit 2>/dev/null &')
 
 
 if __name__ == '__main__':

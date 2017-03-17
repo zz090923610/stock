@@ -30,16 +30,19 @@
             padding:(5,1,5,1)
             Label:
                 text: '资金帐号'
-            TextInput:
+            TabTextInput:
                 id: Account
+                write_tab: False
                 multiline:False
+                next:Passwd
         BoxLayout:
             padding:(5,1,5,1)
             Label:
                 text: '交易密码'
-            TextInput:
+            TabTextInput:
                 id: Passwd
                 multiline:False
+                write_tab: False
                 password:True
         BoxLayout:
             padding:(5,1,5,1)
@@ -54,9 +57,10 @@
                 allow_stretch: True
                 source:'/home/zhangzhao/data/stock_data/trade_api/Captcha_gtja/waiting_captcha.jpg'
                 size_hint:(.25,1)
-            TextInput:
+            TabTextInput:
                 id: Captcha
                 multiline:False
+                write_tab: False
                 size_hint:(.25,1)
         BoxLayout:
             padding:(5,1,5,1)
@@ -158,16 +162,24 @@
 <ActionBar>:
     pos_hint: {'top':1}
     ActionView:
-        use_separator: True
+
         ActionPrevious:
-            title: 'Action Bar'
+            title: 'Crystal T+0'
             with_previous: False
-        ActionOverflow:
-        ActionButton:
-            text: '券商登录'
-            on_press: app.main_layout.add_login_sticker()
+        ActionGroup:
+            text: '交易相关'
+            ActionButton:
+                text: '券商登录'
+                on_press: app.main_layout.add_login_sticker()
+            ActionButton:
+                text: '交割信息'
+                on_press: app.main_layout.trade_detail_hdl.mqtt_report()
+
         ActionGroup:
             text: '信息更新'
+            ActionButton:
+                text: '公告更新'
+                on_press: app.main_layout.update_daily_all()
             ActionButton:
                 text: '日线强制更新'
                 on_press: app.main_layout.update_daily_all()
@@ -177,14 +189,57 @@
             ActionButton:
                 text: '分笔更新'
                 on_press: app.main_layout.update_tick()
-        ActionButton:
-            text: '交割信息'
-            on_press: app.main_layout.trade_detail_hdl.mqtt_report()
         ActionGroup:
-            text: 'Group1'
+            text: '宏观分析'
+        ActionGroup:
+            text: '量化模型'
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'aaa'
+                on_press: print('23333')
+            ActionButton:
+                text: 'ee'
+                on_press: print('23333')
+            ActionButton:
+                text: 'cffcc'
+                on_press: print('23333')
+        ActionGroup:
+            text: '数据可视化'
+            ActionButton:
+                text: 'bbb'
+                on_press: print('23333')
+        ActionGroup:
+            text: '自动 T+0'
+            ActionButton:
+                text: 'ccccc'
+                on_press: print('23333')
+        ActionGroup:
+            text: '定时任务'
+            ActionButton:
+                text: 'dddd'
+                on_press: print('23333')
+        ActionGroup:
+            text: '系统'
             ActionButton:
                 text: '设置'
                 on_press: app.open_settings()
+            ActionButton:
+                text: '版本更新'
+                on_press: print('23333')
             ActionButton:
                 text: '退出'
                 on_press: app.stop()
