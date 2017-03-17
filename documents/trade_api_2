@@ -13,17 +13,17 @@ with open('/tmp/a.xls','wb') as f:
 b=a.s.get('https://trade.gtja.com/webtrade/trade/excelExport.jsp?ftype=7')
 
 
-type 1 dui zhang dan
-type 2 dan qian chi cang
-type 3 dang ri wei tuo
-type 4 dang ri cheng jiao
-type 5 li shi cheng jiao
-type 7 jiao ge dan
+type 1 对账单
+type 2 当前持仓
+type 3 当日委托
+type 4 当日成交
+type 5 历史成交
+type 7 交割单
 
-type 6 ji jin
-type 8 ji jin li shi que ren ming xi
-type 9 ji jin zi chan ming xi
-type 10 ji jin che xiao ming xi
-type 11 dang ri sheng qing xin xi
-type 13 zi jin hua zhuan xin xi
-type 14 ji hua zhuan zhang xin xi
+type 6 基金
+type 8 基金历史确认明细
+type 9 基金资产明细
+type 10 基金撤销明细
+type 11 当日申请信息
+type 13 资金划转信息
+type 14 计划转账信息
