@@ -179,7 +179,7 @@
             text: '信息更新'
             ActionButton:
                 text: '公告更新'
-                on_press: app.main_layout.update_daily_all()
+                on_press: app.main_layout.update_announcement()
             ActionButton:
                 text: '日线强制更新'
                 on_press: app.main_layout.update_daily_all()
@@ -189,6 +189,9 @@
             ActionButton:
                 text: '分笔更新'
                 on_press: app.main_layout.update_tick()
+            ActionButton:
+                text: '数据对齐'
+                on_press: print('23333')
         ActionGroup:
             text: '宏观分析'
         ActionGroup:

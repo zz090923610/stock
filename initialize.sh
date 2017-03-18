@@ -10,7 +10,7 @@ cd ./stock/common
 sudo ./stock/common/install_font.sh
 cd ../..
 su zhangzhao -c "python3 ./init_path.py"
-
+sudo echo "sslocal -s '115.28.142.56' -p '8388' -b '127.0.0.1' -l '1080' -k 'zz90q9d3' -m 'aes-256-cfb' &" >> /etc/rc.local
 
 #chmod 700 ~/.ssh/authorized_keys
 #sudo apt-get install samba smbclient cifs-utils

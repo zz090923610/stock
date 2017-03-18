@@ -17,6 +17,8 @@ from stock.common.daemon_class import DaemonClass
 
 from stock.common.variables import COMMON_VARS_OBJ
 import daemon.pidfile
+
+
 def load_image(path):
     root = tk.Tk()
     canvas = tk.Canvas(root, width=500, height=500)
@@ -25,6 +27,7 @@ def load_image(path):
     tk_img = ImageTk.PhotoImage(img)
     canvas.create_image(250, 250, image=tk_img)
     root.mainloop()
+
 
 class TradeAPI(DaemonClass):
     def __init__(self, broker='gtja', topic_sub='trade_api_req', topic_pub='trade_api_update'):
@@ -42,18 +45,26 @@ class TradeAPI(DaemonClass):
 
         self.s = requests.session()
         self.s.headers.update(vs.AGENT)
+        self.proxy = {
+            'http': 'socks5://127.0.0.1:1080',
+            'https': 'socks5://127.0.0.1:1080'
+        }
+        self.use_proxy = True
         self.heart_thread = threading.Thread(target=self.send_heartbeat,
                                              daemon=True)
         self.load_captcha_db()
 
-    def get_captcha(self): # FIXME refresh captcha always failed
-        res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
-                                 random.uniform(0, 1))
+    def get_captcha(self):  # FIXME refresh captcha always failed
+        if self.use_proxy:
+            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
+                                     random.uniform(0, 1),proxies=self.proxy)
+        else:
+            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
+                                     random.uniform(0, 1))
         md5 = hashlib.md5(res_captcha.content).hexdigest()
         with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, self.broker, md5), "wb") as file:
             file.write(res_captcha.content)
         self.unblock_publish('md5_fetched_%s' % md5)
-
 
     def download_captcha_lib(self):
         while True:
@@ -83,8 +94,14 @@ class TradeAPI(DaemonClass):
 
     def pre_login(self):
         self.s.headers.update(vs.AGENT)
-        self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin')
-        res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp')
+        if self.use_proxy:
+            self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin',proxies=self.proxy)
+        else:
+            self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin')
+        if self.use_proxy:
+            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp',proxies=self.proxy)
+        else:
+            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp')
         md5 = hashlib.md5(res_captcha.content).hexdigest()
         with open('%s/trade_api/Captcha_%s/%s.jpg' % (COMMON_VARS_OBJ.stock_data_root, self.broker, md5), "wb") as file:
             file.write(res_captcha.content)
@@ -123,8 +140,12 @@ class TradeAPI(DaemonClass):
                         'trdpwd': trdpwd,
                         'AppendCode': v_code
                         }
-        logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
-                              data=login_params)
+        if self.use_proxy:
+            logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
+                data=login_params, proxies=self.proxy)
+        else:
+            logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
+                                  data=login_params)
         if logined.text.find(u'国泰君安证券欢迎您') != -1:
             self.unblock_publish('login_success')
             return True
@@ -141,7 +162,12 @@ class TradeAPI(DaemonClass):
         while True:
             if self.heart_active:
                 try:
-                    b = self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail')
+                    if self.use_proxy:
+                        b = self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method'
+                                       '=searchStackDetail',proxies=self.proxy)
+                    else:
+                        b = self.s.get(
+                            'https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail')
                     if b.text.find('资金帐户状况') == '-1':
                         print('dead')
                         raise LookupError

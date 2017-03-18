@@ -1,4 +1,5 @@
 schedule
+pysocks
 daemon
 python-daemon
 paho-mqtt
