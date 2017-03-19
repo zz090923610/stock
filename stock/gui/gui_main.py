@@ -328,13 +328,11 @@ class ControllerApp(App):
     main_layout = None
 
     def build(self):
-
         self.display_type = 'normal'
         self.main_layout = Controller()
         layout_bar = ActionBar()
         self.main_layout.add_widget(layout_bar)
         self.set_settings_cls(SettingsWithSidebar)
-
         return self.main_layout
 
     def on_settings_cls(self, *args):

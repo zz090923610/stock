@@ -49,7 +49,7 @@ class TradeAPI(DaemonClass):
             'http': 'socks5://127.0.0.1:1080',
             'https': 'socks5://127.0.0.1:1080'
         }
-        self.use_proxy = True
+        self.use_proxy = False
         self.heart_thread = threading.Thread(target=self.send_heartbeat,
                                              daemon=True)
         self.load_captcha_db()
