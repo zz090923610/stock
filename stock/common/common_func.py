@@ -58,6 +58,18 @@ def load_tick_data(stock, day):
     return data_list
 
 
+def load_tick_data_pair(stock, day):
+    a = load_tick_data(stock, day)
+    b = []
+    max_price = 0
+    min_price = 99999
+    for (idx, line) in enumerate(a):
+        b.append((idx, line['price']))
+        max_price = max(max_price, line['price'])
+        min_price = min(min_price, line['price'])
+    return b, max_price, min_price, len(a)
+
+
 def load_ma_for_stock(stock, ma_params):
     try:
         with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (COMMON_VARS_OBJ.stock_data_root, ma_params, stock),

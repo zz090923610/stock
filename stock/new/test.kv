@@ -1,8 +1,4 @@
-#:kivy 1.9.0
-<Widget>:
-    font_name: '../gui/fonts/WenQuanYi_Micro_Hei.ttf'
-
-<Record>:
+<PlayerRecord>:
     size_hint_y: None
     height: '30dp'
     width: '100dp'
@@ -26,14 +22,16 @@
             pos: self.pos
             size: self.size
 
-<CustomTable>:
+AnchorLayout:
     anchor_x: 'center'
     anchor_y: 'center'
+
     ScrollView:
+        size_hint_y: None
+        height: '200dp'
+
         MyGrid:
-            id: Tables
-            cols: self.cols
-            rows:self.rows
+            cols: 3
             size_hint_y: None
             height: self.minimum_height
             spacing: '1dp'

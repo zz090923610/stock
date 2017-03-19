@@ -1,5 +1,6 @@
 import os
 import threading
+from math import sin, cos
 
 import paho.mqtt.client as mqtt
 from kivy import Config
@@ -10,7 +11,7 @@ from stock.real_time.trade_detail import HistoryTradeDetail
 Config.set('graphics', 'position', 'custom')
 Config.set('graphics', 'left', '1920')  # FIXME monitor workaround
 from kivy.app import App
-from kivy.properties import OptionProperty, ObjectProperty, NumericProperty
+from kivy.properties import OptionProperty, ObjectProperty, NumericProperty, Clock
 from kivy.properties import StringProperty
 from kivy.uix.actionbar import ActionBar
 from kivy.uix.dropdown import DropDown
@@ -22,10 +23,10 @@ from kivy.core.text import LabelBase
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.image import AsyncImage
 from kivy.core.window import Window
-from stock.common.common_func import BASIC_INFO
+from stock.common.common_func import BASIC_INFO, load_tick_data_pair
 from stock.common.communction import simple_publish
 from stock.common.variables import COMMON_VARS_OBJ
-
+from stock.gui.graph import Graph, MeshLinePlot, SmoothLinePlot
 from stock.trade_api.trade_api import TradeAPI
 
 LabelBase.register(name="msyh",
@@ -58,6 +59,39 @@ class Sticker(ScatterLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+
+class GraphSticker(Sticker):
+    xmax = NumericProperty()
+    xmin = NumericProperty(0)
+    ymax = NumericProperty()
+    ymin = NumericProperty()
+    def __init__(self,  **kwargs):
+        super().__init__(**kwargs)
+        plot = SmoothLinePlot(color=[1, 0, 0, 1])
+        plot.points, self.ymax, self.ymin,self.xmax = load_tick_data_pair('002263','2017-01-16')
+        self.ids['grp'].add_plot(plot)
+        # Clock.schedule_interval(self.update_points, 1 / 60.)
+        self.plt = plot
+
+
+    def on_transform_with_touch(self, *args):
+        # print(self.bbox[1])
+        self.update_points()
+        with self.canvas:
+            pass
+
+    def update_points(self, *args):
+        print([self.plt.params['size']])
+        #s = (i for i in self.bbox)
+        #self.plt.params['size'] = s
+        #self.ids['grp'].remove_plot(self.plt)
+        #plot = SmoothLinePlot(color=[1, 0, 0, 1])
+        #plot.points, self.ymax, self.ymin, self.xmax = load_tick_data_pair('002263', '2017-01-16')
+        #self.ids['grp'].add_plot(plot)
+        # Clock.schedule_interval(self.update_points, 1 / 60.)
+        #self.plt = plot
+        print(self.ids['grp'].size)
 
 
 # noinspection PyCompatibility,PyShadowingBuiltins
@@ -160,6 +194,7 @@ class Controller(FloatLayout):
         self.widget_cnt = 0
         self.widget_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
+        self.add_widget(GraphSticker())
 
     def show_popup(self):
         self.popup.open()
