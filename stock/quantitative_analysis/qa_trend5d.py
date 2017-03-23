@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import sys
+from operator import itemgetter
 
-from stock.common.common_func import *
-from stock.data.data_announance_parsing import get_parsed_announcement_for_stock
+from stock.common.common_func import BASIC_INFO, load_atpdr_data
 from stock.quantitative_analysis.qa_analysis_collect import add_analysis_result_one_stock_one_day
-from stock.quantitative_analysis.qa_ma import ma_align
 
 
 def recent_trend_stat(stock, trade_days, last_day):

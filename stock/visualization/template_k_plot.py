@@ -149,10 +149,10 @@ def generate_plot_definition(figure_setting_list, plots_list, data_loader_list):
     final_str += 'fig.autofmt_xdate()\n'
     final_str += 'fig.tight_layout()\n'
     final_str += 'plt.subplots_adjust(top=0.92)\n'
-    final_str += "fig.savefig('%s/plots/%s.png' % (stock_data_root, s_full_name), transparent=False)\n"
+    final_str += "fig.savefig('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), transparent=False)\n"
     final_str += "intraday_plot(stock, df['date'].tolist()[-1])\n"
     final_str += "combine_plots(s_full_name)\n"
-    final_str += "subprocess.call('rm %s/plots/%s_intraday.png' % (stock_data_root, s_full_name), shell=True)\n"
+    final_str += "subprocess.call('rm %s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), shell=True)\n"
     final_str += "plt.close(fig)\n"
     return final_str
 

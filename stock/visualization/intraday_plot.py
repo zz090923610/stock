@@ -45,7 +45,7 @@ def intraday_plot(stock, target_date):
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('%s/plots/%s_intraday.png' % (stock_data_root, s_full_name), transparent=False)
+    fig.savefig('%s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), transparent=False)
     # plt.plot(fig)
     plt.close(fig)
 
@@ -57,7 +57,7 @@ def save_fig_pickle(path, fig_param):
 
 def load_fig_pickle(s_full_name):
     try:
-        with open('%s/plots_pickle/%s.pickle' % (stock_data_root, s_full_name), 'rb') as f:
+        with open('%s/plots_pickle/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), 'rb') as f:
             return pickle.load(f)
     except FileNotFoundError as e:
         logging('load_fig_pickle(): File not found')
@@ -66,6 +66,6 @@ def load_fig_pickle(s_full_name):
 
 def cvt2gif(stock):
     s_full_name = BASIC_INFO.market_code_of_stock(stock)
-    img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
+    img = Image.open('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name))
     img = img.resize((545, 300))
-    img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')
+    img.save('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), 'png')

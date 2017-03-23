@@ -194,7 +194,7 @@ class Controller(FloatLayout):
         self.widget_cnt = 0
         self.widget_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
-        self.add_widget(GraphSticker())
+        # self.add_widget(GraphSticker())
 
     def show_popup(self):
         self.popup.open()

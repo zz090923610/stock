@@ -1,9 +1,10 @@
 
 # Moving Average System
-
+import subprocess
 import sys
 
 from stock.common.common_func import *
+from stock.common.file_operation import load_pickle
 from stock.common.variables import *
 
 
@@ -206,8 +207,8 @@ class ma_align:
 
 
 def save_ma_for_stock(stock, ma_list, ma_params):
-    subprocess.call("mkdir -p %s/quantitative_analysis/ma/%s" % (stock_data_root, ma_params), shell=True)
-    with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (stock_data_root, ma_params, stock), 'wb') as f:
+    subprocess.call("mkdir -p %s/quantitative_analysis/ma/%s" % (COMMON_VARS_OBJ.stock_data_root, ma_params), shell=True)
+    with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (COMMON_VARS_OBJ.stock_data_root, ma_params, stock), 'wb') as f:
         pickle.dump(ma_list, f, -1)
 
 

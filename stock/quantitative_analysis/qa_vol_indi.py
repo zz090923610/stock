@@ -2,6 +2,7 @@
 import sys
 
 from stock.common.common_func import *
+from stock.common.file_operation import load_csv
 from stock.quantitative_analysis.qa_analysis_collect import AnalysisResult, add_analysis_result_one_stock_one_day
 from stock.common.variables import *
 import numpy as np
@@ -12,12 +13,12 @@ import numpy as np
 # result_output_format: csv
 # result_output_column: ['date', 'vol_indi_large', 'vol_indi_small']
 
-if not os.path.isdir('%s/quantitative_analysis/vol_indi' % stock_data_root):
-    os.mkdir('%s/quantitative_analysis/vol_indi' % stock_data_root, mode=0o777)
+if not os.path.isdir('%s/quantitative_analysis/vol_indi' % COMMON_VARS_OBJ.stock_data_root):
+    os.mkdir('%s/quantitative_analysis/vol_indi' % COMMON_VARS_OBJ.stock_data_root, mode=0o777)
 
 
 def calc_vol_indi_for_stock(stock):
-    data_list = load_csv('%s/quantitative_analysis/atpd/%s.csv' % (stock_data_root, stock),
+    data_list = load_csv('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock),
                          col_type={'vol_buy_large_sum': 'int', 'vol_sell_large_sum': 'int',
                                    'vol_buy_small_sum': 'int', 'vol_sell_small_sum': 'int'})
     df = pd.DataFrame(data_list)
@@ -39,7 +40,7 @@ def calc_vol_indi_for_stock(stock):
     df['buy_vol_indi'] = False
     for idx in df.loc[(df['vol_indi_small'] > 1) & (df['vol_indi_large'] > 1)].index:
         df.set_value(idx, 'buy_vol_indi', True)
-    df[['date', 'vol_indi_large', 'vol_indi_small', 'buy_vol_indi']].to_csv('%s/quantitative_analysis/vol_indi/%s.csv' % (stock_data_root, stock),
+    df[['date', 'vol_indi_large', 'vol_indi_small', 'buy_vol_indi']].to_csv('%s/quantitative_analysis/vol_indi/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock),
                                                                             index=False)
     for day in df.loc[(df['vol_indi_small'] > 1) & (df['vol_indi_large'] > 1)].date.tolist():
         add_analysis_result_one_stock_one_day(stock, day,
@@ -69,7 +70,7 @@ def calc_vol_indi_for_all_stock():
 
 
 def load_vol_indi_for_plot(stock, days):
-    data = pd.read_csv('%s/quantitative_analysis/vol_indi/%s.csv' % (stock_data_root, stock))
+    data = pd.read_csv('%s/quantitative_analysis/vol_indi/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     data = data.sort_values(by='date', ascending=True)
     data = data.fillna(0)
     return data.tail(days)

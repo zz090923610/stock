@@ -20,7 +20,7 @@ from stock.quantitative_analysis.qa_vol_indi import load_vol_indi_for_plot
 
 def calc_tmi_series_for_stock(stock, days):
     print('Calc TMI for %s' % stock)
-    atpd_data = pd.read_csv('%s/quantitative_analysis/atpd/%s.csv' % (stock_data_root, stock))
+    atpd_data = pd.read_csv('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     atpd_data = atpd_data.sort_values(by='date', ascending=True)
     atpd_data = atpd_data.tail(days)
     atpd_data = atpd_data.reset_index()
@@ -39,20 +39,20 @@ def calc_tmi_series_for_stock(stock, days):
 
 
 def load_stock_for_plot(stock, days):
-    daily_data = pd.read_csv('%s/data/%s.csv' % (stock_data_root, stock))
+    daily_data = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     daily_data = daily_data.sort_values(by='date', ascending=True)
     return daily_data.tail(days)
 
 
 def load_atpdr_for_plot(stock, days):
-    atpdr_data = pd.read_csv('%s/quantitative_analysis/atpdr/%s.csv' % (stock_data_root, stock))
+    atpdr_data = pd.read_csv('%s/quantitative_analysis/atpdr/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
     atpdr_data = atpdr_data.sort_values(by='date', ascending=True)
     return atpdr_data.tail(days)
 
 
 def load_ma_for_stock_for_plot(stock, ma_params, days):
     try:
-        with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (stock_data_root, ma_params, stock), 'rb') as f:
+        with open("%s/quantitative_analysis/ma/%s/%s.pickle" % (COMMON_VARS_OBJ.stock_data_root, ma_params, stock), 'rb') as f:
             df = pd.DataFrame.from_dict(pickle.load(f), orient='columns', dtype=None)
     except FileNotFoundError:
         df = None
@@ -62,7 +62,7 @@ def load_ma_for_stock_for_plot(stock, ma_params, days):
 
 def load_adl_for_stock_for_plot(stock, days):
     data_list = []
-    with open('%s/quantitative_analysis/adl/%s.csv' % (stock_data_root, stock)) as csvfile:
+    with open('%s/quantitative_analysis/adl/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             row['open'] = float(row['open'])
@@ -78,7 +78,7 @@ def load_adl_for_stock_for_plot(stock, days):
 
 def load_vhf_for_stock_for_plot(stock, days):
     data_list = []
-    with open('%s/quantitative_analysis/vhf/%s.csv' % (stock_data_root, stock)) as csvfile:
+    with open('%s/quantitative_analysis/vhf/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             row['close'] = float(row['close'])
@@ -93,8 +93,8 @@ def load_vhf_for_stock_for_plot(stock, days):
 
 
 def combine_plots(s_full_name):
-    images = [Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name)),
-              Image.open('%s/plots/%s_intraday.png' % (stock_data_root, s_full_name))]
+    images = [Image.open('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name)),
+              Image.open('%s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name))]
     widths, heights = zip(*(i.size for i in images))
 
     max_width = max(widths)
@@ -104,7 +104,7 @@ def combine_plots(s_full_name):
     new_im.paste(images[0], (0, 0))
     new_im.paste(images[1], (0, heights[0]))
     new_im.resize((max_width, total_height), Image.ANTIALIAS)
-    new_im.save('%s/plots/%s.png' % (stock_data_root, s_full_name), optimize=True, quality=95)
+    new_im.save('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), optimize=True, quality=95)
 
 
 def save_fig_pickle(path, fig_param):
@@ -114,7 +114,7 @@ def save_fig_pickle(path, fig_param):
 
 def load_fig_pickle(s_full_name):
     try:
-        with open('%s/plots_pickle/%s.pickle' % (stock_data_root, s_full_name), 'rb') as f:
+        with open('%s/plots_pickle/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), 'rb') as f:
             return pickle.load(f)
     except FileNotFoundError as e:
         logging('load_fig_pickle(): File not found')
@@ -123,9 +123,9 @@ def load_fig_pickle(s_full_name):
 
 def cvt2gif(stock):
     s_full_name = BASIC_INFO.market_code_of_stock(stock)
-    img = Image.open('%s/plots/%s.png' % (stock_data_root, s_full_name))
+    img = Image.open('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name))
     img = img.resize((545, 300))
-    img.save('%s/plots/%s.png' % (stock_data_root, s_full_name), 'png')
+    img.save('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), 'png')
 def k_plot(stock, days):
     df=get_fitted_data(stock, days, 15, 2)
     df_atpdr=load_atpdr_for_plot(stock, days)
@@ -202,9 +202,9 @@ def k_plot(stock, days):
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
-    fig.savefig('%s/plots/%s.png' % (stock_data_root, s_full_name), transparent=False)
+    fig.savefig('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), transparent=False)
     intraday_plot(stock, df['date'].tolist()[-1])
     combine_plots(s_full_name)
-    subprocess.call('rm %s/plots/%s_intraday.png' % (stock_data_root,s_full_name), shell=True)
+    subprocess.call('rm %s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root,s_full_name), shell=True)
     plt.close(fig)
     

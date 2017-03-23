@@ -213,7 +213,7 @@ class TimeUtil:
 
     def sleep_until(self, when):
         h, m, s = int(when.split(':')[0]), int(when.split(':')[1]), int(when.split(':')[2])
-        date_today = self.get_today()
+        date_today = load_last_date()
         next_wake_up_time = datetime(int(date_today.split('-')[0]), int(date_today.split('-')[1]),
                                      int(date_today.split('-')[2]), h,
                                      m, s) + td(days=1)

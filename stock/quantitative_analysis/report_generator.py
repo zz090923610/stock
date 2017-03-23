@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import sys
+from operator import itemgetter
 
-from stock.common.common_func import *
+from stock.common.common_func import BASIC_INFO, generate_html
 from stock.data.data_announance_parsing import get_parsed_announcement_for_stock
 from stock.quantitative_analysis.qa_analysis_collect import *
 
@@ -53,7 +54,7 @@ def generate_html_vol_indi(vol_indi, day):
         if len(anmt) > 0:
             msg += '%s<br>\n' % anmt
     html = generate_html(msg)
-    with open('%s/plots/%s_vol_indi.html' % (stock_data_root, day), 'wb') as myfile:
+    with open('%s/plots/%s_vol_indi.html' % (COMMON_VARS_OBJ.stock_data_root, day), 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
 
 
@@ -71,7 +72,7 @@ def generate_html_vol_indi_large(vol_indi_large, day):
         if len(anmt) > 0:
             msg += '%s<br>\n' % anmt
     html = generate_html(msg)
-    with open('%s/plots/%s_vol_indi_large.html' % (stock_data_root, day), 'wb') as myfile:
+    with open('%s/plots/%s_vol_indi_large.html' % (COMMON_VARS_OBJ.stock_data_root, day), 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
 
 
@@ -108,7 +109,7 @@ def generate_html_trend5d(trend5d_up, trend5d_down, day):
             msg_down += '<br>\n'
     msg = msg_up + msg_down
     html = generate_html(msg)
-    with open('%s/plots/%s.html' % (stock_data_root, day), 'wb') as myfile:
+    with open('%s/plots/%s.html' % (COMMON_VARS_OBJ.stock_data_root, day), 'wb') as myfile:
         myfile.write(bytes(html, encoding='utf-8'))
 
 
@@ -118,9 +119,16 @@ def generate_email(day):
         '<a href="http://115.28.142.56/plots/%s_vol_indi.html">发出大小单增量买入信号股票</a><br>\n'
         '<a href="http://115.28.142.56/plots/%s_vol_indi_large.html">近五日大单增量大于三天股票</a><br>\n'
         '<a href="http://115.28.142.56/plots/">所有股票最新图线</a><br>\n' % (day,day, day))
-    with open('%s/report/five_days_trend/%s.txt' % (stock_data_root, day), 'wb') as myfile:
+    with open('%s/report/five_days_trend/%s.txt' % (COMMON_VARS_OBJ.stock_data_root, day), 'wb') as myfile:
         myfile.write(bytes(email_html, encoding='utf-8'))
 
+
+def report_generate(day):
+    trend5d_up, trend5d_down, vol_indi, vol_indi_large = sorting_attributes(day)
+    generate_html_vol_indi(vol_indi, day)
+    generate_html_vol_indi_large(vol_indi_large, day)
+    generate_html_trend5d(trend5d_up, trend5d_down, day)
+    generate_email(day)
 
 if __name__ == '__main__':
     continue_days = int(sys.argv[1])

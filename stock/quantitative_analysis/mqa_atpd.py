@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import subprocess
 import sys
 
 from stock.common.common_func import *
 from scoop import futures
+
+from stock.common.time_util import load_stock_date_list_from_tick_files
 
 data = BASIC_INFO.symbol_list
 REFRESH_ATPD = False
@@ -99,11 +102,11 @@ def calc_average_trade_price_for_stock(idx):
                     'vol_sell_small_sum', 'tvi', 'tvi_large', 'tvi_small', 'tmi', 'tmi_large', 'tmi_small',
                     'volume_sum',
                     'cost_sum', 'tick_size']
-    b[column_order].to_csv('%s/quantitative_analysis/atpd/%s.csv' % (stock_data_root, stock), index=False)
+    b[column_order].to_csv('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
 
 
 if __name__ == '__main__':
-    subprocess.call('mkdir -p %s/quantitative_analysis/atpd' % stock_data_root, shell=True)
+    subprocess.call('mkdir -p %s/quantitative_analysis/atpd' % COMMON_VARS_OBJ.stock_data_root, shell=True)
     # FIXME buggy multi processing when re calculated
     results = list(futures.map(calc_average_trade_price_for_stock, range(len(data))))
 

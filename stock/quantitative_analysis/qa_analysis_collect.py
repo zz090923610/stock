@@ -3,20 +3,20 @@ import pickle
 import pandas as pd
 
 from stock.common.common_func import logging
-from stock.common.variables import stock_data_root
+from stock.common.variables import COMMON_VARS_OBJ
 
 
 class AnalysisResult:
     def __init__(self, stock):
         self.stock = stock
-        df = pd.read_csv('%s/data/%s.csv' % (stock_data_root, stock))
+        df = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
         self.date_list = df.date.tolist()
         self.result = {day: [] for day in self.date_list}
         self.load_result()
 
     def load_result(self):
         try:
-            with open('%s/analysis_result/%s.pickle' % (stock_data_root, self.stock), 'rb') as f:
+            with open('%s/analysis_result/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, self.stock), 'rb') as f:
                 self.result = pickle.load(f)
         except FileNotFoundError as e:
             self.result = {day: [] for day in self.date_list}
@@ -29,12 +29,12 @@ class AnalysisResult:
         if result not in current_result:
             try:
                 self.result[day].append(result)
-                with open('%s/analysis_result/%s.pickle' % (stock_data_root, self.stock), 'wb') as f:
+                with open('%s/analysis_result/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, self.stock), 'wb') as f:
                     pickle.dump(self.result, f, -1)
             except KeyError:
                 self.result[day] = []
                 self.result[day].append(result)
-                with open('%s/analysis_result/%s.pickle' % (stock_data_root, self.stock), 'wb') as f:
+                with open('%s/analysis_result/%s.pickle' % (COMMON_VARS_OBJ.stock_data_root, self.stock), 'wb') as f:
                     pickle.dump(self.result, f, -1)
 
 

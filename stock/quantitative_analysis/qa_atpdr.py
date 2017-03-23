@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import subprocess
 
 from stock.common.common_func import *
 
@@ -58,11 +59,11 @@ def calc_atpdr_for_stock(stock):
 
     b = pd.DataFrame(atpd_list)
     column_order = ['date', 'cost_per_vol_1', 'cost_per_vol_3', 'vol_per_tick_1', 'vol_per_tick_3', 'atpd_ratio']
-    b[column_order].to_csv('%s/quantitative_analysis/atpdr/%s.csv' % (stock_data_root, stock), index=False)
+    b[column_order].to_csv('%s/quantitative_analysis/atpdr/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock), index=False)
 
 
 def calc_atpdr_for_all_stock():
-    subprocess.call('mkdir -p %s/quantitative_analysis/atpdr' % stock_data_root, shell=True)
+    subprocess.call('mkdir -p %s/quantitative_analysis/atpdr' % COMMON_VARS_OBJ.stock_data_root, shell=True)
     print('Calc atpdr for all stocks')
     for i in BASIC_INFO.symbol_list:
         calc_atpdr_for_stock(i)
