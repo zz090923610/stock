@@ -34,8 +34,6 @@ class BasicInfoHDL:
                 else:
                     e.args += i
                     raise
-            if i['timeToMarket'] > COMMON_VARS_OBJ.NEW_STOCK_IPO_DATE_THRESHOLD:
-                continue
             self.market_dict[i['code']] = i['market']
             self.name_dict[i['code']] = i['name']
             self.outstanding_dict[i['code']] = i['outstanding']

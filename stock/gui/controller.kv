@@ -2,6 +2,25 @@
 <Widget>:
     font_name: './fonts/WenQuanYi_Micro_Hei.ttf'
 
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserIconView:
+            path: "~"
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_press:root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
 
 <BrokerLoginSticker>:
     size_hint:(None, None)
@@ -152,7 +171,7 @@
 
 <NotificationSticker>:
     size_hint:(None, None)
-    size: (300,300)
+    size: (350,400)
     title: root.title
     BoxLayout:
         padding:(10,10,10,10)
@@ -167,9 +186,11 @@
             padding:(5,1,5,1)
             Label:
                 text: root.title
-        BoxLayout:
-            padding:(5,1,5,1)
+        ScrollView:
+            size: self.size
             Label:
+                size_hint_y: None
+                height: self.texture_size[1]
                 text: root.msg
         BoxLayout:
             padding:(5,1,5,1)
@@ -203,7 +224,6 @@
 <ActionBar>:
     pos_hint: {'top':1}
     ActionView:
-
         ActionPrevious:
             title: 'Crystal T+0'
             with_previous: False
@@ -213,11 +233,17 @@
                 text: '券商登录'
                 on_press: app.main_layout.add_login_sticker()
             ActionButton:
-                text: '交割信息'
+                text: '更新交割单'
+                on_press: app.main_layout.show_load()
+            ActionButton:
+                text: '交割数据'
                 on_press: app.main_layout.trade_detail_hdl.mqtt_report()
 
         ActionGroup:
             text: '信息更新'
+            ActionButton:
+                text: '新闻更新'
+                on_press: app.main_layout.update_news()
             ActionButton:
                 text: '公告更新'
                 on_press: app.main_layout.update_announcement()
@@ -235,6 +261,7 @@
                 on_press: print('23333')
         ActionGroup:
             text: '宏观分析'
+
         ActionGroup:
             text: '量化模型'
             ActionButton:

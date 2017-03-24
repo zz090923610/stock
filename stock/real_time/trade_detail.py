@@ -95,7 +95,7 @@ class StockTradeHistory:
 
     def append_list(self, trade_type, trade_price, trade_quant, trade_value, fee, gui_fei, tax, account_fee):
         self.trade_list.append(
-            {'trade_type': trade_type, 'trade_price': float(trade_price), 'trade_quant': int(trade_quant),
+            {'trade_type': trade_type, 'trade_price': float(trade_price), 'trade_quant': int(float(trade_quant)),
              'trade_value': float(trade_value), 'fee': float(fee),
              'gui_fei': float(gui_fei), 'tax': float(tax), 'account_fee': float(account_fee)})
         if trade_type == '证券买入':

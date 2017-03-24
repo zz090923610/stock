@@ -6,6 +6,7 @@ import paho.mqtt.client as mqtt
 from kivy import Config
 from kivy.uix.textinput import TextInput
 
+from stock.common.trade_history_parser_fuyi import csv_from_excel
 from stock.real_time.trade_detail import HistoryTradeDetail
 
 Config.set('graphics', 'position', 'custom')
@@ -31,6 +32,11 @@ from stock.trade_api.trade_api import TradeAPI
 
 LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
+
+
+class LoadDialog(FloatLayout):
+    load = ObjectProperty(None)
+    cancel = ObjectProperty(None)
 
 
 class TabTextInput(TextInput):
@@ -66,14 +72,14 @@ class GraphSticker(Sticker):
     xmin = NumericProperty(0)
     ymax = NumericProperty()
     ymin = NumericProperty()
-    def __init__(self,  **kwargs):
+
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         plot = SmoothLinePlot(color=[1, 0, 0, 1])
-        plot.points, self.ymax, self.ymin,self.xmax = load_tick_data_pair('002263','2017-01-16')
+        plot.points, self.ymax, self.ymin, self.xmax = load_tick_data_pair('002263', '2017-01-16')
         self.ids['grp'].add_plot(plot)
         # Clock.schedule_interval(self.update_points, 1 / 60.)
         self.plt = plot
-
 
     def on_transform_with_touch(self, *args):
         # print(self.bbox[1])
@@ -83,14 +89,14 @@ class GraphSticker(Sticker):
 
     def update_points(self, *args):
         print([self.plt.params['size']])
-        #s = (i for i in self.bbox)
-        #self.plt.params['size'] = s
-        #self.ids['grp'].remove_plot(self.plt)
-        #plot = SmoothLinePlot(color=[1, 0, 0, 1])
-        #plot.points, self.ymax, self.ymin, self.xmax = load_tick_data_pair('002263', '2017-01-16')
-        #self.ids['grp'].add_plot(plot)
+        # s = (i for i in self.bbox)
+        # self.plt.params['size'] = s
+        # self.ids['grp'].remove_plot(self.plt)
+        # plot = SmoothLinePlot(color=[1, 0, 0, 1])
+        # plot.points, self.ymax, self.ymin, self.xmax = load_tick_data_pair('002263', '2017-01-16')
+        # self.ids['grp'].add_plot(plot)
         # Clock.schedule_interval(self.update_points, 1 / 60.)
-        #self.plt = plot
+        # self.plt = plot
         print(self.ids['grp'].size)
 
 
@@ -151,7 +157,7 @@ class BrokerLoginSticker(Sticker):
         # If we hit escape, release the keyboard
         # if keycode[1] == 13:
         #    print('enter')
-        #if keycode[1] == 'escape':
+        # if keycode[1] == 'escape':
         #    keyboard.release()
 
 
@@ -196,8 +202,18 @@ class Controller(FloatLayout):
         self.trade_detail_hdl = HistoryTradeDetail()
         # self.add_widget(GraphSticker())
 
-    def show_popup(self):
-        self.popup.open()
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+    def show_load(self):
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Load file", content=content,
+                            size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def load(self, path, filename):
+        csv_from_excel(os.path.join(path, filename[0]))
+        self.dismiss_popup()
 
     def change_text(self, stri):
         self.current_state = stri
@@ -351,6 +367,9 @@ class Controller(FloatLayout):
 
     def update_announcement(self):
         simple_publish('basic_info_req', 'update')
+
+    def update_news(self):
+        simple_publish('news_hdl_req', 'update')
 
     def remove_login_sticker(self, sticker_id):
         self.remove_widget(self.widget_dict[sticker_id])
