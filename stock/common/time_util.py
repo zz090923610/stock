@@ -234,6 +234,14 @@ class TimeUtil:
         return local_now.strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
+    def get_real_day_cn():
+        from datetime import datetime
+        current_time = time.time()
+        utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
+        local_now = utc_now.replace(tzinfo=pytz.utc).astimezone(COMMON_VARS_OBJ.china_tz)
+        return local_now.strftime("%Y-%m-%d")
+
+    @staticmethod
     def get_time_of_a_day():
         from datetime import datetime
         current_time = time.time()

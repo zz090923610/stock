@@ -11,7 +11,7 @@ import pandas as pd
 from PIL import Image
 from matplotlib import ticker
 from mpl_finance import *
-
+from stock.common.communction import simple_publish
 from stock.common.common_func import BASIC_INFO, logging
 from stock.quantitative_analysis.qa_linear_fit import get_fitted_data
 from stock.common.variables import *

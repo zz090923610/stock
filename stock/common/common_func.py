@@ -47,7 +47,7 @@ def load_tick_data(stock, day):
             for row in reader:
                 try:
                     row['price'] = float(row['price'])
-                    row['volume'] = int(row['volume'])
+                    row['volume'] = int(float(row['volume']))
                     row['amount'] = float(row['amount'])
                     data_list.append(row)
                 except ValueError as e:
@@ -180,13 +180,16 @@ def load_atpd_data(stock):
         with open('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock)) as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                row['atpd'] = float(row['atpd'])
-                row['tvi'] = int(row['tvi'])
-                row['tvi_large'] = int(row['tvi_large'])
-                row['volume_sum'] = int(row['volume_sum'])
-                row['cost_sum'] = float(row['cost_sum'])
-                row['tick_size'] = int(row['tick_size'])
-                data_list.append(row)
+                try:
+                    row['atpd'] = float(row['atpd'])
+                    row['tvi'] = int(float(row['tvi']))
+                    row['tvi_large'] = int(float(row['tvi_large']))
+                    row['volume_sum'] = int(float(row['volume_sum']))
+                    row['cost_sum'] = float(row['cost_sum'])
+                    row['tick_size'] = int(float(row['tick_size']))
+                    data_list.append(row)
+                except Exception as e:
+                    print(e, row, stock)
         data_new_sorted = sorted(data_list, key=itemgetter('date'))
         return data_new_sorted
     except FileNotFoundError:

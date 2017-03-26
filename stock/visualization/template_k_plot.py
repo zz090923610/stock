@@ -123,7 +123,7 @@ def generate_data_load_sentence(data_loader_list):
 # noinspection PyShadowingNames
 def generate_plot_definition(figure_setting_list, plots_list, data_loader_list):
     final_str = ''
-    final_str += 's_full_name = BASIC_INFO.get_market_code_of_stock(stock)\n'
+    final_str += 's_full_name = BASIC_INFO.market_code_of_stock(stock)\n'
     final_str += 'fig = plt.figure(figsize=%r, dpi=%d)\n' % (figure_setting_list['figsize'], figure_setting_list['dpi'])
     final_str += 'fonts = %r\n' % figure_setting_list['font_size']
     final_str += 'N = len(%s.date)\n' % data_loader_list[0]['df_name']
@@ -154,6 +154,7 @@ def generate_plot_definition(figure_setting_list, plots_list, data_loader_list):
     final_str += "combine_plots(s_full_name)\n"
     final_str += "subprocess.call('rm %s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), shell=True)\n"
     final_str += "plt.close(fig)\n"
+    final_str += "simple_publish('qa_update', 'plot_%s' % stock)"
     return final_str
 
 

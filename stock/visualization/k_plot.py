@@ -11,7 +11,7 @@ import pandas as pd
 from PIL import Image
 from matplotlib import ticker
 from mpl_finance import *
-
+from stock.common.communction import simple_publish
 from stock.common.common_func import BASIC_INFO, logging
 from stock.quantitative_analysis.qa_linear_fit import get_fitted_data
 from stock.common.variables import *
@@ -20,7 +20,7 @@ from stock.quantitative_analysis.qa_vol_indi import load_vol_indi_for_plot
 
 def calc_tmi_series_for_stock(stock, days):
     print('Calc TMI for %s' % stock)
-    atpd_data = pd.read_csv('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
+    atpd_data = pd.read_csv('%s/quantitative_analysis/atpd/%s.csv' % (COMMON_VARS_OBJ.stock_data_root,stock))
     atpd_data = atpd_data.sort_values(by='date', ascending=True)
     atpd_data = atpd_data.tail(days)
     atpd_data = atpd_data.reset_index()
@@ -39,13 +39,13 @@ def calc_tmi_series_for_stock(stock, days):
 
 
 def load_stock_for_plot(stock, days):
-    daily_data = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
+    daily_data = pd.read_csv('%s/data/%s.csv' % (COMMON_VARS_OBJ.stock_data_root,stock))
     daily_data = daily_data.sort_values(by='date', ascending=True)
     return daily_data.tail(days)
 
 
 def load_atpdr_for_plot(stock, days):
-    atpdr_data = pd.read_csv('%s/quantitative_analysis/atpdr/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock))
+    atpdr_data = pd.read_csv('%s/quantitative_analysis/atpdr/%s.csv' % (COMMON_VARS_OBJ.stock_data_root,stock))
     atpdr_data = atpdr_data.sort_values(by='date', ascending=True)
     return atpdr_data.tail(days)
 
@@ -188,23 +188,23 @@ def k_plot(stock, days):
     p_tmi_large_accu, = ax4.plot(ind, df_tmi_accu.tmi_large_accu, '-', label=u'自坐标首日起累积大单资金流入(万元)')
     plt.setp(p_tmi_large_accu, linewidth=1.5)
     legend_list2.append(p_tmi_large_accu)
+    leg_main_k = ax1.legend(handles=legend_list0, loc=2)
     leg_tmi_accu = ax4.legend(handles=legend_list2, loc=2)
     leg_vol_per_tick_1 = ax3.legend(handles=legend_list1, loc=2)
-    leg_main_k = ax1.legend(handles=legend_list0, loc=2)
-    ax4.xaxis.grid(color='gray', linestyle='-')
-    ax4.yaxis.grid(color='gray', linestyle='-')
-    ax3.xaxis.grid(color='gray', linestyle='-')
-    ax3.yaxis.grid(color='gray', linestyle='-')
     ax1.xaxis.grid(color='gray', linestyle='-')
     ax1.yaxis.grid(color='gray', linestyle='-')
     ax2.xaxis.grid(color='gray', linestyle='-')
     ax2.yaxis.grid(color='gray', linestyle='-')
+    ax4.xaxis.grid(color='gray', linestyle='-')
+    ax4.yaxis.grid(color='gray', linestyle='-')
+    ax3.xaxis.grid(color='gray', linestyle='-')
+    ax3.yaxis.grid(color='gray', linestyle='-')
     fig.autofmt_xdate()
     fig.tight_layout()
     plt.subplots_adjust(top=0.92)
     fig.savefig('%s/plots/%s.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), transparent=False)
     intraday_plot(stock, df['date'].tolist()[-1])
     combine_plots(s_full_name)
-    subprocess.call('rm %s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root,s_full_name), shell=True)
+    subprocess.call('rm %s/plots/%s_intraday.png' % (COMMON_VARS_OBJ.stock_data_root, s_full_name), shell=True)
     plt.close(fig)
-    
+    simple_publish('qa_update', 'plot_%s' % stock)

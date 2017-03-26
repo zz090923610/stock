@@ -67,7 +67,7 @@ def load_csv(path, col_type=None):
                             if col_type[key] == 'float':
                                 row[key] = float(row[key])
                             elif col_type[key] == 'int':
-                                row[key] = int(row[key])
+                                row[key] = int(float(row[key]))
                         final_list.append(row)
                     except ValueError as e:
                         logging('Loading csv error: %s %s' % (e, '%s %r' % (path, row)))

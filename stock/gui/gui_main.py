@@ -371,6 +371,9 @@ class Controller(FloatLayout):
     def update_news(self):
         simple_publish('news_hdl_req', 'update')
 
+    def generate_report(self):
+        simple_publish('qa_req', 'update')
+
     def remove_login_sticker(self, sticker_id):
         self.remove_widget(self.widget_dict[sticker_id])
         del self.widget_dict[sticker_id]

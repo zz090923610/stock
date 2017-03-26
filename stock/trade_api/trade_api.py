@@ -14,6 +14,7 @@ import time
 import random
 import stock.trade_api.trade_vars as vs
 from stock.common.daemon_class import DaemonClass
+from stock.common.filled_today import csv_from_excel_filled_today
 
 from stock.common.variables import COMMON_VARS_OBJ
 import daemon.pidfile
@@ -57,7 +58,7 @@ class TradeAPI(DaemonClass):
     def get_captcha(self):  # FIXME refresh captcha always failed
         if self.use_proxy:
             res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
-                                     random.uniform(0, 1),proxies=self.proxy)
+                                     random.uniform(0, 1), proxies=self.proxy)
         else:
             res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp?ran=%f' %
                                      random.uniform(0, 1))
@@ -95,11 +96,11 @@ class TradeAPI(DaemonClass):
     def pre_login(self):
         self.s.headers.update(vs.AGENT)
         if self.use_proxy:
-            self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin',proxies=self.proxy)
+            self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin', proxies=self.proxy)
         else:
             self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin')
         if self.use_proxy:
-            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp',proxies=self.proxy)
+            res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp', proxies=self.proxy)
         else:
             res_captcha = self.s.get('https://trade.gtja.com/webtrade/commons/verifyCodeImage.jsp')
         md5 = hashlib.md5(res_captcha.content).hexdigest()
@@ -142,7 +143,7 @@ class TradeAPI(DaemonClass):
                         }
         if self.use_proxy:
             logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
-                data=login_params, proxies=self.proxy)
+                                  data=login_params, proxies=self.proxy)
         else:
             logined = self.s.post('https://trade.gtja.com/webtrade/trade/webTradeAction.do',
                                   data=login_params)
@@ -151,6 +152,16 @@ class TradeAPI(DaemonClass):
             return True
         self.unblock_publish('login_failed')
         return False
+
+    def get_filled_today(self):
+        b = self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchExchangeBill')
+        b = self.s.get('https://trade.gtja.com/webtrade/trade/excelExport.jsp?ftype=4')
+        with open('%s/filled_today.xls' % COMMON_VARS_OBJ.stock_data_root, 'wb') as f:
+            f.write(b.content)
+        b = self.s.get('https://trade.gtja.com/webtrade/trade/excelExport.jsp?ftype=3')
+        with open('%s/entrust_today.xls' % COMMON_VARS_OBJ.stock_data_root, 'wb') as f:
+            f.write(b.content)
+        csv_from_excel_filled_today()
 
     def keepalive(self):
         if self.heart_thread.is_alive():
@@ -164,7 +175,7 @@ class TradeAPI(DaemonClass):
                 try:
                     if self.use_proxy:
                         b = self.s.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method'
-                                       '=searchStackDetail',proxies=self.proxy)
+                                       '=searchStackDetail', proxies=self.proxy)
                     else:
                         b = self.s.get(
                             'https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail')
@@ -205,6 +216,8 @@ class TradeAPI(DaemonClass):
         elif payload == 'exit':
             self.publish(self.msg_on_exit)
             self.cancel_daemon = True
+        elif payload == 'filled_today':
+            self.get_filled_today()
         elif payload == 'is_alive':
             self.publish('alive_%d' % os.getpid())
 
