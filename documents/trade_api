@@ -17,7 +17,19 @@ Accept-Language: en-US,en;q=0.8,zh-CN;q=0.6
 
 Cookie: __v3_c_review_10890=0; __v3_c_last_10890=1487106962725; __v3_c_visitor=1487106909090118; Hm_lvt_1c5bee4075446b613f382dd399824571=1487106881,1488947837; Hm_lpvt_1c5bee4075446b613f382dd399824571=1488947837
 
+http://flashhq.gtja.com/GET_TICK_DETAILMAX
+&exchange=sz&stockcode=002263&detailtype=max&returnflag=max_first&from=252&to=0&radom=0.29779909970238805
 
+
+get_params={
+	'exchange':'sz',
+	'stockcode':'002263',
+	'detailtype':'max',
+	'returnflag':'max_first',
+	'from':252,
+	'to':0,
+	'radom':0.29779909970238805
+}
 
 
 
