@@ -19,11 +19,15 @@ def update_news_info():
     simple_publish('news_hdl_req', 'update')
 
 
+def update_financial_report():
+    simple_publish('qa_req', 'update')
+
+
 schedule.every().day.at("03:30").do(update_market_open_date_list)
 schedule.every().day.at("03:45").do(get_daily_data_signal_daemon_callable)
 schedule.every().day.at("06:45").do(download_tick)
 schedule.every().day.at("11:15").do(update_basic_info)
-schedule.every().day.at("11:30").do(simple_publish('qa_req', 'update'))
+schedule.every().day.at("11:30").do(update_financial_report)
 schedule.every().day.at("12:05").do(update_news_info)
 
 

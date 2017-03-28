@@ -25,6 +25,8 @@ if __name__ == '__main__':
     elif sys.argv[1] == '--qa':
         qa_daemon.main()
     elif sys.argv[1] == '--exit':
+        if not os.path.isdir('/tmp/stock/daemon/pid'):
+            exit(0)
         for i in os.listdir('/tmp/stock/daemon/pid'):
             os.system('kill `cat %s/%s`' % ('/tmp/stock/daemon/pid', i))
     elif sys.argv[1] == '--touch':
