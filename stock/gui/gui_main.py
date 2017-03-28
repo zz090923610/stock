@@ -385,6 +385,7 @@ class ControllerApp(App):
     main_layout = None
 
     def build(self):
+        self.icon = 'crystal.png'
         self.display_type = 'normal'
         self.main_layout = Controller()
         layout_bar = ActionBar()

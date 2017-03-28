@@ -2,24 +2,19 @@ import csv
 import json
 import os
 import pickle
-import re
 import subprocess
-import threading
-import time
-from datetime import datetime
 
+import daemon.pidfile
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup
-import daemon.pidfile
 
 from stock.common.communction import simple_publish
+from stock.common.daemon_class import DaemonClass
 from stock.common.file_operation import list2csv
-from stock.common.file_operation import mkdirs, load_csv, logging
-from stock.common.time_util import load_last_date, TimeUtil, return_weekday, update_market_open_date_list, \
+from stock.common.file_operation import mkdirs, load_csv
+from stock.common.time_util import load_last_date, return_weekday, update_market_open_date_list, \
     load_market_open_date_list_from
 from stock.common.variables import *
-from stock.common.daemon_class import DaemonClass
 
 
 # noinspection PyUnboundLocalVariable
@@ -108,7 +103,7 @@ class BasicInfoUpdater:
             not_exist = True
         else:
             not_exist = False
-        if not_exist :
+        if not_exist:
             self._get_sse_company_list()
             self._get_szse_company_list()
             self._merge_company_list()
@@ -264,7 +259,7 @@ def main(args=None):
         os.makedirs(pid_dir)
     with daemon.DaemonContext(
             pidfile=daemon.pidfile.PIDLockFile('%s/basic_info_hdl.pid' %
-                                                    COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
+                                                       COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
 
         a = BasicInfoUpdaterDaemon()
         a.daemon_main()

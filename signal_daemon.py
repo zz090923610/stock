@@ -45,6 +45,7 @@ def main():
     os.system('python3 ./main.py --trade')
     os.system('python3 ./main.py --data')
     os.system('python3 ./main.py --qa')
+    os.system('python3 ./main.py --rtp')
     with daemon.DaemonContext(
             pidfile=daemon.pidfile.PIDLockFile(
                         '%s/signal_hdl.pid' % COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):

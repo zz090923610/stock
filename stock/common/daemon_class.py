@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 from stock.common.file_operation import logging
 from stock.common.variables import *
 import paho.mqtt.publish as single_publish
-
+import daemon.pidfile
 
 class DaemonClass:
     def __init__(self, topic_sub=None, topic_pub=''):
