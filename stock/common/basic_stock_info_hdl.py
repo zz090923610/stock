@@ -65,6 +65,17 @@ class BasicInfoHDL:
         except KeyError:
             return ''
 
+    def market_of_stock(self, stock):
+        try:
+            mkt = ''
+            if self.market_dict[stock] == 'sse':
+                mkt = 'sh'
+            elif self.market_dict[stock] == 'szse':
+                mkt = 'sz'
+            return mkt
+        except KeyError:
+            return ''
+
     def in_sse(self, stock):
         try:
             if self.market_dict[stock] == 'sse':

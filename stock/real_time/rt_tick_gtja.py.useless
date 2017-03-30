@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import os
+import random
 import re
 import threading
 import time
@@ -19,8 +20,8 @@ TODAY = load_last_date()
 
 class RTTickGTJA(DaemonClass):
     """
-    sub_topic: rtp_req
-    res_topic: rtp_update
+    sub_topic: rtt_req
+    res_topic: rtt_update
     Requests: add-stock, rm-stock, exit, clear
     Responds:{'stock':'002263','ask_5_size': 4616.0, 'ask_3_size': 1964.0, 'bid_2_price': 3.69, 'ask_4_size': 2599.86, 
     'volume': 106213.75, 'bid_1_size': 1311.0, 'code': '002263', 'bid_4_size': 2834.0, 'date': '2017-03-28', 
@@ -36,6 +37,10 @@ class RTTickGTJA(DaemonClass):
         self.monitoring_list = []
         self.msg_on_exit = 'rtt_exit'
         self.pid_file_name = 'rtt.pid'
+        self.req_url = 'http://flashhq.gtja.com/cssweb'
+        self.get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['0'],
+                            'X-Requested-With': 'ShockwaveFlash/24.0.0.221'
+                            }
 
     def start(self):
         threading.Thread(target=self.monitor_main_loop).start()
@@ -70,49 +75,30 @@ class RTTickGTJA(DaemonClass):
         print('starting main loop')
         while not self.cancel_daemon:
             try:
-                # for stock in self.monitoring_list:
-                # self.get_stock_rtp(stock)
-                #    time.sleep(.5)  # FIXME temporary workaround
-                self.get_stock_rtp_batch()
+                for stock in self.monitoring_list:
+                    self.get_stock_rtt(stock)
+                    time.sleep(.5)  # FIXME temporary workaround
             except IndexError:
                 self.unblock_publish('error_index')
 
-    def get_stock_rtp(self, stock):
-        tmp_str = '%s%s' % ('sh' if BASIC_INFO.market_dict[stock] == 'sse' else 'sz', stock)
-        req_url = 'http://hq.sinajs.cn/list=' + tmp_str
-        get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
-        result = self.s.get(req_url, headers=get_headers, verify=False)
-        if result.status_code != 200:
-            print('Exception %d' % result.status_code)
-        tmp_result = result.text
-        result = re.sub(r'[\n\"]', '', tmp_result)
-        result_line = result.split(";")[0]
-        parsed_line = parse_one_line(result_line)
-        self.unblock_publish(json.dumps(parsed_line))
+    def get_stock_rtt(self, stock, is_first=False):
+        # result = self.s.get(self.req_url, headers=self.get_headers, params=get_params, verify=False)
+        result = self.s.get('http://flashhq.gtja.com/cssweb?'
+                            'type=GET_TICK_DETAILMAX&'
+                            'exchange=%s&'
+                            'stockcode=%s&'
+                            'detailtype=max&'
+                            'returnflag=max_first&'
+                            'from=%d&'
+                            'to=0&'
+                            'radom=%f' % (
+                                BASIC_INFO.market_of_stock(stock), stock, 1000 if is_first else 31, random.random())
+                            , verify=False)
+        b = json.loads(result.text)
+        print(len(b['data']))
+        return b
+        # self.unblock_publish(json.dumps(parsed_line))
         # return parsed_line
-
-    def get_stock_rtp_batch(self):
-        stock_list = []
-        tmp_str = ''
-        monitoring_list = self.monitoring_list.copy()
-        for stock in monitoring_list:
-            tmp_str += '%s%s,' % ('sh' if BASIC_INFO.market_dict[stock] == 'sse' else 'sz', stock)
-            stock_list.append(tmp_str)
-            tmp_str = ''
-        tmp_result = ''
-        for line in stock_list:
-            req_url = 'http://hq.sinajs.cn/list=' + line
-            get_headers = {'User-Agent': COMMON_VARS_OBJ.AGENT_LIST['User-Agent']}
-            result = self.s.get(req_url, headers=get_headers, verify=False)
-            if result.status_code != 200:
-                print('Exception %d' % result.status_code)
-            tmp_result += result.text
-        result = re.sub(r'[\n\"]', '', tmp_result)
-        result_list = result.split(";")
-        for line in result_list:
-            parsed_line = parse_one_line(line)
-            if parsed_line is not None:
-                self.unblock_publish(json.dumps(parsed_line))
 
 
 def main(args=None):
@@ -125,5 +111,5 @@ def main(args=None):
             pidfile=daemon.pidfile.PIDLockFile('%s/rtp.pid' %
                                                        COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
 
-        a = RTPrice()
+        a = RTTickGTJA()
         a.start()

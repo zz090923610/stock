@@ -3,12 +3,14 @@ from tzlocal import get_localzone
 
 IS_DEBUG = True
 
+
 class CommonVars:
     def __init__(self, data_root=''):
         self.START_DATE = '2016-01-01'
         self.local_tz = get_localzone()
         self.china_tz = pytz.timezone('Asia/Shanghai')
         self.AGENT_LIST = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
+                           '0': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
                            '1': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                                 'Chrome/55.0.2883.87 Safari/537.36 '
                            }

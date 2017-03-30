@@ -149,6 +149,7 @@ class RTPrice(DaemonClass):
                 # self.get_stock_rtp(stock)
                 #    time.sleep(.5)  # FIXME temporary workaround
                 self.get_stock_rtp_batch()
+                time.sleep(.5)
             except IndexError:
                 self.unblock_publish('error_index')
 
