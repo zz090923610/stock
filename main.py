@@ -5,7 +5,7 @@ from stock.common import time_util, basic_stock_info_fetcher
 from stock.common.file_operation import mkdirs
 from stock.data import data_news_handler
 from stock.data import new_get_data
-from stock.real_time import rt_price_sina
+from stock.real_time import rt_price_sina, real_time_tick
 from stock.trade_api import trade_api
 from stock.quantitative_analysis import  qa_daemon
 
@@ -27,6 +27,8 @@ if __name__ == '__main__':
         qa_daemon.main()
     elif sys.argv[1] == '--rtp':
         rt_price_sina.main()
+    elif sys.argv[1] == '--rtt':
+        real_time_tick.main()
     elif sys.argv[1] == '--exit':
         if not os.path.isdir('/tmp/stock/daemon/pid'):
             exit(0)

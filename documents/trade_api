@@ -95,4 +95,12 @@ http://vip.stock.finance.sina.com.cn/json_v2.php
 
 import requests
 s = requests.session()
+s.get('http://vip.stock.finance.sina.com.cn/quotes_service/view/vMS_tradedetail.php?symbol=sh600115&date=2017-03-29&page=1', verify=False)
+
+
 s.get('http://hq.sinajs.cn/rn=1490763611391&list=sh600115', verify=False).text
+
+
+
+from stock.real_time.real_time_tick import *
+get_rt_tick(['002263','000725','600115','603166','002503','601881'])

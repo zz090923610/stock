@@ -107,7 +107,8 @@ def str2date(str_date):
 class TimeUtil:
     def __init__(self, as_daemon=False):
         self.dates = {'last_trade_day_cn': self.get_last_trade_day_cn(),
-                      'last_day_cn': self.get_last_day_cn()}
+                      'last_day_cn': self.get_last_day_cn(),
+                      'current_day_cn': self.get_real_day_cn()}
         if as_daemon:
             self.client = mqtt.Client()
             self.client.on_connect = self.mqtt_on_connect
@@ -168,7 +169,8 @@ class TimeUtil:
             if not os.path.isdir(data_dir):
                 os.makedirs(data_dir)
             new_dates = {'last_trade_day_cn': self.get_last_trade_day_cn(),
-                         'last_day_cn': self.get_last_day_cn()}
+                         'last_day_cn': self.get_last_day_cn(),
+                         'current_day_cn': self.get_real_day_cn()}
             data_file_exist = os.path.exists(data_path)
             if (self.dates != new_dates) | (data_file_exist is False):
                 print('%r' % new_dates)
