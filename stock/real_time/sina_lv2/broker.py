@@ -1,3 +1,4 @@
+import pickle
 import random
 import urllib.error
 import urllib.request
@@ -11,7 +12,8 @@ import json
 import urllib
 import urllib.parse
 import binascii
-
+import websockets
+import asyncio
 # 用于模拟登陆新浪微博
 import time
 
@@ -103,7 +105,7 @@ class launcher:
         try:
             request = urllib.request.Request(url=url, data=post_data, headers=headers)
             response = urllib.request.urlopen(request)
-            #for cookie in response.cookies:
+            # for cookie in response.cookies:
             #    print(cookie)
             html = response.read().decode('GBK')
             # print(html)
@@ -130,21 +132,34 @@ class launcher:
             print('Login error!')
             return 0
 
+    def save_cookie(self):
+        with open('/tmp/sina_cookie', 'wb') as f:
+            pickle.dump(self.cookie_container, f)
+
 
 class WSHdl:
     def __init__(self, url, query_list, cookies=None):
+        self.stock = '600115'
         self.url = url
         self.token = ''
         self.query_str_list = query_list
         self.client_ip = ''
         self.s = requests.session()
+        self.ws = None
         if cookies is not None:
             self.s.cookies = cookies
         self.ip = self.get_ip()
         import uuid
-        self.token_var = 'var%%20KKE_auth_%s' % uuid.uuid4().hex[:9]
+        self.token_var = 'var%%20KKE_auth_q%s' % uuid.uuid4().hex[:8]
         self.auth_token = ''
+        self.event_loop = None
 
+    def load_cookie(self):
+        with open('/tmp/sina_cookie', 'rb') as f:
+            self.s.cookies = pickle.load(f)
+    def save_cookie(self):
+        with open('/tmp/sina_cookie', 'wb') as f:
+            pickle.dump(self.s.cookies , f)
     def get_ip(self):
         url = 'https://ff.sinajs.cn'
         param_list = {
@@ -158,7 +173,7 @@ class WSHdl:
     def timestamp_mills():
         return int(time.time() * 1000)
 
-    def update_auto_token(self):
+    def get_auto_token(self):
         url = 'https://current.sina.com.cn/auth/api/jsonp.php/' \
               '%s=/' \
               'AuthSign_Service.getSignCode' % self.token_var
@@ -167,9 +182,38 @@ class WSHdl:
             'query': 'A_hq',
             'ip': self.ip,
             '_': random.random(),
-            'list': '2cn_sh600000'
+            'list': '2cn_sz002263,2cn_sz002263_orders,2cn_sz002263_0,2cn_sz002263_1,sz002263_i,sz002263,2cn_sz002263_1',
+            'kick':1
         }
         ret = self.s.get(url, params=param_list)
+        print(ret.text)
         self.auth_token = ret.text.split('"')[1]
+        print('2333 get token %s' % self.auth_token)
+        self.save_cookie()
 
-    
+    async def refresh_auth_token(self, loop):
+        await asyncio.sleep(180)
+        self.get_auto_token()
+        if self.ws is not None:
+            print('refresh new token %s' %self.auth_token)
+            self.ws.send(self.auth_token)
+
+    async def web_socket_async_hdl(self, loop):
+        url = 'wss://ff.sinajs.cn/wskt?' \
+              'token=%s' \
+              '&list=2cn_sz002263,2cn_sz002263_orders,2cn_sz002263_0,2cn_sz002263_1,sz002263_i,sz002263,2cn_sz002263_1' \
+              % self.auth_token
+        print(url)
+        async with websockets.connect(url) as websocket:
+            print('23333', websocket)
+            self.ws = websocket
+            print('233333', self.ws)
+            data = await websocket.recv()
+            simple_publish('sina-lv2-update_%s' % self.stock, "{}".format(data))
+            print("{}".format(data))
+
+    def start_ws(self):
+        self.event_loop = asyncio.get_event_loop()
+        asyncio.ensure_future(self.web_socket_async_hdl(self.event_loop))
+        # asyncio.ensure_future(self.refresh_auth_token(self.event_loop))
+        self.event_loop.run_forever()
