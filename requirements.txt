@@ -1,3 +1,5 @@
+autobahn
+rsa
 schedule
 pysocks
 daemon

@@ -1,9 +1,8 @@
 import base64
 import binascii
-import http.cookiejar  # 从前的cookielib
+import http.cookiejar  # 从前的cookie lib
 import json
 import os
-import pickle
 import re
 import urllib
 import urllib.error
@@ -13,20 +12,20 @@ import urllib.request
 import requests
 import rsa
 
-cookie_path = '/tmp/cookie'
-
 
 # 用于模拟登陆新浪微博
 
 
+# noinspection PyBroadException
 class SinaLoginHdl:
-    def __init__(self, username, password):
+    def __init__(self, username, password, cookie_path):
         self.cookie_container = http.cookiejar.CookieJar()
+        self.cookie_path = cookie_path
         self.password = password
         self.username = username
         self.s = requests.session()
-        self.s.headers.update({'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) "
-                                             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"})
+        self.s.headers.update({'User-Agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 "
+                                             "(KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"})
 
     def get_prelogin_args(self):
 
@@ -49,14 +48,14 @@ class SinaLoginHdl:
         rsa_e = 65537  # 0x10001
         pw_string = str(data['servertime']) + '\t' + str(data['nonce']) + '\n' + str(self.password)
         key = rsa.PublicKey(int(data['pubkey'], 16), rsa_e)
-        pw_encypted = rsa.encrypt(pw_string.encode('utf-8'), key)
+        pw_encrypted = rsa.encrypt(pw_string.encode('utf-8'), key)
         self.password = ''  # 清空password
-        passwd = binascii.b2a_hex(pw_encypted)
-        return passwd
+        password = binascii.b2a_hex(pw_encrypted)
+        return password
 
     def get_encrypted_name(self):
-        username_urllike = urllib.request.quote(self.username)
-        username_encrypted = base64.b64encode(bytes(username_urllike, encoding='utf-8'))
+        username_url_like = urllib.request.quote(self.username)
+        username_encrypted = base64.b64encode(bytes(username_url_like, encoding='utf-8'))
         return username_encrypted.decode('utf-8')
 
     def enableCookies(self):
@@ -113,17 +112,17 @@ class SinaLoginHdl:
             login_url = p.search(html).group(1)
             page = self.s.get(login_url).text
             login_url = 'http://weibo.com/' + p2.search(page).group(1)
-            final = self.s.get(login_url).text
-
+            self.s.get(login_url)
             print("Login success!")
+            self.save_cookie()
         except:
             print('Login error!')
             return 0
 
     def load_cookie(self):
         self.s.cookies.clear()
-        if os.path.isfile(cookie_path):
-            with open(cookie_path) as f:
+        if os.path.isfile(self.cookie_path):
+            with open(self.cookie_path) as f:
                 for line in f.read().splitlines():
                     sp = line.split(',')
                     if len(sp) == 4:
@@ -132,8 +131,8 @@ class SinaLoginHdl:
 
     def save_cookie(self):
         try:
-            with open(cookie_path, 'w') as f:
+            with open(self.cookie_path, 'w') as f:
                 for c in self.s.cookies:
                     f.write('%s,%s,%s,%s\n' % (c.name, c.value, c.domain, c.path))
-        except:
-            print('save cookie error')
+        except Exception as e:
+            print('save cookie error', e)
