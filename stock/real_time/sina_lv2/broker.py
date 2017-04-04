@@ -1,5 +1,7 @@
 import pickle
 import random
+import string
+import threading
 import urllib.error
 import urllib.request
 import re
@@ -17,8 +19,9 @@ import asyncio
 # 用于模拟登陆新浪微博
 import time
 
+from stock.common.common_func import BASIC_INFO
 from stock.common.communction import simple_publish
-
+cookie_path='/tmp/cookie1'
 
 class launcher:
     def __init__(self, username, password):
@@ -76,7 +79,8 @@ class launcher:
             "from": "",
             "savestate": "7",
             "useticket": "1",
-            "pagerefer": "http://passport.weibo.com/visitor/visitor?entry=miniblog&a=enter&url=http%3A%2F%2Fweibo.com%2F&domain=.weibo.com&ua=php-sso_sdk_client-0.6.14",
+            "pagerefer": "http://passport.weibo.com/visitor/visitor?entry=miniblog&a=enter&url=http%3A%2F%2Fweibo.com"
+                         "%2F&domain=.weibo.com&ua=php-sso_sdk_client-0.6.14",
             "vsnf": "1",
             "su": self.get_encrypted_name(),
             "service": "miniblog",
@@ -100,7 +104,9 @@ class launcher:
         data = self.get_prelogin_args()
         post_data = self.build_post_data(data)
         headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
+            "User-Agent":
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
         }
         try:
             request = urllib.request.Request(url=url, data=post_data, headers=headers)
@@ -115,7 +121,9 @@ class launcher:
         p = re.compile('location\.replace\(\'(.*?)\'\)')
         p2 = re.compile(r'"userdomain":"(.*?)"')
 
+        # noinspection PyBroadException
         try:
+            # noinspection PyUnboundLocalVariable
             login_url = p.search(html).group(1)
             print(login_url)
             request = urllib.request.Request(login_url)
@@ -125,6 +133,7 @@ class launcher:
             login_url = 'http://weibo.com/' + p2.search(page).group(1)
             request = urllib.request.Request(login_url)
             response = urllib.request.urlopen(request)
+            # noinspection PyUnusedLocal
             final = response.read().decode('utf-8')
 
             print("Login success!")
@@ -133,33 +142,47 @@ class launcher:
             return 0
 
     def save_cookie(self):
-        with open('/tmp/sina_cookie', 'wb') as f:
+        with open(cookie_path, 'wb') as f:
             pickle.dump(self.cookie_container, f)
 
 
 class WSHdl:
-    def __init__(self, url, query_list, cookies=None):
-        self.stock = '600115'
-        self.url = url
+    def __init__(self, stock):
+        self.stock = stock
+        self.mkt_stock = BASIC_INFO.market_code_of_stock(stock)
         self.token = ''
-        self.query_str_list = query_list
+        self.query_str_list = '2cn_%s,' \
+                              '2cn_%s_orders,' \
+                              '2cn_%s_0,' \
+                              '2cn_%s_1,' \
+                              '%s_i,' \
+                              '%s' % (
+                                  self.mkt_stock, self.mkt_stock, self.mkt_stock, self.mkt_stock, self.mkt_stock,
+                                  self.mkt_stock)
         self.client_ip = ''
         self.s = requests.session()
         self.ws = None
-        if cookies is not None:
-            self.s.cookies = cookies
+        self.load_cookie()
         self.ip = self.get_ip()
-        import uuid
-        self.token_var = 'var%%20KKE_auth_q%s' % uuid.uuid4().hex[:8]
+        self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
         self.auth_token = ''
         self.event_loop = None
+        self.first_time = True
+        self.running = True
+
+    @staticmethod
+    def id_generator(size=9, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(size))
 
     def load_cookie(self):
-        with open('/tmp/sina_cookie', 'rb') as f:
+        with open(cookie_path, 'rb') as f:
             self.s.cookies = pickle.load(f)
+
     def save_cookie(self):
-        with open('/tmp/sina_cookie', 'wb') as f:
-            pickle.dump(self.s.cookies , f)
+        with open(cookie_path, 'wb') as f:
+            pickle.dump(self.s.cookies, f)
+
+
     def get_ip(self):
         url = 'https://ff.sinajs.cn'
         param_list = {
@@ -173,7 +196,7 @@ class WSHdl:
     def timestamp_mills():
         return int(time.time() * 1000)
 
-    def get_auto_token(self):
+    def get_auth_token(self, kick=False):
         url = 'https://current.sina.com.cn/auth/api/jsonp.php/' \
               '%s=/' \
               'AuthSign_Service.getSignCode' % self.token_var
@@ -182,38 +205,58 @@ class WSHdl:
             'query': 'A_hq',
             'ip': self.ip,
             '_': random.random(),
-            'list': '2cn_sz002263,2cn_sz002263_orders,2cn_sz002263_0,2cn_sz002263_1,sz002263_i,sz002263,2cn_sz002263_1',
-            'kick':1
+            'list': self.query_str_list
         }
+        if kick:
+            param_list['kick'] = 1
+
         ret = self.s.get(url, params=param_list)
+        print(ret.headers['Set-Cookie'])
         print(ret.text)
         self.auth_token = ret.text.split('"')[1]
-        print('2333 get token %s' % self.auth_token)
         self.save_cookie()
 
     async def refresh_auth_token(self, loop):
-        await asyncio.sleep(180)
-        self.get_auto_token()
-        if self.ws is not None:
-            print('refresh new token %s' %self.auth_token)
-            self.ws.send(self.auth_token)
+        while self.running:
+            await asyncio.sleep(180)
+            self.get_auth_token()
+            if self.ws is not None:
+                print('[refresh token] %s' % self.auth_token)
+                self.ws.send(self.auth_token)
 
     async def web_socket_async_hdl(self, loop):
+        if self.first_time:
+            self.get_auth_token(kick=True)
+            self.first_time = False
+            # await asyncio.sleep(3)
         url = 'wss://ff.sinajs.cn/wskt?' \
               'token=%s' \
-              '&list=2cn_sz002263,2cn_sz002263_orders,2cn_sz002263_0,2cn_sz002263_1,sz002263_i,sz002263,2cn_sz002263_1' \
-              % self.auth_token
+              '&list=%s' \
+              % (self.auth_token, self.query_str_list)
         print(url)
         async with websockets.connect(url) as websocket:
-            print('23333', websocket)
             self.ws = websocket
-            print('233333', self.ws)
             data = await websocket.recv()
             simple_publish('sina-lv2-update_%s' % self.stock, "{}".format(data))
             print("{}".format(data))
 
-    def start_ws(self):
-        self.event_loop = asyncio.get_event_loop()
+    def _start_ws(self):
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
         asyncio.ensure_future(self.web_socket_async_hdl(self.event_loop))
-        # asyncio.ensure_future(self.refresh_auth_token(self.event_loop))
+        asyncio.ensure_future(self.refresh_auth_token(self.event_loop))
         self.event_loop.run_forever()
+
+    def start_ws(self):
+        self.load_cookie()
+        threading.Thread(target=self._start_ws).start()
+
+    def stop_ws(self):
+        self.running = False
+        self.event_loop.stop()
+
+        self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
+        self.auth_token = ''
+        self.event_loop = None
+        self.first_time = True
+        self.ws = None
