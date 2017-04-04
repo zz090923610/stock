@@ -1,18 +1,21 @@
-import util
-import socket
-import traceback
 import asyncio
-import os
-import re
-import json
 import base64
 import binascii
-import rsa
-import requests
+import json
 import logging
+import os
+import re
+import socket
 import threading
+import traceback
+
+import requests
+import rsa
+import util
 from autobahn.asyncio.websocket import WebSocketClientProtocol, WebSocketClientFactory
 
+
+# 用于模拟登陆新浪微博
 
 class NotLoginException(Exception):
     pass
@@ -30,28 +33,6 @@ class Config:
             break
 
 
-def parse_payload(payload):
-    for line in payload.splitlines():
-        sp = line.split('=')
-        if sp[0].startswith('2cn'):
-            lst = sp[1].split(',')
-            bids = []
-            asks = []
-            try:
-                for x, y in zip(map(float, lst[26:36]), map(float, lst[36:46])):
-                    if y:
-                        bids.append({'price': x, 'volume': y})
-
-                for x, y in zip(map(float, lst[46:56]), map(float, lst[56:66])):
-                    if y:
-                        asks.append({'price': x, 'volume': y})
-            except:
-                pass
-
-            price = float(lst[7])
-            print(price, bids, asks)
-
-
 def create_protocal(kls, symbol):
     class MyClientProtocal(WebSocketClientProtocol):
         def onConnect(self, response):
@@ -63,9 +44,9 @@ def create_protocal(kls, symbol):
         @asyncio.coroutine
         def onMessage(self, payload, isBinary):
             print('payload {} {}'.format(payload, isBinary))
-            #try:
+            # try:
             #    parse_payload(str(payload, 'utf8'))
-            #except:
+            # except:
             #    logging.debug('parse payload error {}'.format(payload))
             #    logging.info('parse payload error')
 
@@ -247,6 +228,7 @@ class Sinaquote:
 
         yield from self.execute(symbol)
 
+
 class Contract:
     def __init__(self, unique_symbol):
         self.unique_symbol = unique_symbol
@@ -271,10 +253,10 @@ def main():
     chunks = [cons[x:x + cut] for x in range(0, len(cons), cut)]
     for c in chunks:
         logging.debug('addcon {}'.format(c))
-        asyncio.async(instance.add_cons(c))
+        asyncio.ensure_future(instance.add_cons(c))
 
 
 if __name__ == '__main__':
-    os.makedirs('log', exist_ok=True)
-    asyncio.async(main())
+    os.makedirs('/tmp/sina/log', exist_ok=True)
+    asyncio.ensure_future(main())
     asyncio.get_event_loop().run_forever()

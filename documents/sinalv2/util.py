@@ -7,7 +7,7 @@ import shutil
 
 def get_yzm(sess, url, path):
     yzm = sess.get(url, stream=True)
-    yzm_jpg_path = os.path.join('log', path)
+    yzm_jpg_path = os.path.join('/tmp/sina/log', path)
     with open(yzm_jpg_path, 'wb') as f:
         yzm.raw.decode_content = True
         # f.write(yzm.text.encode('utf8'))
