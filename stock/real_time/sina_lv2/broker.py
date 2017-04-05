@@ -25,8 +25,8 @@ class WSHdl:
         self.query_str_list = ''
         for s in self.mkt_stock_list:
             self.query_str_list += '2cn_%s_0,' \
-                               '2cn_%s_1,' \
-                               % (s,s)
+                                   '2cn_%s_1,' \
+                                   % (s, s)
         self.client_ip = ''
         self.s = requests.session()
         self.s.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 ' \
@@ -34,7 +34,7 @@ class WSHdl:
         self.ws = None
         self.load_cookie()
         self.ip = self.get_ip()
-        # self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
+        self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
         self.auth_token = ''
         self.event_loop = None
         self.first_time = True
@@ -93,11 +93,11 @@ class WSHdl:
     def timestamp_mills():
         return int(time.time() * 1000)
 
-    def get_auth_token2(self, kick=False):
-        # url = 'https://current.sina.com.cn/auth/api/jsonp.php/' \
-        #      '%s=/' \
-        #      'AuthSign_Service.getSignCode' % self.token_var
-        url = 'https://current.sina.com.cn/auth/api/jsonp.php/varxxxl/AuthSign_Service.getSignCode'
+    def get_auth_token(self, kick=False):
+        url = 'https://current.sina.com.cn/auth/api/jsonp.php/' \
+              '%s=/' \
+              'AuthSign_Service.getSignCode' % self.token_var
+        #  url = 'https://current.sina.com.cn/auth/api/jsonp.php/varxxxl/AuthSign_Service.getSignCode'
         param_list = {
             'query': 'A_hq',
             'ip': self.ip,
@@ -108,41 +108,23 @@ class WSHdl:
             param_list['kick'] = 1
 
         ret = self.s.get(url, params=param_list)
-        print(ret.headers['Set-Cookie'])
         print(ret.text)
         self.auth_token = ret.text.split('"')[1]
-        self.save_cookie()
-
-    def get_auth_token(self,kick=False):
-
-        query_type = 'A_hq'
-
-        token_url = 'https://current.sina.com.cn/auth/api/jsonp.php/varxxxl/AuthSign_Service.getSignCode'
-        dct = {'query': query_type,
-               'ip': self.ip,
-               'list': self.query_str_list,
-               'kick': 1
-               }
-
-        res = self.s.get(token_url, params=dct).text
-
-        if 'pls login' in res:
-            print('NOT LOGIN EXCEPTION')
-            raise Exception
-        else:
-            token_start = res.find('\"') + 1
-            token_end = res.find('\"', token_start)
-            token = res[token_start: token_end]
-            print('found token:  %s' % token)
-            self.auth_token = token
 
     async def refresh_auth_token(self, loop):
+        cnt = 0
         while self.running:
-            await asyncio.sleep(180)
-            self.get_auth_token()
-            if self.ws is not None:
-                print('[refresh token] %s' % self.auth_token)
-                self.ws.send(self.auth_token)
+            await asyncio.sleep(59)
+            cnt += 1
+            if cnt != 2:
+                print('sent heartbeat')
+                self.ws.send('')
+            else:
+                self.get_auth_token()
+                if self.ws is not None:
+                    print('[refresh token] %s' % self.auth_token)
+                    self.ws.send(self.auth_token)
+                cnt = 0
 
     async def web_socket_async_hdl(self, loop):
         if self.first_time:
@@ -154,9 +136,13 @@ class WSHdl:
               % (self.auth_token, self.query_str_list)
         print(url)
         self.ws = await websockets.connect(url)
-        data = await self.ws.recv()
-        simple_publish('sina-lv2-update_%s' % self.stock_list, "{}".format(data))
-        print("{}".format(data))
+        while self.running:
+            if self.ws.state == 1:
+               data = await self.ws.recv()
+               simple_publish('sina-lv2-update_%s' % self.stock_list, "{}".format(data))
+               print("{}".format(data))
+            else:
+                self.ws = await websockets.connect(url)
         #async with websockets.connect(url) as websocket:
         #    self.ws = websocket
         #    data = await websocket.recv()
@@ -171,14 +157,14 @@ class WSHdl:
         self.event_loop.run_forever()
 
     def start_ws(self):
-        self.load_cookie()
+        self.login()
         threading.Thread(target=self._start_ws).start()
 
     def stop(self):
         self.running = False
         next(self.ws.close())
         self.event_loop.stop()
-        # self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
+        self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
         self.auth_token = ''
         self.event_loop = None
         self.first_time = True
