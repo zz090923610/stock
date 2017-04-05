@@ -5,17 +5,22 @@ import string
 import threading
 # 用于模拟登陆新浪微博
 import time
-
+import _thread
 import requests
-import websockets
+import websocket
 
 from stock.common.common_func import BASIC_INFO
 from stock.common.communction import simple_publish
+from stock.common.time_util import TimeUtil
 from stock.real_time.sina_lv2.sina_login import SinaLoginHdl
 
 
+# mqtt control:
+# res_topic: real_tick_update, real_tick_ctrl
+# real_tick_ctrl: auth_failed, closed, started_$PID
+
 # noinspection PyBroadException,PyUnusedLocal
-class WSHdl:
+class WebSocketAuthTokenHdl:
     def __init__(self, stock_list, username, password, cookie_path):
         self.stock_list = stock_list
         self.username = username
@@ -27,6 +32,7 @@ class WSHdl:
             self.query_str_list += '2cn_%s_0,' \
                                    '2cn_%s_1,' \
                                    % (s, s)
+        self.query_str_list = self.query_str_list[:len(self.query_str_list) - 1]
         self.client_ip = ''
         self.s = requests.session()
         self.s.headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 ' \
@@ -94,6 +100,7 @@ class WSHdl:
         return int(time.time() * 1000)
 
     def get_auth_token(self, kick=False):
+        self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
         url = 'https://current.sina.com.cn/auth/api/jsonp.php/' \
               '%s=/' \
               'AuthSign_Service.getSignCode' % self.token_var
@@ -110,62 +117,71 @@ class WSHdl:
         ret = self.s.get(url, params=param_list)
         print(ret.text)
         self.auth_token = ret.text.split('"')[1]
-
-    async def refresh_auth_token(self, loop):
-        cnt = 0
-        while self.running:
-            await asyncio.sleep(59)
-            cnt += 1
-            if cnt != 2:
-                print('sent heartbeat')
-                self.ws.send('')
-            else:
-                self.get_auth_token()
-                if self.ws is not None:
-                    print('[refresh token] %s' % self.auth_token)
-                    self.ws.send(self.auth_token)
-                cnt = 0
-
-    async def web_socket_async_hdl(self, loop):
-        if self.first_time:
-            self.get_auth_token(kick=True)
-            self.first_time = False
-        url = 'wss://ff.sinajs.cn/wskt?' \
-              'token=%s' \
-              '&list=%s' \
-              % (self.auth_token, self.query_str_list)
-        print(url)
-        self.ws = await websockets.connect(url)
-        while self.running:
-            if self.ws.state == 1:
-               data = await self.ws.recv()
-               simple_publish('sina-lv2-update_%s' % self.stock_list, "{}".format(data))
-               print("{}".format(data))
-            else:
-                self.ws = await websockets.connect(url)
-        #async with websockets.connect(url) as websocket:
-        #    self.ws = websocket
-        #    data = await websocket.recv()
-        #    simple_publish('sina-lv2-update_%s' % self.stock_list, "{}".format(data))
-        #    print("{}".format(data))
-
-    def _start_ws(self):
-        self.event_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.event_loop)
-        asyncio.ensure_future(self.web_socket_async_hdl(self.event_loop))
-        asyncio.ensure_future(self.refresh_auth_token(self.event_loop))
-        self.event_loop.run_forever()
-
-    def start_ws(self):
-        self.login()
-        threading.Thread(target=self._start_ws).start()
+        return 'wss://ff.sinajs.cn/wskt?token=%s&list=%s' % (self.auth_token, self.query_str_list)
 
     def stop(self):
         self.running = False
-        next(self.ws.close())
-        self.event_loop.stop()
         self.token_var = 'var%%20KKE_auth_%s' % self.id_generator()
         self.auth_token = ''
-        self.event_loop = None
-        self.first_time = True
-        self.ws = None
+
+
+class WebSHdl:
+    def __init__(self, url=''):
+        self.url = url
+        self.auth_hdl = WebSocketAuthTokenHdl(['000001', '600115', '601881', '601899'], '610153443@qq.com',
+                                              'f9c6c2827d3e5647',
+                                              '/tmp/cookie')  # FIXME
+
+    @staticmethod
+    def on_message(ws, message):
+        if message == 'sys_auth=FAILED':
+            simple_publish('real_tick_ctrl', 'auth_failed')
+            print(message)
+            ws.close()
+        simple_publish('real_tick_update', message)
+
+    @staticmethod
+    def on_error(ws, error):
+        print(error)
+
+    @staticmethod
+    def on_close(ws):
+        simple_publish('real_tick_ctrl', 'closed')
+        print("### closed ###")
+
+    def on_open(self, ws):
+        def refresh_token(*args):
+            print('refresh thread run')
+            while True:
+                time.sleep(170)
+                self.auth_hdl.get_auth_token()
+                print('Refresh Token', TimeUtil().get_time_of_a_day(), self.auth_hdl.auth_token)
+                ws.send('*%s' % self.auth_hdl.auth_token)
+
+        def heartbeat(*args):
+            print('heartbeat thread run')
+            while True:
+                time.sleep(60)
+                print('[Heart Beat]', TimeUtil().get_time_of_a_day())
+                ws.send('')
+
+        _thread.start_new_thread(refresh_token, ())
+        _thread.start_new_thread(heartbeat, ())
+
+    def main(self):
+        if self.url == '':
+            self.auth_hdl.login()
+            self.url = self.auth_hdl.get_auth_token(kick=True)
+        websocket.enableTrace(True)
+        ws = websocket.WebSocketApp(self.url,
+                                    on_message=self.on_message,
+                                    on_error=self.on_error,
+                                    on_close=self.on_close)
+        ws.on_open = self.on_open
+        ws.run_forever()
+
+
+if __name__ == '__main__':
+    simple_publish('real_tick_ctrl', 'started_%d' % os.getpid())
+    b = WebSHdl('')
+    b.main()
