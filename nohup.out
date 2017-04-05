@@ -10,3 +10,26 @@
 
 
 
+--- request header ---
+GET /wskt?token=c0VzcfJzx3Nzc9xtgDeYxn02kUXhBfjNRJP3lFzV&list=2cn_sz000001_0,2cn_sz000001_1,2cn_sh600115_0,2cn_sh600115_1,2cn_sh601881_0,2cn_sh601881_1,2cn_sh601899_0,2cn_sh601899_1 HTTP/1.1
+Upgrade: websocket
+Connection: Upgrade
+Host: ff.sinajs.cn
+Origin: http://ff.sinajs.cn
+Sec-WebSocket-Key: /l7XDUy+/cyC92LU3NtZRw==
+Sec-WebSocket-Version: 13
+
+
+-----------------------
+--- response header ---
+HTTP/1.1 101 Switching Protocols
+Upgrade: Websocket
+Connection: Upgrade
+Server: KUROYUKI/5.7.0
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Accept: cHZw6Q/8qoCfyjbLrEndMKWts88=
+-----------------------
+send: b'\x81\x80QnaS'
+send: b'\x81\x80\xed\xba\xf8f'
+send: b'\x81\xa9\xc2\xb4\x84\xaf\xe8\xf3\xb5\xe6\xa0\xf3\xde\xc4\xa0\xc6\xfc\xdc\xa0\xf3\xb2\xe0\xf1\xe3\xc8\xf5\xfb\xda\xd2\xeb\x8b\xd0\xbc\x96\x8a\xc2\xde\x97\x91\x87\xde\xff\xb6\xc5\xee\xe8\xa7'
+send: b'\x81\x80\x18\x06Z\x05'

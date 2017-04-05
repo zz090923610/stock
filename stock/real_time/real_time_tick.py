@@ -47,7 +47,7 @@ class RTTick(DaemonClass):
     """
 
     def __init__(self):
-        super().__init__(topic_sub=['rtt_req'], topic_pub='rtt_update')
+        super().__init__(topic_sub=['rtt_req','real_tick_ctrl'], topic_pub='rtt_update')
         self.last_time_dict = {}
         self.monitoring_list = []
         self.msg_on_exit = 'rtt_exit'
@@ -71,12 +71,14 @@ class RTTick(DaemonClass):
                 self.publish(self.msg_on_exit)
                 self.cancel_daemon = True
             elif payload == 'start-broker':
+
                 if self.broker_pid == 0:
                     self.start_broker()
                 else:
                     self.stop_broker()
                     self.start_broker()
             elif payload == 'stop-broker':
+                print(23333)
                 if self.broker_pid != 0:
                     self.stop_broker()
 
@@ -88,8 +90,10 @@ class RTTick(DaemonClass):
                 self.start_broker()
             elif payload.find('started_') != -1:
                 self.broker_pid = int(payload.split('_')[1])
+                print(self.broker_pid)
             elif payload == 'closed':
                 self.broker_pid = 0
+                self.start_broker()
 
     def add_stock(self, stock):
         if stock not in self.monitoring_list:
@@ -101,10 +105,15 @@ class RTTick(DaemonClass):
             self.monitoring_list.remove(stock)
 
     def stop_broker(self):
-        os.system('kill -SIGINT %d' % self.broker_pid)
+        print('sudo kill %d' % self.broker_pid)
+        os.system('sudo kill %d' % self.broker_pid)
+        self.broker_pid = 0
 
     def start_broker(self):
-        os.system('nohup python3 -m stock.real_time.sina_lv2.broker %s &' % ' '.join(self.monitoring_list))
+        print('python3 -m stock.real_time.sina_lv2.broker %s &' % ' '.join(self.monitoring_list))
+        os.system('cd /home/zhangzhao/data/stock;'
+                  'python3 -m stock.real_time.sina_lv2.broker %s &' % ' '.join(self.monitoring_list))
+
 
 
 def main(args=None):
@@ -116,6 +125,5 @@ def main(args=None):
     with daemon.DaemonContext(
             pidfile=daemon.pidfile.PIDLockFile('%s/rtt.pid' %
                                                        COMMON_VARS_OBJ.DAEMON['basic_info_hdl']['pid_path'])):
-
         a = RTTick()
-        a.MQTT_START()
+        a.daemon_main()

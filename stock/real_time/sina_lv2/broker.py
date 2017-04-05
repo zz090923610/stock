@@ -7,6 +7,7 @@ import threading
 import time
 import _thread
 import requests
+import sys
 import websocket
 
 from stock.common.common_func import BASIC_INFO
@@ -126,11 +127,9 @@ class WebSocketAuthTokenHdl:
 
 
 class WebSHdl:
-    def __init__(self, url=''):
+    def __init__(self, stock_list, username, password, cookie_path, url=''):
         self.url = url
-        self.auth_hdl = WebSocketAuthTokenHdl(['000001', '600115', '601881', '601899'], '610153443@qq.com',
-                                              'f9c6c2827d3e5647',
-                                              '/tmp/cookie')  # FIXME
+        self.auth_hdl = WebSocketAuthTokenHdl(stock_list, username, password, cookie_path)
 
     @staticmethod
     def on_message(ws, message):
@@ -182,6 +181,13 @@ class WebSHdl:
 
 
 if __name__ == '__main__':
+    print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+
+    if len(sys.argv) > 1:
+        stock_list = [i for i in sys.argv[1:]]
+    print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
     simple_publish('real_tick_ctrl', 'started_%d' % os.getpid())
-    b = WebSHdl('')
+    b = WebSHdl(stock_list, '610153443@qq.com',
+                                              'f9c6c2827d3e5647',
+                                              '/tmp/cookie')
     b.main()
