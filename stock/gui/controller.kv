@@ -254,8 +254,12 @@
                 text: '日线更新'
                 on_press: app.main_layout.update_daily()
             ActionButton:
-                text: '分笔更新'
+                text: '历史分笔'
                 on_press: app.main_layout.update_tick()
+            ActionButton:
+                text: '实时分笔'
+                on_press: app.main_layout.real_time_tick()
+
             ActionButton:
                 text: '数据对齐'
                 on_press: print('23333')

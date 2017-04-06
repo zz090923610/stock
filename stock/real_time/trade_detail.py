@@ -96,6 +96,14 @@ class HistoryTradeDetail:
                 msg += '%s\n' % self.history_dict[stock].generate_report()
         simple_publish('trade_detail_update', msg)
 
+    def get_current_position(self):
+        self.reload()
+        ret_list = []
+        for stock in self.history_dict.keys():
+            if self.history_dict[stock].current_quant != 0:
+                ret_list.append(stock)
+        return ret_list
+
 
 def calc_trade_cost(stock, price, quant, trade_type):
     quant = int(float(quant))

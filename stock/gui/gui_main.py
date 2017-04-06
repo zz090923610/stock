@@ -196,7 +196,7 @@ class Controller(FloatLayout):
         self.current_state = 'Not connected'
         self.cancel_daemon = False
         self.msg_on_exit = ''
-        self.MQTT_START()
+        self.mqtt_start()
         self.widget_cnt = 0
         self.widget_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
@@ -343,11 +343,11 @@ class Controller(FloatLayout):
     def mqtt_on_log(self, mqttc, obj, level, string):
         print(string)
 
-    def MQTT_CANCEL(self):
+    def mqtt_cancel(self):
         self.client.loop_stop(force=True)
         self.change_text('Not connected')
 
-    def MQTT_START(self):
+    def mqtt_start(self):
         threading.Thread(target=self.client.loop_start).start()
 
     def add_login_sticker(self):
@@ -364,6 +364,14 @@ class Controller(FloatLayout):
 
     def update_tick(self):
         simple_publish('data_req', 'tick_update')
+
+    def real_time_tick(self):
+        simple_publish('rtt_req', 'stop-broker')
+        simple_publish('rtt_req', 'clear')
+        pos_list = self.trade_detail_hdl.get_current_position()
+        for stock in pos_list:
+            simple_publish('rtt_req', 'add-stock_%s' % stock)
+        simple_publish('rtt_req', 'start-broker')
 
     def update_announcement(self):
         simple_publish('basic_info_req', 'update')

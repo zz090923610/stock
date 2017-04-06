@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import random
 import string
@@ -126,18 +127,20 @@ class WebSocketAuthTokenHdl:
         self.auth_token = ''
 
 
+type_dict = {'0': 'S', '1': 'M', '2': 'B'}
+
+
 class WebSHdl:
     def __init__(self, stock_list, username, password, cookie_path, url=''):
         self.url = url
         self.auth_hdl = WebSocketAuthTokenHdl(stock_list, username, password, cookie_path)
 
-    @staticmethod
-    def on_message(ws, message):
+    def on_message(self, ws, message):
         if message == 'sys_auth=FAILED':
             simple_publish('real_tick_ctrl', 'auth_failed')
             print(message)
             ws.close()
-        simple_publish('real_tick_update', message)
+        self.parse_payload(message)
 
     @staticmethod
     def on_error(ws, error):
@@ -147,6 +150,28 @@ class WebSHdl:
     def on_close(ws):
         simple_publish('real_tick_ctrl', 'closed')
         print("### closed ###")
+
+    @staticmethod
+    def parse_payload(payload):
+        """
+        sortid  |date        |price|num |money    |*       |*      |type|*
+        10061883|15:00:00.000|3.680|4300|15824.000|10033886|9995765|2   |2012,
+        type:
+        0: S 
+        1: M 
+        2: B
+        :publish: 'real_tick_update', json.dumps({'stock': stock, 'tick': final_list})
+        """
+        [title, raw_lines] = payload.split('=')
+        lines = raw_lines.split(',')
+        final_list = []
+        for line in lines:
+            cells = line.split('|')
+            final_list.append(
+                {'sort_id': cells[0], 'time': cells[1], 'price': float(cells[2]), 'hands': int(cells[3]) / 100,
+                 'type': type_dict[cells[7]]})
+        stock = title.split('_')[1][2:]
+        simple_publish('real_tick_update', json.dumps({'stock': stock, 'tick': final_list}))
 
     def on_open(self, ws):
         def refresh_token(*args):
@@ -188,6 +213,6 @@ if __name__ == '__main__':
     print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
     simple_publish('real_tick_ctrl', 'started_%d' % os.getpid())
     b = WebSHdl(stock_list, '610153443@qq.com',
-                                              'f9c6c2827d3e5647',
-                                              '/tmp/cookie')
+                'f9c6c2827d3e5647',
+                '/tmp/cookie')
     b.main()
