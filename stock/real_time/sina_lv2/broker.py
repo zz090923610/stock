@@ -1,14 +1,14 @@
-import asyncio
+import _thread
 import json
 import os
 import random
 import string
-import threading
+import sys
 # 用于模拟登陆新浪微博
 import time
-import _thread
+
 import requests
-import sys
+# noinspection PyPackageRequirements
 import websocket
 
 from stock.common.common_func import BASIC_INFO
@@ -130,6 +130,7 @@ class WebSocketAuthTokenHdl:
 type_dict = {'0': 'S', '1': 'M', '2': 'B'}
 
 
+# noinspection PyUnusedLocal
 class WebSHdl:
     def __init__(self, stock_list, username, password, cookie_path, url=''):
         self.url = url
@@ -206,13 +207,11 @@ class WebSHdl:
 
 
 if __name__ == '__main__':
-    print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
-
+    s_list = []
     if len(sys.argv) > 1:
-        stock_list = [i for i in sys.argv[1:]]
-    print('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF')
+        s_list = [i for i in sys.argv[1:]]
     simple_publish('real_tick_ctrl', 'started_%d' % os.getpid())
-    b = WebSHdl(stock_list, '610153443@qq.com',
+    b = WebSHdl(s_list, '610153443@qq.com',
                 'f9c6c2827d3e5647',
                 '/tmp/cookie')
     b.main()

@@ -198,6 +198,38 @@
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
+<LargeNotificationSticker>:
+    size_hint:(None, None)
+    size: (560,800)
+    title: root.title
+    BoxLayout:
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            size_hint:(1, .1)
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        ScrollView:
+            size_hint:(1, .8)
+            size: self.size
+            Label:
+                size_hint_y: None
+                height: self.texture_size[1]
+                text: root.msg
+        BoxLayout:
+            size_hint:(.8, .1)
+            padding:(5,1,5,1)
+            pos_hint: {'center_x': .5}
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
 
 <Controller>:
     PageLayout:

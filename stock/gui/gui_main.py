@@ -191,6 +191,21 @@ class NotificationSticker(Sticker):
         self.msg = msg
 
 
+class LargeNotificationSticker(Sticker):
+    msg = StringProperty('')
+    title = StringProperty('')
+
+    def __init__(self, sid='', title='', msg='', **kwargs):
+        super().__init__(**kwargs)
+        self.title = title
+        self.msg = msg
+        if sid != '':
+            self.sticker_id = sid
+
+    def update_msg(self, msg):
+        self.msg = msg
+
+
 # noinspection PyMethodMayBeStatic,PyUnusedLocal,PyCompatibility,PyBroadException
 class Controller(FloatLayout):
     current_state = StringProperty()
@@ -216,8 +231,7 @@ class Controller(FloatLayout):
         self.widget_dict = {}
         self.stock_sticker_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
-        #self.add_widget(StockSticker())
-
+        # self.add_widget(StockSticker())
 
     def add_stock_sticker(self, stock):
         new_sticker = StockSticker(stock=stock)
@@ -320,9 +334,9 @@ class Controller(FloatLayout):
             print(self.widget_dict)
             self.widget_cnt += 1
         elif msg.topic == 'trade_detail_update':
-            new_sticker = NotificationSticker(do_rotation=False,
-                                              sid='trade_detail_notification_sticker_%d' % self.widget_cnt,
-                                              title='交割信息', msg=payload)
+            new_sticker = LargeNotificationSticker(do_rotation=False,
+                                                   sid='trade_detail_notification_sticker_%d' % self.widget_cnt,
+                                                   title='交割信息', msg=payload)
             self.add_widget(new_sticker)
             self.widget_dict['trade_detail_notification_sticker_%d' % self.widget_cnt] = new_sticker
             print(self.widget_dict)
