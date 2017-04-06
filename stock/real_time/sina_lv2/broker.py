@@ -87,9 +87,9 @@ class WebSocketAuthTokenHdl:
             return False
 
     def login(self):
-        self.load_cookie()
         is_login = self.is_login()
         if is_login:
+            self.load_cookie()
             print('sina quote already login')
             return
         a = SinaLoginHdl(self.username, self.password, self.cookie_path)

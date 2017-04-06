@@ -2,6 +2,7 @@ import os
 import sys
 import signal_daemon
 from stock.common import time_util, basic_stock_info_fetcher
+from stock.common.communction import simple_publish
 from stock.common.file_operation import mkdirs
 from stock.data import data_news_handler
 from stock.data import new_get_data
@@ -32,6 +33,7 @@ if __name__ == '__main__':
     elif sys.argv[1] == '--exit':
         if not os.path.isdir('/tmp/stock/daemon/pid'):
             exit(0)
+        simple_publish('rtt_req','stop-broker')
         for i in os.listdir('/tmp/stock/daemon/pid'):
             os.system('kill `cat %s/%s`' % ('/tmp/stock/daemon/pid', i))
     elif sys.argv[1] == '--touch':
