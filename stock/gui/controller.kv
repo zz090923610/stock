@@ -91,10 +91,10 @@
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
-<GraphSticker>:
+<StockSticker>:
     do_rotation:False
-    size_hint:(.25, .125)
-
+    size_hint:(None, None)
+    size: (400,240)
     Graph:
         size: root.bbox[1]
         id: grp
@@ -112,27 +112,27 @@
         xmax:root.xmax
         ymin:root.ymin
         ymax:root.ymax
-    BoxLayout:
-        size: root.size
-        orientation: 'vertical'
-        Label:
-            text: 'Position\n' + str(root.pos)
-            text_size: (root.width, None)
-        Label:
-            text: 'Size\n' + str(root.size)
-            text_size: (root.width, None)
-        Label:
-            text: 'Center\n' + str(root.center)
-            text_size: (root.width, None)
-        Label:
-            text: 'Bounding Box\n' + str(root.bbox)
-            text_size: (root.width, None)
-        Label:
-            text: 'Top\n' + str(root.top)
-            text_size: (root.width, None)
-        Label:
-            text: 'Right\n' + str(root.right)
-            text_size: (root.width, None)
+    #BoxLayout:
+    #    size: root.size
+    #    orientation: 'vertical'
+    #    Label:
+    #        text: 'Position\n' + str(root.pos)
+    #        text_size: (root.width, None)
+    #    Label:
+    #        text: 'Size\n' + str(root.size)
+    #        text_size: (root.width, None)
+    #    Label:
+    #        text: 'Center\n' + str(root.center)
+    #        text_size: (root.width, None)
+    #    Label:
+    #        text: 'Bounding Box\n' + str(root.bbox)
+    #        text_size: (root.width, None)
+    #    Label:
+    #        text: 'Top\n' + str(root.top)
+    #        text_size: (root.width, None)
+    #    Label:
+    #        text: 'Right\n' + str(root.right)
+    #        text_size: (root.width, None)
 
 <ProgressBarSticker>:
     size_hint:(None, None)

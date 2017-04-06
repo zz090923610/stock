@@ -24,7 +24,7 @@ from kivy.core.text import LabelBase
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.image import AsyncImage
 from kivy.core.window import Window
-from stock.common.common_func import BASIC_INFO, load_tick_data_pair
+from stock.common.common_func import BASIC_INFO, load_tick_data
 from stock.common.communction import simple_publish
 from stock.common.variables import COMMON_VARS_OBJ
 from stock.gui.graph import Graph, MeshLinePlot, SmoothLinePlot
@@ -67,16 +67,19 @@ class Sticker(ScatterLayout):
         super().__init__(**kwargs)
 
 
-class GraphSticker(Sticker):
+class StockSticker(Sticker):
     xmax = NumericProperty()
     xmin = NumericProperty(0)
     ymax = NumericProperty()
     ymin = NumericProperty()
 
-    def __init__(self, **kwargs):
+    def __init__(self, stock='', **kwargs):
         super().__init__(**kwargs)
         plot = SmoothLinePlot(color=[1, 0, 0, 1])
-        plot.points, self.ymax, self.ymin, self.xmax = load_tick_data_pair('002263', '2017-01-16')
+        try:
+            plot.points, self.ymax, self.ymin, self.xmax = self.load_tick_data_pair(stock, '2017-04-05')
+        except FileNotFoundError:
+            plot.points, self.ymax, self.ymin, self.xmax = self.load_tick_data_pair('002263', '2017-04-05')
         self.ids['grp'].add_plot(plot)
         # Clock.schedule_interval(self.update_points, 1 / 60.)
         self.plt = plot
@@ -87,8 +90,20 @@ class GraphSticker(Sticker):
         with self.canvas:
             pass
 
+    def load_tick_data_pair(self, stock, day):
+        a = load_tick_data(stock, day)
+        b = []
+        max_price = 0
+        min_price = 99999
+        for (idx, line) in enumerate(a):
+            b.append((idx, line['price']))
+            max_price = max(max_price, line['price'])
+            min_price = min(min_price, line['price'])
+        return b, max_price, min_price, len(a)
+
     def update_points(self, *args):
-        print([self.plt.params['size']])
+        pass
+        # print([self.plt.params['size']])
         # s = (i for i in self.bbox)
         # self.plt.params['size'] = s
         # self.ids['grp'].remove_plot(self.plt)
@@ -97,7 +112,7 @@ class GraphSticker(Sticker):
         # self.ids['grp'].add_plot(plot)
         # Clock.schedule_interval(self.update_points, 1 / 60.)
         # self.plt = plot
-        print(self.ids['grp'].size)
+        # print(self.ids['grp'].size)
 
 
 # noinspection PyCompatibility,PyShadowingBuiltins
@@ -176,7 +191,7 @@ class NotificationSticker(Sticker):
         self.msg = msg
 
 
-# noinspection PyMethodMayBeStatic,PyUnusedLocal,PyCompatibility
+# noinspection PyMethodMayBeStatic,PyUnusedLocal,PyCompatibility,PyBroadException
 class Controller(FloatLayout):
     current_state = StringProperty()
     display_type = OptionProperty('normal', options=['normal', 'popup'])
@@ -199,8 +214,22 @@ class Controller(FloatLayout):
         self.mqtt_start()
         self.widget_cnt = 0
         self.widget_dict = {}
+        self.stock_sticker_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
-        # self.add_widget(GraphSticker())
+        #self.add_widget(StockSticker())
+
+
+    def add_stock_sticker(self, stock):
+        new_sticker = StockSticker(stock=stock)
+        self.add_widget(new_sticker)
+        self.stock_sticker_dict[stock] = new_sticker
+
+    def remove_stock_sticker(self, stock):
+        try:
+            self.remove_widget(self.stock_sticker_dict[stock])
+            del self.widget_dict[stock]
+        except:
+            pass
 
     def dismiss_popup(self):
         self._popup.dismiss()
@@ -371,6 +400,7 @@ class Controller(FloatLayout):
         pos_list = self.trade_detail_hdl.get_current_position()
         for stock in pos_list:
             simple_publish('rtt_req', 'add-stock_%s' % stock)
+            self.add_stock_sticker(stock)
         simple_publish('rtt_req', 'start-broker')
 
     def update_announcement(self):
