@@ -1,17 +1,10 @@
-import json
-import threading
 import time
 
 import daemon.pidfile
-import lxml.html
 import tushare as ts
-from lxml import etree
-from pandas.compat import StringIO
 
 from stock.common.common_func import *
-from stock.common.communction import simple_publish
 from stock.common.daemon_class import DaemonClass
-from stock.common.time_util import load_last_date
 from stock.common.variables import *
 
 
@@ -47,7 +40,7 @@ class RTTick(DaemonClass):
     """
 
     def __init__(self):
-        super().__init__(topic_sub=['rtt_req','real_tick_ctrl'], topic_pub='rtt_update')
+        super().__init__(topic_sub=['rtt_req', 'real_tick_ctrl'], topic_pub='rtt_update')
         self.last_time_dict = {}
         self.monitoring_list = []
         self.msg_on_exit = 'rtt_exit'
@@ -55,7 +48,6 @@ class RTTick(DaemonClass):
         self.broker_pid = 0
 
     def mqtt_on_message(self, mqttc, obj, msg):
-
         payload = msg.payload.decode('utf8')
         print(msg.topic, msg.payload)
         if msg.topic == 'rtt_req':
@@ -81,7 +73,6 @@ class RTTick(DaemonClass):
                 print(23333)
                 if self.broker_pid != 0:
                     self.stop_broker()
-
         elif msg.topic == 'real_tick_ctrl':
             # real_tick_ctrl: auth_failed, closed, started_$PID
             if payload == 'auth_failed':
