@@ -91,49 +91,6 @@
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
-<StockSticker>:
-    do_rotation:False
-    size_hint:(None, None)
-    size: (400,240)
-    Graph:
-        size: root.bbox[1]
-        id: grp
-        xlabel:'X'
-        ylabel:'Y'
-        x_ticks_minor:5
-        x_ticks_major:25
-        y_ticks_major:1
-        y_grid_label:True
-        x_grid_label:True
-        padding:5
-        x_grid:True
-        y_grid:True
-        xmin:-0
-        xmax:root.xmax
-        ymin:root.ymin
-        ymax:root.ymax
-    #BoxLayout:
-    #    size: root.size
-    #    orientation: 'vertical'
-    #    Label:
-    #        text: 'Position\n' + str(root.pos)
-    #        text_size: (root.width, None)
-    #    Label:
-    #        text: 'Size\n' + str(root.size)
-    #        text_size: (root.width, None)
-    #    Label:
-    #        text: 'Center\n' + str(root.center)
-    #        text_size: (root.width, None)
-    #    Label:
-    #        text: 'Bounding Box\n' + str(root.bbox)
-    #        text_size: (root.width, None)
-    #    Label:
-    #        text: 'Top\n' + str(root.top)
-    #        text_size: (root.width, None)
-    #    Label:
-    #        text: 'Right\n' + str(root.right)
-    #        text_size: (root.width, None)
-
 <ProgressBarSticker>:
     size_hint:(None, None)
     size: (300,300)
