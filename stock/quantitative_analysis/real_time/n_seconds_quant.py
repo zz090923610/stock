@@ -23,6 +23,11 @@ class NSecondsQuant:
         self.data_queue = []
         self.today = load_last_date('current_day_cn')
         self.save_list = []
+        self.today = load_last_date('current_day_cn')
+        self.ts_930 = self.cvt2timestamp('09:30:00.000')
+        self.ts_1130 = self.cvt2timestamp('11:30:30.000')
+        self.ts_1300 = self.cvt2timestamp('13:00:00.000')
+        self.ts_1500 = self.cvt2timestamp('15:00:30.000')
 
     def add_data(self, data_dict):
         """
@@ -49,9 +54,11 @@ class NSecondsQuant:
             else:
                 self.sum -= line[1]
 
-        self.save_list.append({'stock': self.stock, 'quant_n_seconds': self.sum, 'time': self.current_time})
+        self.save_list.append({'stock': self.stock, 'quant_n_seconds': self.sum,
+                               'plot_idx': self.get_plot_idx(self.current_time), 'time': self.current_time})
         simple_publish('n_seconds_quant_update',
-                       json.dumps({'stock': self.stock, 'quant_n_seconds': self.sum, 'time': self.current_time}))
+                       json.dumps({'stock': self.stock, 'quant_n_seconds': self.sum,
+                                   'plot_idx': self.get_plot_idx(self.current_time), 'time': self.current_time}))
         print(self.stock, self.sum, self.current_time)
         self.dump_data()
 
@@ -63,6 +70,15 @@ class NSecondsQuant:
         pd.DataFrame(self.save_list) \
             .to_csv(
             '%s/quantitative_analysis/real_time/n_seconds_quant/%s.csv' % (COMMON_VARS_OBJ.stock_data_root, self.stock))
+
+    def get_plot_idx(self, timestamp_str):
+        cts = self.cvt2timestamp(timestamp_str)
+        if (cts >= self.ts_930) & (cts <= self.ts_1130):
+            return int(cts - self.ts_930)
+        elif (cts >= self.ts_1300) & (cts <= self.ts_1500):
+            return int(cts - self.ts_1300 + self.ts_1130 - self.ts_930)
+        else:
+            return -1
 
 
 class NSecondsQuantDaemon(DaemonClass):

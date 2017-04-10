@@ -7,13 +7,16 @@ import sys
 # 用于模拟登陆新浪微博
 import time
 
+import datetime
+from operator import itemgetter
+
 import requests
 # noinspection PyPackageRequirements
 import websocket
 
 from stock.common.common_func import BASIC_INFO
 from stock.common.communction import simple_publish
-from stock.common.time_util import TimeUtil
+from stock.common.time_util import TimeUtil, load_last_date
 from stock.real_time.sina_lv2.sina_login import SinaLoginHdl
 
 
@@ -135,6 +138,8 @@ class WebSHdl:
     def __init__(self, stock_list, username, password, cookie_path, url=''):
         self.url = url
         self.auth_hdl = WebSocketAuthTokenHdl(stock_list, username, password, cookie_path)
+        self.today = load_last_date('current_day_cn')
+
 
     def on_message(self, ws, message):
         if message == 'sys_auth=FAILED':
@@ -152,8 +157,7 @@ class WebSHdl:
         simple_publish('real_tick_ctrl', 'closed')
         print("### closed ###")
 
-    @staticmethod
-    def parse_payload(payload):
+    def parse_payload(self, payload):
         """
         sortid  |date        |price|num |money    |*       |*      |type|*
         10061883|15:00:00.000|3.680|4300|15824.000|10033886|9995765|2   |2012,
@@ -169,10 +173,14 @@ class WebSHdl:
         for line in lines:
             cells = line.split('|')
             final_list.append(
-                {'sort_id': cells[0], 'time': cells[1], 'price': float(cells[2]), 'hands': int(cells[3]) / 100,
+                {'sort_id': cells[0], 'time': cells[1],
+                 'price': float(cells[2]), 'hands': int(cells[3]) / 100,
                  'type': type_dict[cells[7]]})
+        final_list = sorted(final_list, key=itemgetter('time'))
         stock = title.split('_')[1][2:]
         simple_publish('real_tick_update', json.dumps({'stock': stock, 'tick': final_list}))
+
+
 
     def on_open(self, ws):
         def refresh_token(*args):

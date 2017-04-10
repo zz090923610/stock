@@ -155,6 +155,63 @@
                 text: 'Cancel'
                 on_press:app.main_layout.remove_login_sticker(root.sticker_id)
 
+
+<StockSticker>:
+    do_rotation:False
+    size_hint:(None, None)
+    size:(1000,120)
+    title: root.title
+    BoxLayout:
+        orientation:"horizontal"
+        Graph:
+            size_hint:(.6,1)
+            id: Left
+            y_grid_label:True
+            x_grid_label:True
+            padding:5
+            xlog:False
+            ylog:False
+            x_grid:True
+            y_grid:True
+            xmin:0
+            xmax:root.x_max
+            ymin:root.y_min
+            ymax:root.y_max
+        Graph:
+            size_hint:(.3,1)
+            id: Right
+            y_grid_label:True
+            x_grid_label:True
+            padding:5
+            xlog:False
+            ylog:False
+            x_grid:True
+            y_grid:True
+            xmin:root.r_x_min
+            xmax:root.r_x_min + 180
+            ymin:root.y_min
+            ymax:root.y_max
+        BoxLayout:
+            orientation:"vertical"
+            size_hint:(.1,1)
+            Label:
+                id: Title
+                text: 'NSV30'
+                size_hint:(1,.25)
+            Label:
+                id: Stock
+                text: root.stock
+                size_hint:(1,.25)
+            Label:
+                id: Name
+                text: root.name
+                size_hint:(1,.25)
+            Label:
+                id: Volume
+                text: root.volume
+                size_hint:(1,.25)
+
+
 <LargeNotificationSticker>:
     size_hint:(None, None)
     size: (560,800)
@@ -191,6 +248,7 @@
 <Controller>:
     PageLayout:
         FloatLayout:
+            id:MainPage
             orientation: 'vertical'
             canvas:
                 Color:
@@ -198,16 +256,15 @@
                 Rectangle:
                     pos: self.pos
                     size: self.size
-        BoxLayout:
+        FloatLayout:
             orientation: 'vertical'
+            id:MessagePage
             canvas:
                 Color:
                     rgba: 22/255., 22/255., 22/255., 1
                 Rectangle:
                     pos: self.pos
                     size: self.size
-            Label:
-                text: 'page 2'
 
 
 <ActionBar>:
@@ -307,3 +364,6 @@
             ActionButton:
                 text: '退出'
                 on_press: app.stop()
+
+
+

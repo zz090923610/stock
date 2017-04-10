@@ -1,4 +1,10 @@
+import json
 import os
+from operator import itemgetter
+
+from stock.common.file_operation import load_csv
+from stock.gui.graph import SmoothLinePlot, LinePlot
+
 os.environ['KIVY_GL_BACKEND'] = 'angle'
 import threading
 
@@ -11,7 +17,6 @@ from stock.real_time.trade_detail import HistoryTradeDetail
 
 Config.set('graphics', 'position', 'custom')
 Config.set('graphics', 'left', '1920')  # FIXME monitor workaround
-from kivy.app import App
 from kivy.properties import OptionProperty, ObjectProperty, NumericProperty
 from kivy.properties import StringProperty
 from kivy.uix.actionbar import ActionBar
@@ -28,6 +33,13 @@ from stock.common.common_func import BASIC_INFO
 from stock.common.communction import simple_publish
 from stock.common.variables import COMMON_VARS_OBJ
 from stock.trade_api.trade_api import TradeAPI
+import itertools
+from math import sin, cos
+
+from kivy.clock import Clock
+from kivy.utils import get_color_from_hex as rgb
+from kivy.uix.boxlayout import BoxLayout
+from kivy.app import App
 
 LabelBase.register(name="msyh",
                    fn_regular="./stock/gui/fonts/msyh.ttf")
@@ -66,6 +78,59 @@ class Sticker(ScatterLayout):
         super().__init__(**kwargs)
 
 
+class StockSticker(Sticker):
+    y_min = NumericProperty(-0.0002)
+    y_max = NumericProperty(0.0002)
+    x_max = NumericProperty(14460)
+    r_x_min = NumericProperty(0)
+    stock = StringProperty('')
+    name = StringProperty('')
+    volume = StringProperty('')
+
+    def __init__(self, stock='', **kwargs):
+        super().__init__(**kwargs)
+        self.stock = stock
+        self.name = BASIC_INFO.name_dict[stock]
+        colors = itertools.cycle([
+            rgb('7dac9f'), rgb('dc7062'), rgb('66a8d4'), rgb('e5b060')])
+
+        self.left_plot = LinePlot(color=next(colors))
+        self.left_plot.points = []
+        # for efficiency, the x range matches xmin, xmax
+        self.ids['Left'].add_plot(self.left_plot)
+
+        self.left_graph = self.ids['Left']
+
+        self.right_plot = LinePlot(color=next(colors))
+        self.right_plot.points = []
+        # for efficiency, the x range matches xmin, xmax
+        self.ids['Right'].add_plot(self.right_plot)
+
+        self.right_graph = self.ids['Right']
+        # Clock.schedule_interval(self.update_points, 1 / 60.)
+        self.load_from_file()
+
+    def update_points(self, idx, val, *args):
+        self.volume = '%.f' % val
+        self.left_plot.points.append((idx, val))
+        # self.left_plot.points = sorted(self.left_plot.points, key=lambda x: x[0])
+        self.x_max = max(idx, self.x_max)
+        self.y_max = max(max(i[1] for i in self.left_plot.points), val)
+        self.y_min = min(min(i[1] for i in self.left_plot.points), val)
+        if len(self.left_plot.points) > 180:
+            self.right_plot.points = self.left_plot.points[-180:]
+        else:
+            self.right_plot.points = self.left_plot.points
+        self.r_x_min = self.right_plot.points[0][0]
+
+    def load_from_file(self):
+        in_file = '%s/quantitative_analysis/real_time/n_seconds_quant/%s.csv' % (COMMON_VARS_OBJ.stock_data_root,
+                                                                             self.stock)
+        if os.path.isfile(in_file):
+            data_list = load_csv(in_file,col_type={'plot_idx':'int','quant_n_seconds':'float'})
+            data_list = sorted(data_list,  key=itemgetter('plot_idx'))
+            for line in data_list:
+                self.update_points(line['plot_idx'],line['quant_n_seconds'])
 
 
 # noinspection PyCompatibility,PyShadowingBuiltins
@@ -175,7 +240,7 @@ class Controller(FloatLayout):
         self.client.on_message = self.mqtt_on_message
         self.client.connect("localhost", 1883, 60)
         self.mqtt_topic_sub = ['trade_api_update', 'ui_update', 'daily_data_update', 'tick_update', 'tick_detail',
-                               'basic_info_update', 'news_hdl_update', 'trade_detail_update']
+                               'basic_info_update', 'news_hdl_update', 'trade_detail_update', 'n_seconds_quant_update']
         self.current_state = 'Not connected'
         self.cancel_daemon = False
         self.msg_on_exit = ''
@@ -184,12 +249,12 @@ class Controller(FloatLayout):
         self.widget_dict = {}
         self.stock_sticker_dict = {}
         self.trade_detail_hdl = HistoryTradeDetail()
-        # self.add_widget(StockSticker())
+        # self.add_widget(StockSticker(stock='002263'))
 
-    #def add_stock_sticker(self, stock):
-    #    new_sticker = StockSticker(stock=stock)
-    #    self.add_widget(new_sticker)
-    #    self.stock_sticker_dict[stock] = new_sticker
+    def add_stock_sticker(self, stock):
+        new_sticker = StockSticker(stock=stock)
+        self.ids['MainPage'].add_widget(new_sticker)
+        self.stock_sticker_dict[stock] = new_sticker
 
     def remove_stock_sticker(self, stock):
         try:
@@ -294,6 +359,15 @@ class Controller(FloatLayout):
             self.widget_dict['trade_detail_notification_sticker_%d' % self.widget_cnt] = new_sticker
             print(self.widget_dict)
             self.widget_cnt += 1
+        elif msg.topic == 'n_seconds_quant_update':
+            try:
+                json_payload = json.loads(payload)
+                stock = json_payload['stock']
+                idx = json_payload['plot_idx']
+                val = json_payload['quant_n_seconds']
+                self.stock_sticker_dict[stock].update_points(idx, val)
+            except KeyError:
+                pass
 
         if payload == 'exit':
             self.publish(self.msg_on_exit)
@@ -367,7 +441,7 @@ class Controller(FloatLayout):
         pos_list = self.trade_detail_hdl.get_current_position()
         for stock in pos_list:
             simple_publish('rtt_req', 'add-stock_%s' % stock)
-            # self.add_stock_sticker(stock)
+            self.add_stock_sticker(stock)
         simple_publish('rtt_req', 'start-broker')
 
     def update_announcement(self):
