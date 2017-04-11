@@ -79,10 +79,11 @@ class Sticker(ScatterLayout):
 
 
 class StockSticker(Sticker):
-    y_min = NumericProperty(-0.0002)
-    y_max = NumericProperty(0.0002)
+    y_min = NumericProperty(-1)
+    y_max = NumericProperty(1)
     x_max = NumericProperty(14460)
     r_x_min = NumericProperty(0)
+    r_x_max = NumericProperty(14460)
     stock = StringProperty('')
     name = StringProperty('')
     volume = StringProperty('')
@@ -122,15 +123,16 @@ class StockSticker(Sticker):
         else:
             self.right_plot.points = self.left_plot.points
         self.r_x_min = self.right_plot.points[0][0]
+        self.r_x_max = self.right_plot.points[-1][0]
 
     def load_from_file(self):
         in_file = '%s/quantitative_analysis/real_time/n_seconds_quant/%s.csv' % (COMMON_VARS_OBJ.stock_data_root,
-                                                                             self.stock)
+                                                                                 self.stock)
         if os.path.isfile(in_file):
-            data_list = load_csv(in_file,col_type={'plot_idx':'int','quant_n_seconds':'float'})
-            data_list = sorted(data_list,  key=itemgetter('plot_idx'))
+            data_list = load_csv(in_file, col_type={'plot_idx': 'int', 'quant_n_seconds': 'float'})
+            data_list = sorted(data_list, key=itemgetter('plot_idx'))
             for line in data_list:
-                self.update_points(line['plot_idx'],line['quant_n_seconds'])
+                self.update_points(line['plot_idx'], line['quant_n_seconds'])
 
 
 # noinspection PyCompatibility,PyShadowingBuiltins
