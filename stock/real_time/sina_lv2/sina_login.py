@@ -37,6 +37,7 @@ class SinaLoginHdl:
               + self.get_encrypted_name() + '&rsakt=mod&checkpin=1&client=ssologin.js(v1.4.19)'
         try:
             raw_data = self.s.get(url).text
+            print(raw_data)
             json_data = json_pattern.search(raw_data).group(1)
             data = json.loads(json_data)
             return data
@@ -93,13 +94,14 @@ class SinaLoginHdl:
         return post_data
 
     def login(self):
-        url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
+        url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.19)'
         self.enableCookies()
         data = self.get_prelogin_args()
         post_data = self.build_post_data(data)
 
         try:
             html = self.s.post(url, data=post_data).text
+            print(html)
         except Exception as e:
             print(e)
             return 1
