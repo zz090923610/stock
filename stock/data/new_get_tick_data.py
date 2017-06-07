@@ -33,7 +33,7 @@ def _download_one_stock_one_day(scode_a_day):
     if Path('%s/tick_data/%s/%s_%s.csv' % (COMMON_VARS_OBJ.stock_data_root, stock, stock, a_day)).is_file():
         return
     try:
-        data = ts.get_tick_data(stock, date=a_day)
+        data = ts.get_tick_data(stock, date=a_day,src='tt')
     except:
         return
     try:
