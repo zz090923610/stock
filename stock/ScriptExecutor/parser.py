@@ -34,6 +34,7 @@ def load_script(script_path):
         print(line)
     return script
 
+
 def is_num(target):
     try:
         float(target)
@@ -41,13 +42,36 @@ def is_num(target):
     except ValueError:
         return False
 
-def parse_script(input_data, script_path, output_method):
+
+def parse_script_head(script_path):
+    script = load_script(script_path)
+    parallel_level = ''
+    input_dir_file = ''
+    output_dir_file = ''
+    output_cols = []
+    for line in script:
+        if line[0] == 'PLEV':
+            parallel_level = line[1]
+        elif line[0] == 'PLFDIN':
+            input_dir_file = line[1]
+        elif line[0] == 'SGFLIN':
+            input_dir_file = line[1]
+        elif line[0] == 'PLFDOUT':
+            output_dir_file = line[1]
+        elif line[0] == 'SGFLOUT':
+            output_dir_file = line[1]
+        elif line[0] == 'OUTCOLS':
+            output_cols = re.split(r'[, \t]+', line[1])
+    print("Parallel level: %s\nInput path: %s\n Output path: %s\n Output cols: %r" %
+          (parallel_level, input_dir_file, output_dir_file, output_cols))
+
+
+def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
     data_cols = data.columns.tolist()
     vars = {}
     imms = {}
     shift_series = {}
-    script = load_script(script_path)
     for line in script:
         if line[0] == 'ADDC':
             result_col = line[1]
