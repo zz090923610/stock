@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import math
 import re
+import multiprocess as mp
 
 
 def load_data(input_data):
@@ -45,7 +46,7 @@ def is_num(target):
 
 def parse_script_head(script_path):
     script = load_script(script_path)
-    parallel_level = ''
+    parallel_level = ''  # FOLDER/SINGLE
     input_dir_file = ''
     output_dir_file = ''
     output_cols = []
@@ -61,9 +62,25 @@ def parse_script_head(script_path):
         elif line[0] == 'SGFLOUT':
             output_dir_file = line[1]
         elif line[0] == 'OUTCOLS':
-            output_cols = re.split(r'[, \t]+', line[1])
+            output_cols = re.split(r',', line[1])
     print("Parallel level: %s\nInput path: %s\n Output path: %s\n Output cols: %r" %
           (parallel_level, input_dir_file, output_dir_file, output_cols))
+    return script, parallel_level, input_dir_file, output_dir_file, output_cols
+
+
+def engine(script_path):
+    script, parallel_level, input_dir_file, output_dir_file, output_cols = parse_script_head(script_path)
+    if parallel_level == 'FOLDER':
+        dirlist= os.listdir(input_dir_file)
+        input_dir= input_dir_file.rstrip('/')
+        os.makedirs(output_dir_file)
+        pool = mp.Pool()
+        for i in dirlist:
+            pool.apply_async(execute_script, args=(i, input_dir+'/'+i, output_dir_file, output_cols))
+        pool.close()
+        pool.join()
+    elif parallel_level == 'SINGLE':
+        execute_script(input_dir_file, script, output_dir_file, output_cols)
 
 
 def execute_script(input_data, script, output_path, output_cols):
@@ -156,4 +173,5 @@ def execute_script(input_data, script, output_path, output_cols):
                     data['%s_sft_%d' % (result_col, i)] = data[line[2]].shift(i)
                     series.append('%s_sft_%d' % (result_col, i))
                 shift_series[result_col] = series
-    return data
+    data[output_cols].to_csv(output_path, index=False)
+    # return data

@@ -12,7 +12,7 @@ tzlocal
 pandas >= 0.19.2
 lxml >= 3.5.0
 requests >= 2.13.0
-tushare >= 0.6.8
+tushare
 bs4 >= 0.0.1
 matplotlib >= 2.0.0
 bypy >= 1.3.8c

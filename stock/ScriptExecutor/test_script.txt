@@ -1,8 +1,9 @@
 # PLEV	FOLDER/SINGLE
 # PLFDIN	path_to_parallel_input_execute_folder
-# PLFLIN	path_to_single_input_file
+# SGFLIN	path_to_single_input_file
 # PLFDOUT	path_to_parallel_output_execute_folder
-# PLFLOUT	path_to_single_output_file
+# SGFLOUT	path_to_single_output_file
+# OUTCOLS
 
 # ADDC   COL3 COL1 COL2/VAR/IMM          new column COL3 = COL1 + COL2/VAR/IMM
 # SUBC   COL3 COL1 COL2/VAR/IMM          new column COL3 = COL1 - COL2/VAR/IMM
@@ -16,8 +17,10 @@
 # FLT   TABLE COND                      filter out rows in TABLE based on 
 
 
-PLEV	FOLDER
-PLFD	
+PLEV	SINGLE
+SGFLIN	./stock/ScriptExecutor/test_pl/000001.csv
+SGFLOUT /tmp/test_out.csv
+OUTCOLS date,COL3,COL4,COL5
 ADDC   COL3 open high close low
 SUBC   COL4 COL3 high  close low     #foobarrrrr#
 MULC   COL5 COL4 2

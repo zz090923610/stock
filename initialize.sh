@@ -4,7 +4,7 @@ sudo pip3 install --upgrade pip
 sudo pip3 install pandas
 sudo pip3 install Cython==0.23
 sudo pip3 install -r ./requirements.txt
-sudo pip3 install tushare==0.7.0 # FIXME
+sudo pip3 install tushare
 sudo apt-get -y install python-kivy-examples
 cd ./stock/common
 sudo ./stock/common/install_font.sh
