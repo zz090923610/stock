@@ -73,10 +73,11 @@ def engine(script_path):
     if parallel_level == 'FOLDER':
         dirlist= os.listdir(input_dir_file)
         input_dir= input_dir_file.rstrip('/')
-        os.makedirs(output_dir_file)
+        output_dir = output_dir_file.rstrip('/')
+        os.makedirs(output_dir)
         pool = mp.Pool()
         for i in dirlist:
-            pool.apply_async(execute_script, args=(i, input_dir+'/'+i, output_dir_file, output_cols))
+            pool.apply_async(execute_script, args=(i, input_dir+'/'+i, output_dir+'/'+i, output_cols))
         pool.close()
         pool.join()
     elif parallel_level == 'SINGLE':
