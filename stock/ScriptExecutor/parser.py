@@ -74,19 +74,20 @@ def parse_script_head(script_path):
 def engine(script_path):
     script, parallel_level, input_dir_file, output_dir_file, output_cols = parse_script_head(script_path)
     if parallel_level == 'FOLDER':
-        dirlist= os.listdir(input_dir_file)
-        input_dir= input_dir_file.rstrip('/')
+        dir_list = os.listdir(input_dir_file)
+        input_dir = input_dir_file.rstrip('/')
         output_dir = output_dir_file.rstrip('/')
         os.makedirs(output_dir)
         pool = mp.Pool()
-        for i in dirlist:
-            pool.apply_async(execute_script, args=(i, input_dir+'/'+i, output_dir+'/'+i, output_cols))
+        for i in dir_list:
+            pool.apply_async(execute_script, args=(i, input_dir + '/' + i, output_dir + '/' + i, output_cols))
         pool.close()
         pool.join()
     elif parallel_level == 'SINGLE':
         execute_script(input_dir_file, script, output_dir_file, output_cols)
 
 
+# noinspection PyShadowingBuiltins
 def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
     data_cols = data.columns.tolist()
