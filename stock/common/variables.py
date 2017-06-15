@@ -33,6 +33,7 @@ class CommonVars:
         self.important_dates_root = "%s/%s " % (self.stock_data_root, 'dates')
         self.hist_file = './.console_history'
         self.hist_file_size = 100000
+        self.QA_DIR = self.stock_data_root + "/quantitative_analysis"
         self.DIR_LIST = [self.stock_data_root + "/announcements",
                          self.stock_data_root + "/back_up/tick_data",
                          self.stock_data_root + "/back_up/data",

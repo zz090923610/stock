@@ -2,7 +2,8 @@ import pandas as pd
 import os
 import math
 import re
-import multiprocess as mp
+import multiprocessing as mp
+from stock.common.variables import COMMON_VARS_OBJ
 
 
 def load_data(input_data):
@@ -11,6 +12,8 @@ def load_data(input_data):
     elif type(input_data) == str:
         if os.path.isfile(input_data):
             data = pd.read_csv(input_data)
+        elif input_data.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
+            data = pd.read_csv(COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
         else:
             data = None
     else:
