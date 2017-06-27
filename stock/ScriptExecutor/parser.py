@@ -29,6 +29,17 @@ def load_data(input_data):
     return data
 
 
+def determine_output_path(output_path):
+    if os.path.isfile(output_path):
+        print('External path')
+        return output_path
+    elif output_path.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
+        print('Internal path, absolute path: %s' % COMMON_VARS_OBJ.QA_DIR + '/' + output_path)
+        return COMMON_VARS_OBJ.QA_DIR + '/' + output_path
+    else:
+        return output_path
+
+
 def load_script(script_path):
     if os.path.isfile(script_path):
         with open(script_path) as f:
@@ -186,5 +197,5 @@ def execute_script(input_data, script, output_path, output_cols):
                     series_member.append('%s_SFT_%d' % (result_col, i))
                 shift_series[result_col] = series_member
 
-    data[output_cols].to_csv(output_path, index=False)
+    data[output_cols].to_csv(determine_output_path(output_path), index=False)
     # return data,shift_series
