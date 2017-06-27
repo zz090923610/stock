@@ -6,14 +6,22 @@ import multiprocessing as mp
 from stock.common.variables import COMMON_VARS_OBJ
 
 
+
 def load_data(input_data):
+    print('func load_data(input_data)\n'
+          '%s %s' %(type(input_data), input_data))
     if type(input_data) == pd.core.frame.DataFrame:
         data = input_data
     elif type(input_data) == str:
         if os.path.isfile(input_data):
+            print('External path')
             data = pd.read_csv(input_data)
         elif input_data.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
-            data = pd.read_csv(COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
+            print('Internal path, absolute path: %s' % COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
+            if os.path.isfile(COMMON_VARS_OBJ.QA_DIR + '/' + input_data):
+                data = pd.read_csv(COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
+            else:
+                data = None
         else:
             data = None
     else:
@@ -56,9 +64,7 @@ def parse_script_head(script_path):
     for line in script:
         if line[0] == 'PLEV':
             parallel_level = line[1]
-        elif line[0] == 'PLFDIN':
-            input_dir_file = line[1]
-        elif line[0] == 'SGFLIN':
+        elif line[0] == 'FIN':
             input_dir_file = line[1]
         elif line[0] == 'PLFDOUT':
             output_dir_file = line[1]
@@ -97,19 +103,20 @@ def execute_script(input_data, script, output_path, output_cols):
     for line in script:
         if line[0] == 'ADDC':
             result_col = line[1]
-            data[result_col] = data[line[2]]
-            for op_source in line[3:]:
-                if op_source in data_cols:
+            data[result_col] = 0
+            for op_source in line[2:]:
+                if op_source.split('_')[0] in shift_series.keys():
+                    for i in range(int(op_source.split('_')[1]),int(op_source.split('_')[2])):
+                       data[result_col] += data[op_source.split('_')[0]+'_sft_%d' % i]
+                elif op_source in data_cols:
                     data[result_col] += data[op_source]
-                elif op_source in shift_series:
-                    for s in shift_series[op_source]:
-                        data[result_col] += data[s]
                 elif op_source in vars.keys():
                     data[result_col] += vars[op_source]
                 elif op_source in imms.keys():
                     data[result_col] += imms[op_source]
                 elif is_num(op_source):
                     data[result_col] += float(op_source)
+
         elif line[0] == 'SUBC':
             result_col = line[1]
             data[result_col] = data[line[2]]
@@ -173,10 +180,11 @@ def execute_script(input_data, script, output_path, output_cols):
             elif len(line) == 5:
                 bit_start = int(line[3])
                 bit_end = int(line[4])
-                series = []
-                for i in range(bit_start, bit_end + 1):
+                series_member = []
+                for i in range(bit_start, bit_end):
                     data['%s_sft_%d' % (result_col, i)] = data[line[2]].shift(i)
-                    series.append('%s_sft_%d' % (result_col, i))
-                shift_series[result_col] = series
+                    series_member.append('%s_SFT_%d' % (result_col, i))
+                shift_series[result_col] = series_member
+
     data[output_cols].to_csv(output_path, index=False)
-    # return data
+    # return data,shift_series
