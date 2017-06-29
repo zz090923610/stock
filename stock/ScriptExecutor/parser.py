@@ -6,35 +6,36 @@ import multiprocessing as mp
 from stock.common.variables import COMMON_VARS_OBJ
 
 
-
 def load_data(input_data):
     print('func load_data(input_data)\n'
-          '%s %s' %(type(input_data), input_data))
+          '%s %s' % (type(input_data), input_data))
     if type(input_data) == pd.core.frame.DataFrame:
         data = input_data
     elif type(input_data) == str:
-        if os.path.isfile(input_data):
-            print('External path')
-            data = pd.read_csv(input_data)
-        elif input_data.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
-            print('Internal path, absolute path: %s' % COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
-            if os.path.isfile(COMMON_VARS_OBJ.QA_DIR + '/' + input_data):
-                data = pd.read_csv(COMMON_VARS_OBJ.QA_DIR + '/' + input_data)
-            else:
-                data = None
-        else:
+        try:
+            data = pd.read_csv(determine_input_path(input_data))
+        except FileNotFoundError:
+            print('Load data file failed: %s' % input_data)
             data = None
     else:
         data = None
     return data
 
 
+def determine_input_path(input_path):
+    if os.path.isfile(input_path):
+        return input_path
+    elif input_path.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
+        if os.path.isfile(COMMON_VARS_OBJ.QA_DIR + '/' + input_path):
+            return COMMON_VARS_OBJ.QA_DIR + '/' + input_path
+    else:
+        return input_path
+
+
 def determine_output_path(output_path):
     if os.path.isfile(output_path):
-        print('External path')
         return output_path
     elif output_path.split('/')[0] in os.listdir(COMMON_VARS_OBJ.QA_DIR):
-        print('Internal path, absolute path: %s' % COMMON_VARS_OBJ.QA_DIR + '/' + output_path)
         return COMMON_VARS_OBJ.QA_DIR + '/' + output_path
     else:
         return output_path
@@ -104,6 +105,55 @@ def engine(script_path):
         execute_script(input_dir_file, script, output_dir_file, output_cols)
 
 
+class ScriptVariable:
+    def __init__(self, v_type, v_val, v_name, series=None):
+        """
+        :param v_type: vars,imms,series,cols
+        """
+        if series is None:
+            series = []
+        self.v_type = v_type
+        self.v_val = v_val
+        self.v_name = v_name
+        self.mutable = True
+        self.series = series
+
+    def gen_sub_series_list(self, series_str):
+        series_list = []
+        splited_str = series_str.split('_')
+        name = splited_str[0]
+        if len(splited_str) == 2:
+            start = 0
+            end = int(splited_str[1])
+        elif len(splited_str) == 3:
+            start = int(splited_str[1])
+            end = int(splited_str[2])
+        else:
+            start = 0
+            end = len(self.series)
+        for i in range(start, end):
+            series_list.append('%s_SERIES_%d' % (name, i))
+        return series_list
+
+    def respond(self):
+        if self.v_type == 'var':
+            return [self.v_val]
+        elif self.v_type == 'imm':
+            return [self.v_val]
+        elif self.v_type == 'col':
+            return [self.v_name]
+        elif self.v_type == 'series':
+            return self.gen_sub_series_list(self.v_name)
+
+class VariableHdl:
+    def __init__(self):
+        pass
+    def get_var_by_name(self,name):
+        pass
+    def add_var(self):
+        pass
+
+
 # noinspection PyShadowingBuiltins
 def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
@@ -117,8 +167,8 @@ def execute_script(input_data, script, output_path, output_cols):
             data[result_col] = 0
             for op_source in line[2:]:
                 if op_source.split('_')[0] in shift_series.keys():
-                    for i in range(int(op_source.split('_')[1]),int(op_source.split('_')[2])):
-                       data[result_col] += data[op_source.split('_')[0]+'_sft_%d' % i]
+                    for i in range(int(op_source.split('_')[1]), int(op_source.split('_')[2])):
+                        data[result_col] += data[op_source.split('_')[0] + '_sft_%d' % i]
                 elif op_source in data_cols:
                     data[result_col] += data[op_source]
                 elif op_source in vars.keys():
