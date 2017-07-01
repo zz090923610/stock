@@ -106,7 +106,7 @@ def engine(script_path):
 
 
 class ScriptVariable:
-    def __init__(self, v_type, v_val, v_name, series=None):
+    def __init__(self, v_type, v_name, v_val=None, series=None):
         """
         :param v_type: vars,imms,series,cols
         """
@@ -135,7 +135,7 @@ class ScriptVariable:
             series_list.append('%s_SERIES_%d' % (name, i))
         return series_list
 
-    def respond(self):
+    def respond(self, pass_in=''):
         if self.v_type == 'var':
             return [self.v_val]
         elif self.v_type == 'imm':
@@ -143,109 +143,106 @@ class ScriptVariable:
         elif self.v_type == 'col':
             return [self.v_name]
         elif self.v_type == 'series':
-            return self.gen_sub_series_list(self.v_name)
+            if pass_in != '':
+                return self.gen_sub_series_list(pass_in)
+            else:
+                return self.gen_sub_series_list(self.v_name)
+
 
 class VariableHdl:
     def __init__(self):
-        pass
-    def get_var_by_name(self,name):
-        pass
-    def add_var(self):
-        pass
+        self.vdict = {}
+
+    def get_var_by_name(self, v_name):
+        if v_name in self.vdict.keys():
+            return self.vdict[v_name]
+        else:
+            return None
+
+    def add_var(self, v_name, v_type, v_val=None, series=None):
+        self.vdict[v_name] = ScriptVariable(v_type, v_name, v_val=v_val, series=series)
+
+    def respond_var(self, v_name):
+        if v_name in self.vdict.keys():
+            return self.vdict[v_name].respond(pass_in=v_name)
+        elif is_num(v_name):
+            return [float(v_name)]
+        else:
+            return []
 
 
 # noinspection PyShadowingBuiltins
 def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
     data_cols = data.columns.tolist()
-    vars = {}
-    imms = {}
-    shift_series = {}
+    var_hdl = VariableHdl()
+    for i in data_cols:
+        var_hdl.add_var(i, 'col')
+
     for line in script:
         if line[0] == 'ADDC':
-            result_col = line[1]
-            data[result_col] = 0
+            opts_cols = []
             for op_source in line[2:]:
-                if op_source.split('_')[0] in shift_series.keys():
-                    for i in range(int(op_source.split('_')[1]), int(op_source.split('_')[2])):
-                        data[result_col] += data[op_source.split('_')[0] + '_sft_%d' % i]
-                elif op_source in data_cols:
-                    data[result_col] += data[op_source]
-                elif op_source in vars.keys():
-                    data[result_col] += vars[op_source]
-                elif op_source in imms.keys():
-                    data[result_col] += imms[op_source]
-                elif is_num(op_source):
-                    data[result_col] += float(op_source)
-
+                opts_cols += var_hdl.respond_var(op_source)
+            result_col = data[opts_cols[0]]
+            for col in opts_cols[1:]:
+                data[result_col] += data[col]
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'SUBC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            for op_source in line[3:]:
-                if op_source in data_cols:
-                    data[result_col] -= data[op_source]
-                elif op_source in vars.keys():
-                    data[result_col] -= vars[op_source]
-                elif op_source in imms.keys():
-                    data[result_col] -= imms[op_source]
-                elif is_num(op_source):
-                    data[result_col] -= float(op_source)
+            opts_cols = []
+            for op_source in line[2:]:
+                opts_cols += var_hdl.respond_var(op_source)
+            result_col = data[opts_cols[0]]
+            for col in opts_cols[1:]:
+                data[result_col] -= data[col]
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'MULC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            for op_source in line[3:]:
-                if op_source in data_cols:
-                    data[result_col] *= data[op_source]
-                elif op_source in vars.keys():
-                    data[result_col] *= vars[op_source]
-                elif op_source in imms.keys():
-                    data[result_col] *= imms[op_source]
-                elif is_num(op_source):
-                    data[result_col] *= float(op_source)
+            opts_cols = []
+            for op_source in line[2:]:
+                opts_cols += var_hdl.respond_var(op_source)
+            result_col = data[opts_cols[0]]
+            for col in opts_cols[1:]:
+                data[result_col] *= data[col]
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'DIVC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            for op_source in line[3:]:
-                if op_source in data_cols:
-                    data[result_col] /= data[op_source]
-                elif op_source in vars.keys():
-                    data[result_col] /= vars[op_source]
-                elif op_source in imms.keys():
-                    data[result_col] /= imms[op_source]
-                elif is_num(op_source):
-                    data[result_col] /= float(op_source)
+            opts_cols = []
+            for op_source in line[2:]:
+                opts_cols += var_hdl.respond_var(op_source)
+            result_col = data[opts_cols[0]]
+            for col in opts_cols[1:]:
+                data[result_col] /= data[col]
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'MODC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            for op_source in line[3:]:
-                if op_source in data_cols:
-                    data[result_col] %= data[op_source]
-                elif op_source in vars.keys():
-                    data[result_col] %= vars[op_source]
-                elif op_source in imms.keys():
-                    data[result_col] %= imms[op_source]
-                elif is_num(op_source):
-                    data[result_col] %= float(op_source)
+            opts_cols = []
+            for op_source in line[2:]:
+                opts_cols += var_hdl.respond_var(op_source)
+            result_col = data[opts_cols[0]]
+            for col in opts_cols[1:]:
+                data[result_col] %= data[col]
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'SQRTC':
             result_col = line[1]
             data[result_col] = data[line[2]]
             data[result_col] = data[result_col].apply(math.sqrt)
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'EXPC':
             result_col = line[1]
             data[result_col] = data[line[2]]
             data[result_col] = data[result_col].apply(math.exp)
+            var_hdl.add_var(result_col, 'col')
         elif line[0] == 'SHIFT':
             result_col = line[1]
             if len(line) == 4:
                 data[result_col] = data[line[2]].shift(int(line[3]))
+                var_hdl.add_var(result_col, 'col')
             elif len(line) == 5:
                 bit_start = int(line[3])
                 bit_end = int(line[4])
                 series_member = []
                 for i in range(bit_start, bit_end):
-                    data['%s_sft_%d' % (result_col, i)] = data[line[2]].shift(i)
-                    series_member.append('%s_SFT_%d' % (result_col, i))
-                shift_series[result_col] = series_member
-
+                    data['%s_SERIES_%d' % (result_col, i)] = data[line[2]].shift(i)
+                    series_member.append('%s_SERIES_%d' % (result_col, i))
+                    var_hdl.add_var('%s_SERIES_%d' % (result_col, i), 'col')
+                var_hdl.add_var(result_col,'series',series=series_member)
     data[output_cols].to_csv(determine_output_path(output_path), index=False)
     # return data,shift_series
