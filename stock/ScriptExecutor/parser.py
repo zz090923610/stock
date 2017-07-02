@@ -184,65 +184,73 @@ def execute_script(input_data, script, output_path, output_cols):
             opts_cols = []
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
-            result_col = data[opts_cols[0]]
+            result_col_name = opts_cols[0]
             for col in opts_cols[1:]:
-                data[result_col] += data[col]
-            var_hdl.add_var(result_col, 'col')
+                data[result_col_name] += data[col]
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'SUBC':
             opts_cols = []
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
-            result_col = data[opts_cols[0]]
+            result_col_name = opts_cols[0]
             for col in opts_cols[1:]:
-                data[result_col] -= data[col]
-            var_hdl.add_var(result_col, 'col')
+                data[result_col_name] -= data[col]
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'MULC':
             opts_cols = []
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
-            result_col = data[opts_cols[0]]
+            result_col_name = opts_cols[0]
             for col in opts_cols[1:]:
-                data[result_col] *= data[col]
-            var_hdl.add_var(result_col, 'col')
+                data[result_col_name] *= data[col]
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'DIVC':
             opts_cols = []
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
-            result_col = data[opts_cols[0]]
+            result_col_name = opts_cols[0]
             for col in opts_cols[1:]:
-                data[result_col] /= data[col]
-            var_hdl.add_var(result_col, 'col')
+                data[result_col_name] /= data[col]
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'MODC':
             opts_cols = []
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
-            result_col = data[opts_cols[0]]
+            result_col_name = opts_cols[0]
             for col in opts_cols[1:]:
-                data[result_col] %= data[col]
-            var_hdl.add_var(result_col, 'col')
+                data[result_col_name] %= data[col]
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'SQRTC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            data[result_col] = data[result_col].apply(math.sqrt)
-            var_hdl.add_var(result_col, 'col')
+            result_col_name = line[1]
+            data[result_col_name] = data[line[2]]
+            data[result_col_name] = data[result_col_name].apply(math.sqrt)
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'EXPC':
-            result_col = line[1]
-            data[result_col] = data[line[2]]
-            data[result_col] = data[result_col].apply(math.exp)
-            var_hdl.add_var(result_col, 'col')
+            result_col_name = line[1]
+            data[result_col_name] = data[line[2]]
+            data[result_col_name] = data[result_col_name].apply(math.exp)
+            var_hdl.add_var(result_col_name, 'col')
         elif line[0] == 'SHIFT':
-            result_col = line[1]
+            result_col_name = line[1]
             if len(line) == 4:
-                data[result_col] = data[line[2]].shift(int(line[3]))
-                var_hdl.add_var(result_col, 'col')
+                data[result_col_name] = data[line[2]].shift(int(line[3]))
+                var_hdl.add_var(result_col_name, 'col')
             elif len(line) == 5:
                 bit_start = int(line[3])
                 bit_end = int(line[4])
                 series_member = []
                 for i in range(bit_start, bit_end):
-                    data['%s_SERIES_%d' % (result_col, i)] = data[line[2]].shift(i)
-                    series_member.append('%s_SERIES_%d' % (result_col, i))
-                    var_hdl.add_var('%s_SERIES_%d' % (result_col, i), 'col')
-                var_hdl.add_var(result_col,'series',series=series_member)
+                    data['%s_SERIES_%d' % (result_col_name, i)] = data[line[2]].shift(i)
+                    series_member.append('%s_SERIES_%d' % (result_col_name, i))
+                    var_hdl.add_var('%s_SERIES_%d' % (result_col_name, i), 'col')
+                var_hdl.add_var(result_col_name,'series',series=series_member)
+        elif line[0] == 'VAR':
+            val = float(line[2])
+            result_col_name = line[1]
+            var_hdl.add_var(result_col_name, 'var', v_val=val)
+        elif line[0] == 'IMM':
+            val = float(line[2])
+            result_col_name = line[1]
+            var_hdl.add_var(result_col_name, 'imm', v_val=val)
     data[output_cols].to_csv(determine_output_path(output_path), index=False)
     # return data,shift_series
