@@ -5,9 +5,9 @@
 # SGFLOUT	path_to_single_output_file
 # OUTCOLS
 
-PLEV	SINGLE
-FIN	ohcl/000001.csv
-SGFLOUT /tmp/test_out.csv
+PLEV	FOLDER
+FIN	ohcl
+PLFDOUT ma
 OUTCOLS date,open,high,close,low,AVEDAY,ma5,ma10,ma20
 
 ADDC   SUMALL open high close low
