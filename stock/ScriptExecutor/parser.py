@@ -7,15 +7,15 @@ from stock.common.variables import COMMON_VARS_OBJ
 
 
 def load_data(input_data):
-#    print('func load_data(input_data)\n'
-#          '%s %s' % (type(input_data), input_data))
+    #    print('func load_data(input_data)\n'
+    #          '%s %s' % (type(input_data), input_data))
     if type(input_data) == pd.core.frame.DataFrame:
         data = input_data
     elif type(input_data) == str:
         try:
             data = pd.read_csv(determine_input_path(input_data))
         except FileNotFoundError:
-#            print('Load data file failed: %s' % input_data)
+            #            print('Load data file failed: %s' % input_data)
             data = None
     else:
         data = None
@@ -77,15 +77,13 @@ def parse_script_head(script_path):
         if line[0] == 'PLEV':
             parallel_level = line[1]
         elif line[0] == 'FIN':
-            input_dir_file =determine_input_path( line[1])
+            input_dir_file = determine_input_path(line[1])
         elif line[0] == 'PLFDOUT':
             output_dir_file = determine_output_path(line[1])
         elif line[0] == 'SGFLOUT':
             output_dir_file = determine_output_path(line[1])
         elif line[0] == 'OUTCOLS':
             output_cols = re.split(r',', line[1])
-    print(23333, input_dir_file)
-
     print("Parallel level: %s\nInput path: %s\n Output path: %s\n Output cols: %r" %
           (parallel_level, input_dir_file, output_dir_file, output_cols))
     return script, parallel_level, input_dir_file, output_dir_file, output_cols
@@ -151,8 +149,9 @@ class ScriptVariable:
                 return self.gen_sub_series_list(pass_in)
             else:
                 return self.gen_sub_series_list(self.v_name)
+
     def print_self(self):
-        print(self.v_name,self.v_type,self.v_val,self.series)
+        print(self.v_name, self.v_type, self.v_val, self.series)
 
 
 class VariableHdl:
@@ -182,9 +181,7 @@ def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
     data_cols = data.columns.tolist()
     var_hdl = VariableHdl()
-    for i in data_cols:
-        var_hdl.add_var(i, 'col')
-
+    [var_hdl.add_var(i, 'col') for i in data_cols]
     for line in script:
         if line[0] == 'ADDC':
             opts_cols = []
@@ -203,7 +200,7 @@ def execute_script(input_data, script, output_path, output_cols):
             for op_source in line[2:]:
                 opts_cols += var_hdl.respond_var(op_source)
             result_col_name = line[1]
-            data[result_col_name] =data[opts_cols[0]]
+            data[result_col_name] = data[opts_cols[0]]
             for col in opts_cols[1:]:
                 if is_num(col):
                     data[result_col_name] -= col
@@ -269,7 +266,7 @@ def execute_script(input_data, script, output_path, output_cols):
                     data['%s_SERIES_%d' % (result_col_name, i)] = data[line[2]].shift(i)
                     series_member.append('%s_SERIES_%d' % (result_col_name, i))
                     var_hdl.add_var('%s_SERIES_%d' % (result_col_name, i), 'col')
-                var_hdl.add_var(result_col_name,'series',series=series_member)
+                var_hdl.add_var(result_col_name, 'series', series=series_member)
         elif line[0] == 'VAR':
             val = float(line[2])
             result_col_name = line[1]
