@@ -176,13 +176,33 @@ class VariableHdl:
             return []
 
 
+class DFHdl:
+    def __init__(self):
+        self.df_list = []
+        self.current = None
+
+    def add_df(self, name, set_current=True):
+        if name not in self.df_list:
+            self.df_list.append(name)
+        if set_current:
+            self.set_current(name)
+
+    def set_current(self, name):
+        if name in self.df_list:
+            self.current = name
+        else:
+            pass
+
+
 # noinspection PyShadowingBuiltins
 def execute_script(input_data, script, output_path, output_cols):
     data = load_data(input_data)
     data_cols = data.columns.tolist()
     var_hdl = VariableHdl()
     [var_hdl.add_var(i, 'col') for i in data_cols]
-    for line in script:
+    df_hdl = DFHdl()
+    df_hdl.add_df('data')
+    for (idx, line) in enumerate(script):
         if line[0] == 'ADDC':
             opts_cols = []
             for op_source in line[2:]:
@@ -275,6 +295,42 @@ def execute_script(input_data, script, output_path, output_cols):
             val = float(line[2])
             result_col_name = line[1]
             var_hdl.add_var(result_col_name, 'imm', v_val=val)
+        elif line[0] == 'SWITCH':
+            to_df = line[1]
+            if to_df in df_hdl.df_dict.keys():
+                data = df_hdl.df_dict[to_df]
+                data_cols = data.columns.tolist()
+        elif line[0] == 'FLT':
+            new_df_name = line[1]
+            ori_df_name = line[2]
+            conds = line[3]
+            half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % ori_df_name, conds)
+            full_way = '%s = %s[%s]' % (new_df_name, ori_df_name, half_way)
+            exec(full_way)
+            df_hdl.add_df(new_df_name)
+        elif line[0] == 'JUDGE':
+            result_col_name = line[1]
+            df_name = line[2]
+            conds = line[3]
+            half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % df_name, conds)
+            full_way = '%s["%s"] = %s' % (df_name, result_col_name, half_way)
+            exec(full_way)
+            var_hdl.add_var(result_col_name, 'col')
+        elif line[0] == 'APPLYH':
+            result_col_name = line[1]
+            func = line[2]
+            cols = '%s[[' % df_hdl.current + \
+                   ', '.join(list(map(lambda i: '"%s"' % i, line[3:]))) + \
+                   ']]'
+            func = parse_lambda(script[idx + 1]) if func.upper() == 'LAMBDA' else func
+            full_cmd = '%s[\'%s\'] = %s.apply(%s,axis=1)' % (df_hdl.current, result_col_name, cols, func)
+            exec(full_cmd)
+            var_hdl.add_var(result_col_name, 'col')
 
     data[output_cols].to_csv(output_path, index=False)
     # return data,shift_series
+
+
+def parse_lambda(line):
+    line = ['lambda'] + line[1:]
+    return ' '.join(line)
