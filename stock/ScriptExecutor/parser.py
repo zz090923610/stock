@@ -83,7 +83,7 @@ def parse_script_head(script_path):
         elif line[0] == 'SGFLOUT':
             output_dir_file = determine_output_path(line[1])
         elif line[0] == 'OUTCOLS':
-            output_cols = re.split(r',', line[1])
+            output_cols += re.split(r',', line[1])
     print("Parallel level: %s\nInput path: %s\n Output path: %s\n Output cols: %r" %
           (parallel_level, input_dir_file, output_dir_file, output_cols))
     return script, parallel_level, input_dir_file, output_dir_file, output_cols
@@ -202,132 +202,135 @@ def execute_script(input_data, script, output_path, output_cols):
     [var_hdl.add_var(i, 'col') for i in data_cols]
     df_hdl = DFHdl()
     df_hdl.add_df('data')
-    for (idx, line) in enumerate(script):
-        if line[0] == 'ADDC':
-            opts_cols = []
-            for op_source in line[2:]:
-                opts_cols += var_hdl.respond_var(op_source)
-            result_col_name = line[1]
-            data[result_col_name] = 0
-            for col in opts_cols:
-                if is_num(col):
-                    data[result_col_name] += col
-                else:
-                    data[result_col_name] += data[col]
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'SUBC':
-            opts_cols = []
-            for op_source in line[2:]:
-                opts_cols += var_hdl.respond_var(op_source)
-            result_col_name = line[1]
-            data[result_col_name] = data[opts_cols[0]]
-            for col in opts_cols[1:]:
-                if is_num(col):
-                    data[result_col_name] -= col
-                else:
-                    data[result_col_name] -= data[col]
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'MULC':
-            opts_cols = []
-            for op_source in line[2:]:
-                opts_cols += var_hdl.respond_var(op_source)
-            result_col_name = line[1]
-            data[result_col_name] = data[opts_cols[0]]
-            for col in opts_cols[1:]:
-                if is_num(col):
-                    data[result_col_name] *= col
-                else:
-                    data[result_col_name] *= data[col]
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'DIVC':
-            opts_cols = []
-            for op_source in line[2:]:
-                opts_cols += var_hdl.respond_var(op_source)
-            result_col_name = line[1]
-            data[result_col_name] = data[opts_cols[0]]
-            for col in opts_cols[1:]:
-                if is_num(col):
-                    data[result_col_name] /= col
-                else:
-                    data[result_col_name] /= data[col]
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'MODC':
-            opts_cols = []
-            for op_source in line[2:]:
-                opts_cols += var_hdl.respond_var(op_source)
-            result_col_name = line[1]
-            data[result_col_name] = data[opts_cols[0]]
-            for col in opts_cols[1:]:
-                if is_num(col):
-                    data[result_col_name] %= col
-                else:
-                    data[result_col_name] %= data[col]
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'SQRTC':
-            result_col_name = line[1]
-            data[result_col_name] = data[line[2]]
-            data[result_col_name] = data[result_col_name].apply(math.sqrt)
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'EXPC':
-            result_col_name = line[1]
-            data[result_col_name] = data[line[2]]
-            data[result_col_name] = data[result_col_name].apply(math.exp)
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'SHIFT':
-            result_col_name = line[1]
-            if len(line) == 4:
-                data[result_col_name] = data[line[2]].shift(int(line[3]))
+    try:
+        for (idx, line) in enumerate(script):
+            if line[0] == 'ADDC':
+                opts_cols = []
+                for op_source in line[2:]:
+                    opts_cols += var_hdl.respond_var(op_source)
+                result_col_name = line[1]
+                data[result_col_name] = 0
+                for col in opts_cols:
+                    if is_num(col):
+                        data[result_col_name] += col
+                    else:
+                        data[result_col_name] += data[col]
                 var_hdl.add_var(result_col_name, 'col')
-            elif len(line) == 5:
-                bit_start = int(line[3])
-                bit_end = int(line[4])
-                series_member = []
-                for i in range(bit_start, bit_end):
-                    data['%s_SERIES_%d' % (result_col_name, i)] = data[line[2]].shift(i)
-                    series_member.append('%s_SERIES_%d' % (result_col_name, i))
-                    var_hdl.add_var('%s_SERIES_%d' % (result_col_name, i), 'col')
-                var_hdl.add_var(result_col_name, 'series', series=series_member)
-        elif line[0] == 'VAR':
-            val = float(line[2])
-            result_col_name = line[1]
-            var_hdl.add_var(result_col_name, 'var', v_val=val)
-        elif line[0] == 'IMM':
-            val = float(line[2])
-            result_col_name = line[1]
-            var_hdl.add_var(result_col_name, 'imm', v_val=val)
-        elif line[0] == 'SWITCH':
-            to_df = line[1]
-            if to_df in df_hdl.df_dict.keys():
-                data = df_hdl.df_dict[to_df]
-                data_cols = data.columns.tolist()
-        elif line[0] == 'FLT':
-            new_df_name = line[1]
-            ori_df_name = line[2]
-            conds = line[3]
-            half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % ori_df_name, conds)
-            full_way = '%s = %s[%s]' % (new_df_name, ori_df_name, half_way)
-            exec(full_way)
-            df_hdl.add_df(new_df_name)
-        elif line[0] == 'JUDGE':
-            result_col_name = line[1]
-            df_name = line[2]
-            conds = line[3]
-            half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % df_name, conds)
-            full_way = '%s["%s"] = %s' % (df_name, result_col_name, half_way)
-            exec(full_way)
-            var_hdl.add_var(result_col_name, 'col')
-        elif line[0] == 'APPLYH':
-            result_col_name = line[1]
-            func = line[2]
-            cols = '%s[[' % df_hdl.current + \
-                   ', '.join(list(map(lambda i: '"%s"' % i, line[3:]))) + \
-                   ']]'
-            func = parse_lambda(script[idx + 1]) if func.upper() == 'LAMBDA' else func
-            full_cmd = '%s[\'%s\'] = %s.apply(%s,axis=1)' % (df_hdl.current, result_col_name, cols, func)
-            exec(full_cmd)
-            var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'SUBC':
+                opts_cols = []
+                for op_source in line[2:]:
+                    opts_cols += var_hdl.respond_var(op_source)
+                result_col_name = line[1]
+                data[result_col_name] = data[opts_cols[0]]
+                for col in opts_cols[1:]:
+                    if is_num(col):
+                        data[result_col_name] -= col
+                    else:
+                        data[result_col_name] -= data[col]
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'MULC':
+                opts_cols = []
+                for op_source in line[2:]:
+                    opts_cols += var_hdl.respond_var(op_source)
+                result_col_name = line[1]
+                data[result_col_name] = data[opts_cols[0]]
+                for col in opts_cols[1:]:
+                    if is_num(col):
+                        data[result_col_name] *= col
+                    else:
+                        data[result_col_name] *= data[col]
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'DIVC':
+                opts_cols = []
+                for op_source in line[2:]:
+                    opts_cols += var_hdl.respond_var(op_source)
+                result_col_name = line[1]
+                data[result_col_name] = data[opts_cols[0]]
+                for col in opts_cols[1:]:
+                    if is_num(col):
+                        data[result_col_name] /= col
+                    else:
+                        data[result_col_name] /= data[col]
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'MODC':
+                opts_cols = []
+                for op_source in line[2:]:
+                    opts_cols += var_hdl.respond_var(op_source)
+                result_col_name = line[1]
+                data[result_col_name] = data[opts_cols[0]]
+                for col in opts_cols[1:]:
+                    if is_num(col):
+                        data[result_col_name] %= col
+                    else:
+                        data[result_col_name] %= data[col]
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'SQRTC':
+                result_col_name = line[1]
+                data[result_col_name] = data[line[2]]
+                data[result_col_name] = data[result_col_name].apply(math.sqrt)
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'EXPC':
+                result_col_name = line[1]
+                data[result_col_name] = data[line[2]]
+                data[result_col_name] = data[result_col_name].apply(math.exp)
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'SHIFT':
+                result_col_name = line[1]
+                if len(line) == 4:
+                    data[result_col_name] = data[line[2]].shift(int(line[3]))
+                    var_hdl.add_var(result_col_name, 'col')
+                elif len(line) == 5:
+                    bit_start = int(line[3])
+                    bit_end = int(line[4])
+                    series_member = []
+                    for i in range(bit_start, bit_end):
+                        data['%s_SERIES_%d' % (result_col_name, i)] = data[line[2]].shift(i)
+                        series_member.append('%s_SERIES_%d' % (result_col_name, i))
+                        var_hdl.add_var('%s_SERIES_%d' % (result_col_name, i), 'col')
+                    var_hdl.add_var(result_col_name, 'series', series=series_member)
+            elif line[0] == 'VAR':
+                val = float(line[2])
+                result_col_name = line[1]
+                var_hdl.add_var(result_col_name, 'var', v_val=val)
+            elif line[0] == 'IMM':
+                val = float(line[2])
+                result_col_name = line[1]
+                var_hdl.add_var(result_col_name, 'imm', v_val=val)
+            elif line[0] == 'SWITCH':
+                to_df = line[1]
+                if to_df in df_hdl.df_dict.keys():
+                    data = df_hdl.df_dict[to_df]
+                    data_cols = data.columns.tolist()
+            elif line[0] == 'FLT':
+                new_df_name = line[1]
+                ori_df_name = line[2]
+                conds = line[3]
+                half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % ori_df_name, conds)
+                full_way = '%s = %s[%s]' % (new_df_name, ori_df_name, half_way)
+                exec(full_way)
+                df_hdl.add_df(new_df_name)
+            elif line[0] == 'JUDGE':
+                result_col_name = line[1]
+                df_name = line[2]
+                conds = line[3]
+                half_way = re.sub(r'([a-zA-Z][_a-zA-Z0-9]*)', r'%s["\1"]' % df_name, conds)
+                full_way = '%s["%s"] = %s' % (df_name, result_col_name, half_way)
+                exec(full_way)
+                var_hdl.add_var(result_col_name, 'col')
+            elif line[0] == 'APPLYH':
+                result_col_name = line[1]
+                func = line[2]
+                cols = '%s[[' % df_hdl.current + \
+                       ', '.join(list(map(lambda i: '"%s"' % i, line[3:]))) + \
+                       ']]'
+                func = parse_lambda(script[idx + 1]) if func.upper() == 'LAMBDA' else func
+                full_cmd = '%s[\'%s\'] = %s.apply(%s,axis=1)' % (df_hdl.current, result_col_name, cols, func)
+                exec(full_cmd)
+                var_hdl.add_var(result_col_name, 'col')
 
-    data[output_cols].to_csv(output_path, index=False)
+        data[output_cols].to_csv(output_path, index=False)
+    except Exception as e:
+        print(e)
     # return data,shift_series
 
 
