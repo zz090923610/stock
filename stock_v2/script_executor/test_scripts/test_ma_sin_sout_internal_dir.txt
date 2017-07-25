@@ -1,0 +1,32 @@
+# PLEV	FOLDER/SINGLE
+# FIN	path_to_parallel_input_execute_folder
+# FIN	path_to_single_input_file
+# PLFDOUT	path_to_parallel_output_execute_folder
+# SGFLOUT	path_to_single_output_file
+# OUTCOLS
+
+PLEV	SINGLE
+FIN	ohcl/000001.csv
+SGFLOUT /tmp/test_out.csv
+OUTCOLS date,open,high,close,low,AVEDAY,ma5,ma10,ma20
+
+ADDC   SUMALL open high close low
+DIVC   AVEDAY SUMALL 4
+SHIFT AVES AVEDAY 0 20
+
+ADDC SUMAVES5 AVES_0_5
+DIVC ma5 SUMAVES5 5
+
+ADDC SUMAVES5 AVES_0_10
+DIVC ma10 SUMAVES5 10
+
+ADDC SUMAVES5 AVES_0_20
+DIVC ma20 SUMAVES5 20
+
+
+
+
+
+
+
+

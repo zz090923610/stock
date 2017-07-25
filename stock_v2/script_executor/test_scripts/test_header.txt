@@ -1,0 +1,18 @@
+# PLEV	FOLDER/SINGLE
+# PLFDIN	path_to_parallel_input_execute_folder
+# SGFLIN	path_to_single_input_file
+# PLFDOUT	path_to_parallel_output_execute_folder
+# SGFLOUT	path_to_single_output_file
+# OUTCOLS
+
+PLEV	FOLDER
+PLFDIN	./stock/stock/ScriptExecutor/test_pl
+SGFLOUT /tmp/test_out.csv
+OUTCOLS date,open,close
+
+
+
+
+
+
+
