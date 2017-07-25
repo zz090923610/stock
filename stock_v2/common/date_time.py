@@ -19,6 +19,8 @@
 import os
 import re
 
+I18N = 'CHN'  # FIXME: need to implement full i18n support
+
 
 def load_config(config_path):
     if os.path.isfile(config_path):
@@ -35,3 +37,67 @@ def load_config(config_path):
                 config.append(split_line)
     return config
 
+
+class Period:
+    def __init__(self, name, status, begin, end):
+        self.name = name
+        self.status = status
+        self.begin = begin
+        self.end = end
+        self.time_str = self.begin + '_' + self.end
+
+    def summary(self):
+        return self.name, self.status, self.begin, self.end
+
+
+class MktInfo:
+    def __init__(self):
+        self.mkt = ''
+        self.timezone = ''
+        self.special_close_day_list = None
+        self.special_open_day_list = None
+        self.basic_mkt_open_day_rule = ''
+        self.period_dict_key_name = {}
+        self.period_dict_key_time = {}
+
+
+def load_special_date_file(path):
+    return True
+
+
+def parsing_cfg(cfg):
+    mkt_info = MktInfo()
+    i18n_dict = {}
+    for (idx, line) in enumerate(cfg):
+        if line[0] == 'MARKET':
+            mkt_info.mkt = line[1]
+        elif line[0] == 'TIME_ZONE':
+            mkt_info.timezone = line[1]
+        elif line[0] == 'SPECIAL_CLOSE_DATE_FILE':
+            mkt_info.special_close_day_list = load_special_date_file(line[1])
+        elif line[0] == 'SPECIAL_OPEN_DATE_FILE':
+            mkt_info.special_open_day_list = load_special_date_file(line[1])
+        elif line[0] == 'BASIC_OPEN_DATE':
+            mkt_info.basic_mkt_open_day_rule = line[1]
+        elif line[0] == 'PERIOD':
+            name = line[1]
+            status = cfg[idx + 1][1]
+            begin = cfg[idx + 2][1]
+            end = cfg[idx + 3][1]
+            new_period = Period(name, status, begin, end)
+            mkt_info.period_dict_key_name[name] = new_period
+            mkt_info.period_dict_key_time[new_period.time_str] = new_period
+        elif line[0] == 'I18N':
+            key = line[1]
+            translate_dict = {}
+            for i in line[2:]:
+                lang = i.split(':')[0]
+                trans = i.split(':')[1]
+                translate_dict[lang] = trans
+            i18n_dict[key] = translate_dict
+    return mkt_info, i18n_dict
+
+
+def get_trans(target, i18n_dict):
+    # FIXME need more properly i18n support
+    return i18n_dict[target][I18N]
