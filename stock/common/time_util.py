@@ -73,9 +73,7 @@ def update_market_open_date_list():
     print('Updating market dates list')
     b = ts.get_k_data('000001', index=True, start=COMMON_VARS_OBJ.START_DATE)
     days_cnt = len(b.index)
-    days_list = []
-    for idx in range(0, days_cnt):
-        days_list.append(b.iloc[idx].date)
+    days_list = b['date'].tolist()
     save_market_open_date_list(days_list)
     return days_list
 

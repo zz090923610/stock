@@ -4,6 +4,9 @@ import math
 import re
 import multiprocessing as mp
 from stock.common.variables import COMMON_VARS_OBJ
+from stock_v2.common.communication import simple_publish
+
+mqtt_msg_topic = 'script_executor'
 
 
 def load_data(input_data):
@@ -94,15 +97,17 @@ def engine(script_path):
     if parallel_level == 'FOLDER':
         dir_list = os.listdir(input_dir_file)
         input_dir = input_dir_file.rstrip('/')
-        print(input_dir)
         output_dir = output_dir_file.rstrip('/')
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         pool = mp.Pool()
+        simple_publish(mqtt_msg_topic, '%s/parallel_start_%s_%d' %
+                       (mqtt_msg_topic, script_path.split('/')[-1], len(dir_list)))
         for i in dir_list:
             pool.apply_async(execute_script, args=(input_dir + '/' + i, script, output_dir + '/' + i, output_cols))
         pool.close()
         pool.join()
+        simple_publish(mqtt_msg_topic, '%s/parallel_finish_%s' % (mqtt_msg_topic, script_path.split('/')[-1]))
     elif parallel_level == 'SINGLE':
         execute_script(input_dir_file, script, output_dir_file, output_cols)
 
@@ -332,8 +337,10 @@ def execute_script(input_data, script, output_path, output_cols):
         else:
             return data[output_cols]
     except Exception as e:
-        print(e)
+        simple_publish(mqtt_msg_topic, '%s/exception_%s_%r' % (mqtt_msg_topic, output_path.split('/')[-1], e))
+        return
         # return data,shift_series
+    simple_publish(mqtt_msg_topic, '%s/applied_%s' % (mqtt_msg_topic, output_path.split('/')[-1]))
 
 
 def parse_lambda(line):
