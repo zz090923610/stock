@@ -101,13 +101,12 @@ def engine(script_path):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         pool = mp.Pool()
-        simple_publish(mqtt_msg_topic, '%s/parallel_start_%s_%d' %
-                       (mqtt_msg_topic, script_path.split('/')[-1], len(dir_list)))
+        simple_publish(mqtt_msg_topic, '%s/parallel_start_%s_%d' % (mqtt_msg_topic, script_path, len(dir_list)))
         for i in dir_list:
             pool.apply_async(execute_script, args=(input_dir + '/' + i, script, output_dir + '/' + i, output_cols))
         pool.close()
         pool.join()
-        simple_publish(mqtt_msg_topic, '%s/parallel_finish_%s' % (mqtt_msg_topic, script_path.split('/')[-1]))
+        simple_publish(mqtt_msg_topic, '%s/parallel_finish_%s' % (mqtt_msg_topic, script_path))
     elif parallel_level == 'SINGLE':
         execute_script(input_dir_file, script, output_dir_file, output_cols)
 
