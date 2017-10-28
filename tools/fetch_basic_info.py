@@ -47,7 +47,7 @@ class BasicInfoUpdater:
                       'areaName': None,
                       'stockType': 1}
         s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params)
+        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
         csv_data = result.text
         csv_data = csv_data.replace('\t', ',')
         csv_data = csv_data.replace(' ', '')
@@ -67,7 +67,7 @@ class BasicInfoUpdater:
         get_params = {'SHOWTYPE': 'xlsx', 'CATALOGID': 1110, market_type_dict[market_type][0]: 1, 'ENCODE': 1,
                       'TABKEY': market_type_dict[market_type][1]}
         s = requests.session()
-        result = s.get(req_url, headers=get_headers, params=get_params)
+        result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
         with open('%s/szse_company.xlsx' % self.out_dir, 'wb') as f:
             f.write(result.content)
 
