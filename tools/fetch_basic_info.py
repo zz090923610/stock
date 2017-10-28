@@ -64,12 +64,13 @@ class BasicInfoUpdater:
                       'TABKEY': market_type_dict[market_type][1]}
         s = requests.session()
         result = s.get(req_url, headers=get_headers, params=get_params, verify=False)
-        with open('/tmp/szse_company.xlsx', 'wb') as f:
+        with open('%s/szse_company.xlsx'% self.out_dir, 'wb') as f:
             f.write(result.content)
 
-        data_xls = pd.read_excel('/tmp/szse_company.xlsx', market_type_dict[market_type][2], index_col=None,
+        data_xls = pd.read_excel('%s/szse_company.xlsx'% self.out_dir, market_type_dict[market_type][2], index_col=None,
                                  converters={'A股代码': str, 'A股上市日期': str})
         data_xls.to_csv('%s/szse_company_%s.csv' % (self.out_dir, market_type), encoding='utf-8')
+        os.remove('%s/szse_company.xlsx' % self.out_dir)
 
     def _get_szse_company_list(self):
         print('Updating Shenzhen Stock Exchange List')
