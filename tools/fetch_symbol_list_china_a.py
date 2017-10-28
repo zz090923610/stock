@@ -21,7 +21,7 @@ class BasicInfoUpdater:
         [symbol,name,market,outstanding,totals,timeToMarket]
     sse_company.csv: raw symbol list from SSE
     szse_company_a: raw Symbol list from SZSE
-    
+
     # DEPENDENCY(requests pandas xlrd)
     """
 
