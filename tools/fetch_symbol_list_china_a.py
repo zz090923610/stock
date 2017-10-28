@@ -17,13 +17,14 @@ class BasicInfoUpdater:
     """
     Get most updated type A stock symbol list from Shanghai Stock Exchange List & Shenzhen Stock Exchange List
     After update there should be three csv files in out_dir
-    basic_info.csv: Combined symbol list from both SSE and SZSE with header
+    symbol_list.csv: Combined symbol list from both SSE and SZSE with header
         [symbol,name,market,outstanding,totals,timeToMarket]
     sse_company.csv: raw symbol list from SSE
     szse_company_a: raw Symbol list from SZSE
 
     # DEPENDENCY(requests pandas xlrd)
     """
+    # TODO implement a function to return string of first Pinyin letter of name
 
     def __init__(self, out_dir):
         self.market_dict = {}
@@ -98,7 +99,7 @@ class BasicInfoUpdater:
                     {'market': 'szse', 'symbol': row['A股代码'], 'name': row['公司简称'], 'timeToMarket': row['A股上市日期'],
                      'totals': float(row['A股总股本'].replace(',', '')) / 100000000,
                      'outstanding': float(row['A股流通股本'].replace(',', '')) / 100000000})
-        self.list2csv(final_list, '%s/basic_info.csv' % self.out_dir,
+        self.list2csv(final_list, '%s/symbol_list.csv' % self.out_dir,
                       col_order=['symbol', 'name', 'market', 'outstanding', 'totals', 'timeToMarket'])
 
     def list2csv(self, data_list, out_file, col_order=None, add_index=False):
@@ -124,4 +125,4 @@ if __name__ == '__main__':
         a = BasicInfoUpdater(sys.argv[1])
         a.update()
     else:
-        print("Usage: python3 fetch_basic_info output_dir")
+        print("Usage: python3 fetch_symbol_list_china_a output_dir")
