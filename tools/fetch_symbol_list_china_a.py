@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+# COMPATIBLE( linux windows )
 
 import csv
 import os
@@ -13,7 +13,7 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gec
 
 
 # noinspection PyUnboundLocalVariable,SpellCheckingInspection
-class BasicInfoUpdater:
+class SymbolListUpdater:
     """
     Get most updated type A stock symbol list from Shanghai Stock Exchange List & Shenzhen Stock Exchange List
     After update there should be three csv files in out_dir
@@ -22,7 +22,8 @@ class BasicInfoUpdater:
     sse_company.csv: raw symbol list from SSE
     szse_company_a: raw Symbol list from SZSE
 
-    # DEPENDENCY(requests pandas xlrd)
+    # DEPENDENCY( requests pandas xlrd )
+
     """
     # TODO implement a function to return string of first Pinyin letter of name
 
@@ -122,7 +123,7 @@ class BasicInfoUpdater:
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        a = BasicInfoUpdater(sys.argv[1])
+        a = SymbolListUpdater(sys.argv[1])
         a.update()
     else:
         print("Usage: python3 fetch_symbol_list_china_a output_dir")
