@@ -7,7 +7,7 @@ import sys
 from configs.path import DIRs
 from tools.symbol_list_china_hdl import SymbolListHDL
 
-
+# TODO currently ugly implementation
 class DayLevelSummary:
     def __init__(self, symbol, date, symbol_str, name_str):
         self.symbol = symbol
@@ -169,6 +169,7 @@ def summary_all(date, out_path):
             result = pd.concat([result, res], axis=0)
         except FileNotFoundError:
             continue
+    result = result.drop_duplicates(['代码'], keep='last')
     result.to_csv(out_path)
 
 
