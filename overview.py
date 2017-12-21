@@ -3,6 +3,8 @@ import re
 
 import sys
 
+from tools.internal_func_entry import init_data_root, update_symbol_list
+
 
 class OverviewHdl:
     def __init__(self):
@@ -32,7 +34,7 @@ class OverviewHdl:
         content = [x.strip() for x in content]
         for l in content:
             try:
-                res = re.search(r"DEPENDENCY\(([a-zA-Z0-0 ]+)\)", l).group(1).lstrip().rstrip().split(" ")
+                res = re.search(r"DEPENDENCY\(([-a-zA-Z0-0 ]+)\)", l).group(1).lstrip().rstrip().split(" ")
                 for r in res:
                     if r not in self.dep_list:
                         self.dep_list.append(r)
@@ -61,6 +63,12 @@ class OverviewHdl:
     def generate_pip_cmd(self):
         return "sudo pip3 install " + " ".join(self.dep_list)
 
+    def init_path(self):
+        init_data_root()
+
+    def update(self):
+        update_symbol_list()
+
 
 if __name__ == '__main__':
 
@@ -69,3 +77,7 @@ if __name__ == '__main__':
         a.find_all_deps()
     if '-t' in sys.argv:
         a.find_all_todos()
+    if '-i' in sys.argv:
+        a.init_path()
+    if '-u' in sys.argv:
+        a.update()

@@ -11,7 +11,7 @@ msg_source = 'day_level_quotes_china'
 # TODO: add windows support
 
 class DayLevelQuoteUpdaterTushare:
-    # DEPENDENCY( thshare )
+    # DEPENDENCY( tushare )
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
         self.dir = DIRs.get('DAY_LEVEL_QUOTES_CHINA')
