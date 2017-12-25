@@ -1,0 +1,17 @@
+#:set default_font_name "./fonts/WenQuanYi_Micro_Hei.ttf"
+<Widget>:
+    font_name: './fonts/WenQuanYi_Micro_Hei.ttf'
+
+<ActionBar>:
+    pos_hint: {'top':1}
+    ActionView:
+        ActionPrevious:
+            title: 'Anomaly'
+            with_previous: False
+
+        ActionGroup:
+            text: '系统'
+            ActionButton:
+                text: '退出'
+                on_press: app.stop()
+

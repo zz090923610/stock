@@ -1,0 +1,241 @@
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+        FileChooserIconView:
+            path: "~"
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Cancel"
+                on_press:root.cancel()
+
+            Button:
+                text: "Load"
+                on_release: root.load(filechooser.path, filechooser.selection)
+
+<BrokerLoginSticker>:
+    size_hint:(None, None)
+    size: (300,250)
+    title: '券商登录'
+    BoxLayout:
+        padding:(10,10,10,10)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '券商登录'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Spinner:
+                text: '国泰君安'
+                values:('国泰君安', '银河证券')
+
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '资金帐号'
+            TabTextInput:
+                id: Account
+                write_tab: False
+                multiline:False
+                next:Passwd
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '交易密码'
+            TabTextInput:
+                id: Passwd
+                multiline:False
+                write_tab: False
+                password:True
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: '验证码'
+                size_hint:(.5,1)
+            ImageButton:
+                id: captcha_img
+                on_press:root.update_captcha()
+                height: 22
+                width: 70
+                allow_stretch: True
+                source:'/home/zhangzhao/data/stock_data/trade_api/Captcha_gtja/waiting_captcha.jpg'
+                size_hint:(.25,1)
+            TabTextInput:
+                id: Captcha
+                multiline:False
+                write_tab: False
+                size_hint:(.25,1)
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Login'
+                id: Login_btn
+                on_press: app.main_layout.try_login()
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
+<ProgressBarSticker>:
+    size_hint:(None, None)
+    size: (300,300)
+    title: '进度条'
+    BoxLayout:
+        padding:(10,10,10,10)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        BoxLayout:
+            padding:(5,1,5,1)
+            ProgressBar:
+                id: Progress_bar
+                value: root.progress
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.progress_hint
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
+
+
+
+<NotificationSticker>:
+    size_hint:(None, None)
+    size: (350,400)
+    title: root.title
+    BoxLayout:
+        padding:(10,10,10,10)
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        ScrollView:
+            size: self.size
+            Label:
+                size_hint_y: None
+                height: self.texture_size[1]
+                text: root.msg
+        BoxLayout:
+            padding:(5,1,5,1)
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)
+
+
+<StockSticker>:
+    do_rotation:False
+    size_hint:(None, None)
+    size:(1000,120)
+    title: root.title
+    BoxLayout:
+        orientation:"horizontal"
+        Graph:
+            size_hint:(.6,1)
+            id: Left
+            y_grid_label:True
+            x_grid_label:True
+            padding:5
+            xlog:False
+            ylog:False
+            x_grid:True
+            y_grid:True
+            xmin:0
+            xmax:root.x_max
+            ymin:0
+            ymax:root.y_max
+        Graph:
+            size_hint:(.3,1)
+            id: Right
+            y_grid_label:True
+            x_grid_label:True
+            padding:5
+            xlog:False
+            ylog:False
+            x_grid:True
+            y_grid:True
+            xmin:root.r_x_min
+            xmax:root.r_x_max
+            ymin:root.y_min
+            ymax:root.y_max
+        BoxLayout:
+            orientation:"vertical"
+            size_hint:(.1,1)
+            Label:
+                id: Title
+                text: 'NSV30'
+                size_hint:(1,.25)
+            Label:
+                id: Stock
+                text: root.stock
+                size_hint:(1,.25)
+            Label:
+                id: Name
+                text: root.name
+                size_hint:(1,.25)
+            Label:
+                id: Volume
+                text: root.volume
+                size_hint:(1,.25)
+
+
+<LargeNotificationSticker>:
+    size_hint:(None, None)
+    size: (560,800)
+    title: root.title
+    BoxLayout:
+        canvas:
+            Color:
+                rgba: 150/255., 150/255., 150/255., 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        BoxLayout:
+            size_hint:(1, .1)
+            padding:(5,1,5,1)
+            Label:
+                text: root.title
+        ScrollView:
+            size_hint:(1, .8)
+            size: self.size
+            Label:
+                size_hint_y: None
+                height: self.texture_size[1]
+                text: root.msg
+        BoxLayout:
+            size_hint:(.8, .1)
+            padding:(5,1,5,5)
+            pos_hint: {'center_x': .5}
+            Button:
+                text: 'Cancel'
+                on_press:app.main_layout.remove_login_sticker(root.sticker_id)

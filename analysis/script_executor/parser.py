@@ -36,6 +36,9 @@ def determine_input_path(input_path):
     elif input_path.split('/')[0] in os.listdir(DIRs.get("QA")):
         if os.path.exists(DIRs.get("QA") + '/' + input_path):
             return DIRs.get("QA") + '/' + input_path
+    elif input_path.split('/')[0] in os.listdir(DIRs.get("DATA_ROOT")):
+        if os.path.exists(DIRs.get("DATA_ROOT") + '/' + input_path):
+            return DIRs.get("DATA_ROOT") + '/' + input_path
     else:
         return input_path
 
