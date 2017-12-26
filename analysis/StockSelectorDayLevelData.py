@@ -26,8 +26,6 @@ class SelectHdl:
 
     def get_result(self, json_format=False):
         if json_format:
-            pass # TODO implement
+            pass  # TODO implement
         else:
             return len(self.inter_mid_data), ' '.join(self.inter_mid_data['代码'].tolist())
-
-
