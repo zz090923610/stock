@@ -1,6 +1,7 @@
 # DEPENDENCY( pandas )
 import os
 
+import math
 import pandas as pd
 import sys
 
@@ -8,6 +9,7 @@ from configs.path import DIRs
 from tools.io import logging
 from tools.symbol_list_china_hdl import SymbolListHDL
 import multiprocessing as mp
+
 
 # TODO currently ugly implementation
 class DayLevelSummary:
@@ -158,106 +160,106 @@ def calc_score(date, out_path):
     symbol_dict.load()
 
     translate_dict = {
-            'symbol': '代码',
-            'name': '名称',
-            'date': '日期',
-            'open': '开盘',
-            'high': '高值',
-            'close': '收盘',
-            'low': '低值',
-            'volume': '成交量',
-            'price_change': '价格变动',
-            'p_change': '涨跌幅',
-            'ma5': '价ma5',
-            'ma10': '价ma10',
-            'ma20': '价ma20',
-            'v_ma5': '量ma5',
-            'v_ma10': '量ma10',
-            'v_ma20': '量ma20',
-            'turnover': '换手率',
-            'MAALIGNUPWARD': '均线多头排列',
-            'MAALIGNDOWNWARD': '均线空头排列',
-            'GOLDCROSS510': '均线金叉5穿10',
-            'GOLDCROSS520': '均线金叉5穿20',
-            'GOLDCROSS1020': '均线金叉10穿20',
-            'LOSECROSS510': '均线死叉5穿10',
-            'LOSECROSS520': '均线死叉5穿20',
-            'LOSECROSS1020': '均线死叉10穿20',
-            'GOLDVALLEY': '金山谷',
-            'LOSEVALLEY': '死亡谷',
-            'DRAGONOUT': '蛟龙出海',
-            'LOSEEVERYTHING': '断头铡刀',
-            'YIN': '阴线',
-            'YANG': '阳线',
-            'LARGEYANG': '大阳线',
-            'MIDYANG': '中阳线',
-            'SMALLYANG': '小阳线',
-            'LARGEYIN': '大阴线',
-            'MIDYIN': '中阴线',
-            'SMALLYIN': '小阴线',
-            'BOXHIGH': '实体高值',
-            'BOXLOW': '实体低值',
-            'CLOP': '实体长度',
-            'UPPERSHADOW': '上影线长',
-            'BOXLOW': '下影线长',
-            'CROSS': '十字线',
-            'TSHAPE': 'T字线',
-            'REVERSETSHAPE': '反T字线',
-            'ONESHAPE': '一字线',
-            'JUMPHIGHOPEN': '跳高开盘',
-            'JUMPLOWOPEN': '跳低开盘',
-            'LARGEK': '大K线',
-            'MIDK': '中K线',
-            'SMALLK': '小K线',
-            'MORNINGCROSS': '晨十字星',
-            'MORNINGSTAR': '清晨之星',
-            'FRIENDLYFIRE': '好友反攻',
-            'HOPEOFDAWN': '曙光初现',
-            'RAISINGSUN': '旭日东升',
-            'REVERSEHAMMER': '倒锤头线',
-            'HAMMER': '锤头线',
-            'FLATFLOOR': '平底',
-            'CONTINUETHREEJUMPYIN': '连续跳空三阴线',
-            'TRIPLEREDARMY': '红三兵',
-            'UPWARDTWOSTARS': '上涨两颗星',
-            'JUMPUPWARD': '跳空上扬/升势鹤鸦',
-            'JUMPUPWARDYANG': '跳高并排阳线',
-            'JUMPDOWNWARDTHREESTARS': '跳空下跌三颗星',
-            'TRIPLEUPWARDS': '上升三部曲/升势三鸦',
-            'TWILICROSS': '黄昏十字星',
-            'TWILISTAR': '黄昏之星',
-            'FRIENDLYPUSHBACK': '淡友反攻',
-            'INCOMINGCLOUDS': '乌云盖顶',
-            'HEAVYRAIN': '倾盆大雨',
-            'SHOOTINGSTAR': '射击之星',
-            'HANGWIRE': '吊颈线',
-            'FLATROOF': '平顶',
-            'DOUBLECROWS': '双飞乌鸦',
-            'TRIPLECROWS': '三只乌鸦',
-            'HEADSFEETYIN': '穿头破脚阴包阳',
-            'HEADSFEETYANG': '穿头破脚阳包阴',
-            'DOWNWARDCOVER': '下降覆盖线',
-            'TRIPLEBLKARMY': '黑三兵',
-            'MILDDOWNWARDS': '徐缓下跌',
-            'RUSHINGAWAY': '高开出逃',
-            'DOWNWARDTRIPLESTARS': '下跌三颗星',
-            'DOWNWARDTRIPLESWANS': '降势三鹤',
-            'TRIPLEDOWNWARDSYANG': '倒三阳',
-            'JUMPHIGHTRIPLEYANG': '跳空三阳线',
-            'UPWARDRESISTENCE': '升势受阻',
-            'UPWARDPAUSE': '升势停顿',
-            'LAMPYANG': '阳线瘸腿形',
-            'BLKREDBLK': '两黑夹一红',
-            'LONGCROSS': '长十字线',
-            'PROPELLER': '螺旋桨',
-            'EOFUPWARD': '涨势尽头线',
-            'EOFDOWNWARD': '跌势尽头线',
-            'PREGNANTYANG': '身怀六甲阳包阴',
-            'PREGNANTYIN': '身怀六甲阴包阳',
-            'TWOREDONEBLACK': '两红夹一黑',
-            'LOWERSHADOW': '下影线',
-            'BOXLENGTH': '实体长',
-        }
+        'symbol': '代码',
+        'name': '名称',
+        'date': '日期',
+        'open': '开盘',
+        'high': '高值',
+        'close': '收盘',
+        'low': '低值',
+        'volume': '成交量',
+        'price_change': '价格变动',
+        'p_change': '涨跌幅',
+        'ma5': '价ma5',
+        'ma10': '价ma10',
+        'ma20': '价ma20',
+        'v_ma5': '量ma5',
+        'v_ma10': '量ma10',
+        'v_ma20': '量ma20',
+        'turnover': '换手率',
+        'MAALIGNUPWARD': '均线多头排列',
+        'MAALIGNDOWNWARD': '均线空头排列',
+        'GOLDCROSS510': '均线金叉5穿10',
+        'GOLDCROSS520': '均线金叉5穿20',
+        'GOLDCROSS1020': '均线金叉10穿20',
+        'LOSECROSS510': '均线死叉5穿10',
+        'LOSECROSS520': '均线死叉5穿20',
+        'LOSECROSS1020': '均线死叉10穿20',
+        'GOLDVALLEY': '金山谷',
+        'LOSEVALLEY': '死亡谷',
+        'DRAGONOUT': '蛟龙出海',
+        'LOSEEVERYTHING': '断头铡刀',
+        'YIN': '阴线',
+        'YANG': '阳线',
+        'LARGEYANG': '大阳线',
+        'MIDYANG': '中阳线',
+        'SMALLYANG': '小阳线',
+        'LARGEYIN': '大阴线',
+        'MIDYIN': '中阴线',
+        'SMALLYIN': '小阴线',
+        'BOXHIGH': '实体高值',
+        'BOXLOW': '实体低值',
+        'CLOP': '实体长度',
+        'UPPERSHADOW': '上影线长',
+        'BOXLOW': '下影线长',
+        'CROSS': '十字线',
+        'TSHAPE': 'T字线',
+        'REVERSETSHAPE': '反T字线',
+        'ONESHAPE': '一字线',
+        'JUMPHIGHOPEN': '跳高开盘',
+        'JUMPLOWOPEN': '跳低开盘',
+        'LARGEK': '大K线',
+        'MIDK': '中K线',
+        'SMALLK': '小K线',
+        'MORNINGCROSS': '晨十字星',
+        'MORNINGSTAR': '清晨之星',
+        'FRIENDLYFIRE': '好友反攻',
+        'HOPEOFDAWN': '曙光初现',
+        'RAISINGSUN': '旭日东升',
+        'REVERSEHAMMER': '倒锤头线',
+        'HAMMER': '锤头线',
+        'FLATFLOOR': '平底',
+        'CONTINUETHREEJUMPYIN': '连续跳空三阴线',
+        'TRIPLEREDARMY': '红三兵',
+        'UPWARDTWOSTARS': '上涨两颗星',
+        'JUMPUPWARD': '跳空上扬/升势鹤鸦',
+        'JUMPUPWARDYANG': '跳高并排阳线',
+        'JUMPDOWNWARDTHREESTARS': '跳空下跌三颗星',
+        'TRIPLEUPWARDS': '上升三部曲/升势三鸦',
+        'TWILICROSS': '黄昏十字星',
+        'TWILISTAR': '黄昏之星',
+        'FRIENDLYPUSHBACK': '淡友反攻',
+        'INCOMINGCLOUDS': '乌云盖顶',
+        'HEAVYRAIN': '倾盆大雨',
+        'SHOOTINGSTAR': '射击之星',
+        'HANGWIRE': '吊颈线',
+        'FLATROOF': '平顶',
+        'DOUBLECROWS': '双飞乌鸦',
+        'TRIPLECROWS': '三只乌鸦',
+        'HEADSFEETYIN': '穿头破脚阴包阳',
+        'HEADSFEETYANG': '穿头破脚阳包阴',
+        'DOWNWARDCOVER': '下降覆盖线',
+        'TRIPLEBLKARMY': '黑三兵',
+        'MILDDOWNWARDS': '徐缓下跌',
+        'RUSHINGAWAY': '高开出逃',
+        'DOWNWARDTRIPLESTARS': '下跌三颗星',
+        'DOWNWARDTRIPLESWANS': '降势三鹤',
+        'TRIPLEDOWNWARDSYANG': '倒三阳',
+        'JUMPHIGHTRIPLEYANG': '跳空三阳线',
+        'UPWARDRESISTENCE': '升势受阻',
+        'UPWARDPAUSE': '升势停顿',
+        'LAMPYANG': '阳线瘸腿形',
+        'BLKREDBLK': '两黑夹一红',
+        'LONGCROSS': '长十字线',
+        'PROPELLER': '螺旋桨',
+        'EOFUPWARD': '涨势尽头线',
+        'EOFDOWNWARD': '跌势尽头线',
+        'PREGNANTYANG': '身怀六甲阳包阴',
+        'PREGNANTYIN': '身怀六甲阴包阳',
+        'TWOREDONEBLACK': '两红夹一黑',
+        'LOWERSHADOW': '下影线',
+        'BOXLENGTH': '实体长',
+    }
     result_list = []
     pool = mp.Pool()
     for s in symbol_dict.symbol_list:
@@ -265,10 +267,11 @@ def calc_score(date, out_path):
     pool.close()
     pool.join()
 
-    r= pd.DataFrame(result_list)
+    r = pd.DataFrame(result_list)
     r.to_csv(out_path, index=False)
 
-def _calc_score(s, symbol_dict,date):
+
+def _calc_score(s, symbol_dict, date):
     try:
         logging("score", "applied_%s" % s)
         symbol_str = symbol_dict.market_symbol_of_stock(s)
@@ -334,10 +337,18 @@ def _calc_score(s, symbol_dict,date):
                       'QUICK_BUYPOINT|LOSECROSS1020': 0.3583432920306435}
         score = 0
         for target in score_dict.keys():
-            score += score_dict[target] if res[target.split("|")[1]].tolist()[0] else 0
-        return {"symbol":symbol_str, "score": score}
+            try:
+                ori_turnover = res['turnover'].tolist()[0]
+                if ori_turnover > 20:
+                    ori_turnover = 15 - math.log(ori_turnover / 20)
+                turnover = ori_turnover / 25
+            except IndexError:
+                turnover = 0
+            score += score_dict[target] * (1 + turnover) if res[target.split("|")[1]].tolist()[0] else 0
+        return {"symbol": symbol_str, "score": score}
     except FileNotFoundError:
         return {}
+
 
 def summary_all(date, out_path):
     symbol_dict = SymbolListHDL()
@@ -362,4 +373,4 @@ def summary_all(date, out_path):
 
 
 if __name__ == '__main__':
-   summary_all(sys.argv[1], sys.argv[2])
+    summary_all(sys.argv[1], sys.argv[2])

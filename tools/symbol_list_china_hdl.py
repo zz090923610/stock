@@ -36,6 +36,7 @@ class SymbolListHDL:
             self.totals_dict[i['symbol']] = i['totals']
             self.time_to_market_dict[i['symbol']] = i['timeToMarket']
             self.symbol_list.append(i['symbol'])
+        self.symbol_list = list(set(self.symbol_list))
 
     # Below functions should be called after data loaded
     def link_of_stock(self, stock):
