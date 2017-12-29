@@ -15,6 +15,10 @@ TRANSLATE ma5:价ma5, ma10:价ma10, ma20:价ma20
 TRANSLATE symbol:代码, name:名称, v_ma5:量ma5, v_ma10:量ma10,
 TRANSLATE v_ma20:量ma20, turnover:换手率
 
+# 0 turnover yesterday
+OUTCOLS PREV_TURNOVER
+SHIFT PREV_TURNOVER  turnover 1
+
 
 # 1 均线多头排列
 OUTCOLS MAALIGNUPWARD

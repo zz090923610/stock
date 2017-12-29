@@ -59,17 +59,20 @@ def merge(path_list, s, to, index):
     full_path = [os.path.join(i, s) for i in path_list]
     logging(msg_topic, "MERGEING/%s" % s)
     result = None
-    for p in full_path:
-        if result is None:
-            result = pd.read_csv(p)
-            if index is not None:
-                result = result.set_index(index)
-        else:
-            new_data = pd.read_csv(p)
-            new_data = new_data.set_index(index)
-            result = pd.concat([result, new_data], axis=1)
-            result = result.drop_duplicates(keep='last')
-    result.to_csv(os.path.join(to, s))
+    try:
+        for p in full_path:
+            if result is None:
+                result = pd.read_csv(p)
+                if index is not None:
+                    result = result.set_index(index)
+            else:
+                new_data = pd.read_csv(p)
+                new_data = new_data.set_index(index)
+                result = pd.concat([result, new_data], axis=1)
+                result = result.drop_duplicates(keep='last')
+        result.to_csv(os.path.join(to, s))
+    except AssertionError as e:
+        logging('WARNING', "merge failed %s %s" % (s, e))
 
 
 if __name__ == '__main__':

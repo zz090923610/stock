@@ -164,7 +164,7 @@ def calc_score(date, out_path):
         pool.apply_async(_calc_score, args=(s, symbol_dict, date), callback=result_list.append)
     pool.close()
     pool.join()
-
+    result_list = [l for l in result_list if len(l.keys()) != 0]
     r = pd.DataFrame(result_list)
     r = r.sort_values(by='score', ascending=False)
     r.to_csv(out_path, index=False)
@@ -179,6 +179,9 @@ def _calc_score(s, symbol_dict, date):
         a.load_file()
         a.merge_data()
         res = a.get_result()
+        if len(res.index) == 0:
+            logging('WARNING', "no data for %s" % s)
+            return {}
         upwardscore_dict = {
             'QUICK_BUYPOINT|DOWNWARDTRIPLESWANS': 0.1905855725705481, 'QUICK_BUYPOINT|PREGNANTYIN': 0.38270520772351124,
             'QUICK_BUYPOINT|GOLDCROSS520': 0.35408616194100284, 'QUICK_BUYPOINT|UPWARDRESISTENCE': 0.39416727661014744,
@@ -251,16 +254,15 @@ def _calc_score(s, symbol_dict, date):
             'QUICK_SELLPOINT|GOLDCROSS1020': 0.5044866108996416, 'QUICK_SELLPOINT|REVERSETSHAPE': 0.37023305036162624,
             'QUICK_SELLPOINT|GOLDCROSS520': 0.5098471210604967}
         score = 0
+        try:
+            ori_turnover = res['turnover'].tolist()[0]
+            if ori_turnover > 20:
+                ori_turnover = 15 - math.log(ori_turnover / 20)
+            turnover = ori_turnover / 25
+        except IndexError:
+            turnover = 0
         for target in upwardscore_dict.keys():
-            try:
-                ori_turnover = res['turnover'].tolist()[0]
-                if ori_turnover > 20:
-                    ori_turnover = 15 - math.log(ori_turnover / 20)
-                turnover = ori_turnover / 25
-            except IndexError:
-                turnover = 0
             score += (upwardscore_dict[target] * (1 + turnover) if res[target.split("|")[1]].tolist()[0] else 0)
-
         for target in downward_score_dict.keys():
             score -= (downward_score_dict[target] if res[target.split("|")[1]].tolist()[0] else 0)
         return {"symbol": symbol_str, "score": score}
@@ -286,6 +288,8 @@ def summary_all(date, out_path):
             result = pd.concat([result, res], axis=0)
         except FileNotFoundError:
             continue
+        except AssertionError as e:
+            logging('WARNING', "merge failed %s %s" % (s, e))
     result = result.drop_duplicates(['代码'], keep='last')
     result.to_csv(out_path)
 
