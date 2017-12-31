@@ -74,7 +74,7 @@ def is_num(target):
     try:
         float(target)
         return True
-    except ValueError:
+    except Exception:
         return False
 
 
@@ -180,7 +180,10 @@ class VariableHdl:
         self.vdict[v_name] = ScriptVariable(v_type, v_name, v_val=v_val, series=series)
 
     def respond_var(self, v_name):
-        if v_name.split('_')[0] in self.vdict.keys():
+        #FIXME bug here
+        if v_name in self.vdict.keys():
+            return self.vdict[v_name].respond(pass_in=v_name)
+        elif v_name.split('_')[0] in self.vdict.keys():
             return self.vdict[v_name.split('_')[0]].respond(pass_in=v_name)
         elif is_num(v_name):
             return [float(v_name)]
