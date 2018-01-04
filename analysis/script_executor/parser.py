@@ -6,6 +6,7 @@ import multiprocessing as mp
 
 import sys
 
+from analysis.script_executor.TranslateHdl import TranslateHdl
 from tools.io import *
 from configs.path import DIRs
 
@@ -84,6 +85,8 @@ def parse_script_head(script_path):
     input_dir_file = ''
     output_dir_file = ''
     output_cols = []
+    t = TranslateHdl()
+    t.load()
     for line in script:
         if line[0] == 'PLEV':
             parallel_level = line[1]
@@ -95,6 +98,9 @@ def parse_script_head(script_path):
             output_dir_file = determine_output_path(line[1])
         elif line[0] == 'OUTCOLS':
             output_cols += re.split(r',', line[1])
+        elif line[0] == 'TRANSLATE':
+            t.add_translation(' '.join(line[1:]))
+    t.save()
     print("Parallel level: %s\nInput path: %s\n Output path: %s\n Output cols: %r" %
           (parallel_level, input_dir_file, output_dir_file, output_cols))
     return script, parallel_level, input_dir_file, output_dir_file, output_cols

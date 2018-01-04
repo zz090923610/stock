@@ -68,6 +68,11 @@ def merge(path_list, s, to, index):
             else:
                 new_data = pd.read_csv(p)
                 new_data = new_data.set_index(index)
+                new_column = []
+                for k in new_data.columns.values:
+                    if k not in list(result.columns.values):
+                        new_column.append(k)
+                new_data = new_data[new_column]
                 result = pd.concat([result, new_data], axis=1)
                 result = result.drop_duplicates(keep='last')
         result.to_csv(os.path.join(to, s))

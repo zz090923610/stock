@@ -8,7 +8,7 @@ JUDGE YIN data open>close                                           # 阴线
 JUDGE YANG data open<close                                          # 阳线
 SUBC CLOP close open                                                # 收盘价-开盘价
 SUBC OPCL open close                                                # 开盘价-收盘价
-SUBC VIBRATION high low                                             # 振幅
+SUBC VIBRATION high low                       ,                       # 振幅
 JUDGE LARGEYANG data CLOP>=.03*open                                 # 大阳线 实体低值 3%
 JUDGE MIDYANG data (CLOP>=.015*open)&(CLOP<.03*open)                # 中阳线 实体低值 1.5%-3%
 JUDGE SMALLYANG data (CLOP>0)&(CLOP<.015*open)                      # 小阳线 实体低值 0-1.5%

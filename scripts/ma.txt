@@ -9,10 +9,11 @@ PLEV	FOLDER
 FIN	day_quotes/china
 PLFDOUT ma
 OUTCOLS date,open,high,close,low,ma5,ma10,ma20
-TRANSLATE date:,open:开盘, high:高值, close:收盘, low:低值, volume:成交量,
+TRANSLATE symbol:代码, name:名称
+TRANSLATE date:日期, open:开盘, high:高值, close:收盘, low:低值, volume:成交量
 TRANSLATE price_change:价格变动, p_change:涨跌幅
 TRANSLATE ma5:价ma5, ma10:价ma10, ma20:价ma20
-TRANSLATE symbol:代码, name:名称, v_ma5:量ma5, v_ma10:量ma10,
+TRANSLATE v_ma5:量ma5, v_ma10:量ma10
 TRANSLATE v_ma20:量ma20, turnover:换手率
 
 # 0 turnover yesterday
