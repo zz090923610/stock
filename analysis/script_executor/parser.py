@@ -18,11 +18,11 @@ msg_topic = "SCRIPT_ENGINE"
 def load_data(input_data):
     #    print('func load_data(input_data)\n'
     #          '%s %s' % (type(input_data), input_data))
-    if type(input_data) == pd.core.frame.DataFrame:
+    if type(input_data) == pd.DataFrame:
         data = input_data
     elif type(input_data) == str:
         try:
-            data = pd.read_csv(determine_input_path(input_data))
+            data = pd.read_csv(validate_input_path(input_data))
         except FileNotFoundError:
             #            print('Load data file failed: %s' % input_data)
             data = None
@@ -31,7 +31,7 @@ def load_data(input_data):
     return data
 
 
-def determine_input_path(input_path):
+def validate_input_path(input_path):
     if os.path.isfile(input_path):
         return input_path
     elif input_path.split('/')[0] in os.listdir(DIRs.get("QA")):
@@ -44,7 +44,17 @@ def determine_input_path(input_path):
         return input_path
 
 
-def determine_output_path(output_path):
+def validate_script_path(script_path):
+    if os.path.isfile(script_path):
+        return script_path
+    elif script_path.split("/")[-1].split(".")[0] + ".txt" in os.listdir(os.path.join(os.getcwd(), "scripts")):
+        return os.path.join(os.getcwd(), "scripts", script_path.split("/")[-1].split(".")[0] + ".txt")
+    else:
+        out("ERROR", "invalid script path %s" % script_path)
+        return "/tmp"
+
+
+def validate_output_path(output_path):
     if os.path.isfile(output_path):
         return output_path
     elif output_path.split('/')[0] in os.listdir(DIRs.get("QA")):
@@ -91,11 +101,11 @@ def parse_script_head(script_path):
         if line[0] == 'PLEV':
             parallel_level = line[1]
         elif line[0] == 'FIN':
-            input_dir_file = determine_input_path(line[1])
+            input_dir_file = validate_input_path(line[1])
         elif line[0] == 'PLFDOUT':
-            output_dir_file = determine_output_path(line[1])
+            output_dir_file = validate_output_path(line[1])
         elif line[0] == 'SGFLOUT':
-            output_dir_file = determine_output_path(line[1])
+            output_dir_file = validate_output_path(line[1])
         elif line[0] == 'OUTCOLS':
             output_cols += re.split(r',', line[1])
         elif line[0] == 'TRANSLATE':
@@ -107,6 +117,7 @@ def parse_script_head(script_path):
 
 
 def engine(script_path):
+    script_path = validate_script_path(script_path)
     script, parallel_level, input_dir_file, output_dir_file, output_cols = parse_script_head(script_path)
     if parallel_level == 'FOLDER':
         dir_list = os.listdir(input_dir_file)
@@ -186,7 +197,7 @@ class VariableHdl:
         self.vdict[v_name] = ScriptVariable(v_type, v_name, v_val=v_val, series=series)
 
     def respond_var(self, v_name):
-        #FIXME bug here
+        # FIXME bug here
         if v_name in self.vdict.keys():
             return self.vdict[v_name].respond(pass_in=v_name)
         elif v_name.split('_')[0] in self.vdict.keys():
@@ -317,11 +328,6 @@ def execute_script(input_data, script, output_path, output_cols):
                 val = float(line[2])
                 result_col_name = line[1]
                 var_hdl.add_var(result_col_name, 'imm', v_val=val)
-            elif line[0] == 'SWITCH':
-                to_df = line[1]
-                if to_df in df_hdl.df_dict.keys():
-                    data = df_hdl.df_dict[to_df]
-                    data_cols = data.columns.tolist()
             elif line[0] == 'FLT':
                 new_df_name = line[1]
                 ori_df_name = line[2]

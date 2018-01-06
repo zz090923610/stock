@@ -7,6 +7,7 @@ from configs.path import DIRs
 
 msg_source = 'day_level_quotes_china'
 
+
 # TODO: implement backup sources, implement automatic source switch
 # TODO: add windows support
 
@@ -15,6 +16,8 @@ class DayLevelQuoteUpdaterTushare:
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
         self.dir = DIRs.get('DAY_LEVEL_QUOTES_CHINA')
+        self.symbol_dict = SymbolListHDL()
+        self.symbol_dict.load()
 
     # noinspection PyMethodMayBeStatic
     def get_data_one_stock(self, stock, start, end, store_dir):
@@ -23,6 +26,10 @@ class DayLevelQuoteUpdaterTushare:
             out(msg_source, '%s/%s_failed' % (msg_source, stock))
             return
         df = df.reindex(index=df.index[::-1])
+        symbol_str = self.symbol_dict.market_symbol_of_stock(stock)
+        name = self.symbol_dict.name_dict.get(stock)
+        df['name'] = name
+        df['symbol'] = symbol_str
         df.to_csv('%s/%s.csv' % (store_dir, stock))
         out(msg_source, '%s/%s_success' % (msg_source, stock))
 

@@ -13,4 +13,5 @@ DIRs['LOG'] = os.path.join(DIRs.get('DATA_ROOT'), "log")
 DIRs['QA'] = os.path.join(DIRs.get('DATA_ROOT'), "qa")
 DIRs["TRANSLATE"] = os.path.join(DIRs.get('DATA_ROOT'), "translate")
 DIRs['MODEL'] = os.path.join(DIRs.get('DATA_ROOT'), "model")
+DIRs['CALENDAR'] = os.path.join(DIRs.get('DATA_ROOT'), "calendar")
 

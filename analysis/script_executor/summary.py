@@ -18,8 +18,6 @@ class DayLevelSummary:
     def __init__(self, symbol, date, symbol_str, name_str):
         self.symbol = symbol
         self.target_date = date
-        self.symbol_str = symbol_str
-        self.name_str = name_str
         self.result = pd.DataFrame
         self.translate_hdl = TranslateHdl()
         self.translate_hdl.load()
@@ -33,9 +31,6 @@ class DayLevelSummary:
             pass
 
     def rename(self):
-        self.result['symbol'] = self.symbol_str
-        self.result['name'] = self.name_str
-
         self.result = self.result.rename(index=str, columns=self.translate_hdl.dict)
 
     def get_result(self):

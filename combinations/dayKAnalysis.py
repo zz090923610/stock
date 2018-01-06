@@ -5,23 +5,28 @@ from analysis.script_executor.parser import engine
 from analysis.script_executor.statistics import ConditionalStatisticsHdl
 from analysis.script_executor.summary import summary_all, calc_score, calc_score_vol_ratio, calc_score_amount
 from tools.fetch_day_level_quotes_china import *
+from tools.fetch_tick_quotes_china import TickQuoteUpdaterTushare
 from tools.internal_func_entry import update_symbol_list
 
 if __name__ == '__main__':
+    pass
     #update_symbol_list()
     #a = DayLevelQuoteUpdaterTushare()
     # TODO specify better start date
-    #a.get_data_all_stock(start='2001-01-01', end=sys.argv[1])
+    # a.get_data_all_stock(start='2001-01-01', end=sys.argv[1])
+    #tick = TickQuoteUpdaterTushare()
+    #tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, [sys.argv[1]])
+
     #engine('./scripts/ma.txt')
     #engine('./scripts/candle_stick_shape_analysis.txt')
     #engine('./scripts/inflow.txt')
-    #m = DataMerger("day_quotes/china ma candle_stick_shape_analysis inflow", "summary", "date")
+    #m = DataMerger("day_quotes/china&ma&candle_stick_shape_analysis&inflow", "summary", "date")
     #m.collect_symbols()
     #m.merge_all()
     #summary_all(sys.argv[1], '~/' + sys.argv[1] + ".csv")
 
     #engine('./scripts/short_period_buypoint.txt')
-    #b = DataMerger("ma candle_stick_shape_analysis spb", "merged", "date")
+    #b = DataMerger("ma&candle_stick_shape_analysis&spb", "merged", "date")
     #b.collect_symbols()
     #b.merge_all()
     #c = ConditionalStatisticsHdl(
@@ -34,9 +39,9 @@ if __name__ == '__main__':
     #    "merged", "cond_sell")
     #d.statistic()
 
-    calc_score(sys.argv[1], '~/' + sys.argv[1] + "_score_turnover.csv")
-    calc_score_vol_ratio(sys.argv[1], '~/' + sys.argv[1] + "_score_vol_ratio.csv")
-    calc_score_amount(sys.argv[1], '~/' + sys.argv[1] + "_score_amount.csv")
+    #calc_score(sys.argv[1], '~/' + sys.argv[1] + "_score_turnover.csv")
+    #calc_score_vol_ratio(sys.argv[1], '~/' + sys.argv[1] + "_score_vol_ratio.csv")
+    #calc_score_amount(sys.argv[1], '~/' + sys.argv[1] + "_score_amount.csv")
 
     # dates = ['2017-11-01', '2017-11-02', '2017-11-03', '2017-11-06', '2017-11-07', '2017-11-08', '2017-11-09', '2017-11-10', '2017-11-13', '2017-11-14', '2017-11-15', '2017-11-16', '2017-11-17', '2017-11-20', '2017-11-21', '2017-11-22', '2017-11-23', '2017-11-24', '2017-11-27', '2017-11-28', '2017-11-29', '2017-11-30', '2017-12-01', '2017-12-04', '2017-12-05', '2017-12-06', '2017-12-07', '2017-12-08', '2017-12-11', '2017-12-12', '2017-12-13', '2017-12-14', '2017-12-15', '2017-12-18', '2017-12-19', '2017-12-20', '2017-12-21', '2017-12-22', '2017-12-25', '2017-12-26', '2017-12-27', '2017-12-28']
     # for d in dates:

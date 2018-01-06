@@ -23,7 +23,7 @@ class DataMerger:
         self.collect_symbols()
 
     def validate_input_path(self, input_path):
-        input_path = input_path.split(" ")
+        input_path = input_path.split("&")
         parsed = []
         for p in input_path:
             parsed.append(self._validate_input_path(p))
@@ -78,6 +78,17 @@ def merge(path_list, s, to, index):
         result.to_csv(os.path.join(to, s))
     except AssertionError as e:
         logging('WARNING', "merge failed %s %s" % (s, e))
+
+
+def script_exec(line):
+    try:
+        (path_from, path_to, index) = line.split(" ")
+    except Exception as e:
+        logging("ERROR", "data_merger: %s" % e)
+        return
+    a = DataMerger(path_from, path_to, index)
+    a.collect_symbols()
+    a.merge_all()
 
 
 if __name__ == '__main__':
