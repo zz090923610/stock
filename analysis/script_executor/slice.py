@@ -9,37 +9,15 @@ from configs.path import DIRs
 from tools.io import logging
 
 
-# TODO currently ugly implementation
-class DayLevelSummary:
-    def __init__(self, symbol, date, symbol_str, name_str):
-        self.symbol = symbol
-        self.target_date = date
-        self.result = pd.DataFrame
-        self.translate_hdl = TranslateHdl()
-        self.translate_hdl.load()
-
-    def load_file(self):
-        summary_path = os.path.join(DIRs.get("QA"), "summary", self.symbol + ".csv")
-        self.result = pd.read_csv(summary_path)
-        try:
-            self.result = self.result[self.result['date'] == self.target_date]
-        except KeyError:
-            pass
-
-    def rename(self):
-        self.result = self.result.rename(index=str, columns=self.translate_hdl.dict)
-
-    def get_result(self):
-        return self.result
-
-
 def slice_one(in_path, date):
-    result = pd.read_csv(in_path)
     try:
+        result = pd.read_csv(in_path)
         result = result[result['date'] == date]
-    except KeyError:
-        pass
-    return result
+        logging("SLICING", "sliced %s" % in_path)
+        return result
+    except Exception as e:
+        logging("ERROR", "slicing %s %s" % (in_path, e))
+        return None
 
 
 def validate_input_path(input_path):
@@ -55,33 +33,26 @@ def validate_input_path(input_path):
         return input_path
 
 
-def slice_all(input_path, out_path, date):
+def validate_output_path(output_file_name, date):
+        return os.path.join(DIRs.get("SLICE"), "%s_%s.csv" % (output_file_name, date))
+
+
+def slice_all(input_path, out_path, date, rename):
     input_path = validate_input_path(input_path)
+    out_path = validate_output_path(out_path, date)
     from tools.symbol_list_china_hdl import SymbolListHDL
     symbol_dict = SymbolListHDL()
     symbol_dict.load()
-    result = pd.DataFrame()
-    pool = mp.Pool()
-    for i in dir_list:
+    result_list = []
 
+    pool = mp.Pool()
+    for i in symbol_dict.symbol_list:
+        pool.apply_async(slice_one, args=(os.path.join(input_path, "%s.csv" % i), date), callback=result_list.append)
     pool.close()
     pool.join()
-    for s in symbol_dict.symbol_list:
-        full_path = os.path.join(input_path, "%s.csv" % s)
-        pool.apply_async(execute_script, args=(input_dir + '/' + i, script, output_dir + '/' + i, output_cols))
-        try:
-            logging("slicing", full_path)
-
-            a = DayLevelSummary(s, date, symbol_str, name)
-            a.load_file()
-            a.rename()
-            res = a.get_result()
-            result = pd.concat([result, res], axis=0)
-        except FileNotFoundError:
-            continue
-        except AssertionError as e:
-            logging('WARNING', "merge failed %s %s" % (s, e))
-    result = result.drop_duplicates(['代码'], keep='last')
+    result = pd.DataFrame()
+    for i in result_list:
+        result = pd.concat([result, i], axis=0)
     try:
         result = result.drop('Unnamed: 0', 1)
     except Exception as e:
@@ -90,7 +61,16 @@ def slice_all(input_path, out_path, date):
     trans = TranslateHdl()
     trans.load()
     for c in trans.order_list:
-        if trans.dict[c] in result.columns.values:
-            columns.append(trans.dict[c])
-    result = result.sort_values(by="代码", ascending=True)
+        if c in result.columns.values:
+            columns.append(c)
     result.to_csv(out_path, index=False, columns=columns)
+    if rename:
+        rename_csv(out_path)
+
+
+def rename_csv(file_path):
+    data = pd.read_csv(file_path)
+    translate_hdl = TranslateHdl()
+    translate_hdl.load()
+    data = data.rename(index=str, columns=translate_hdl.dict)
+    data.to_csv(file_path, index=False)

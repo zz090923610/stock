@@ -1,0 +1,23 @@
+SCRIPT inflow
+MERGE day_quotes/china&inflow analysis_v2 date
+SLICE analysis_v2 analysis_v2 TODAY TRUE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -3,7 +3,8 @@ SCRIPT ma
 SCRIPT candle_stick_shape_analysis
 SCRIPT inflow
 MERGE day_quotes/china&ma&candle_stick_shape_analysis&inflow summary date
-
+SLICE summary summary TODAY FALSE
+NAIVESCORE TODAY
 
 
 

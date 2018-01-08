@@ -3,7 +3,7 @@ import sys
 from analysis.script_executor.merge_data import DataMerger
 from analysis.script_executor.parser import engine
 from analysis.script_executor.statistics import ConditionalStatisticsHdl
-from analysis.script_executor.summary import summary_all, calc_score, calc_score_vol_ratio, calc_score_amount
+from analysis.script_executor.naive_score import summary_all, calc_score, calc_score_vol_ratio, calc_score_amount
 from tools.fetch_day_level_quotes_china import *
 from tools.fetch_tick_quotes_china import TickQuoteUpdaterTushare
 from tools.internal_func_entry import update_symbol_list

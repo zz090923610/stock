@@ -24,7 +24,7 @@ class TickQuoteUpdaterTushare:
             return
         df = ts.get_tick_data(stock, date=day, src='tt')
         if df is None:
-            out(msg_source, '%s/%s_failed' % (msg_source, stock))
+            out(msg_source, '%s/%s/%s_failed' % (msg_source, stock, day))
             return
         df = df.reindex(index=df.index[::-1])
         if not os.path.exists('%s/%s' % (self.dir, stock)):
@@ -40,6 +40,7 @@ class TickQuoteUpdaterTushare:
 
     def get_tick_multiple(self, stock_list, date_list, force=False):
         force = [force]
+        print(date_list)
         out(msg_source, '%s/start_%d' % (msg_source, len(self.symbol_list_hdl.symbol_list)))
         pool = Pool(16)
         for params in itertools.product(stock_list, date_list, force):
