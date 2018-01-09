@@ -1,0 +1,11 @@
+PLEV	FOLDER
+FIN	DQNS
+PLFDOUT anomaly # strong buy, price downward, strong sell, price upward
+
+OUTCOLS date,symbol,name
+OUTCOLS SBPD,SSPU
+TRANSLATE SBPD:买多价跌异常, SSPU:卖多价涨异常
+
+JUDGE SBPD data (price_change<0)&(quant_buy>quant_sell)
+JUDGE SSPU data (price_change>0)&(quant_sell>quant_buy)
+

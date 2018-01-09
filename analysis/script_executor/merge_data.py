@@ -76,6 +76,9 @@ def merge(path_list, s, to, index):
                 result = pd.concat([result, new_data], axis=1)
                 result = result.drop_duplicates(keep='last')
         result.to_csv(os.path.join(to, s))
+        result = pd.read_csv(os.path.join(to, s))
+        result.rename(columns={'Unnamed: 0': 'date'}, inplace=True)
+        result.to_csv(os.path.join(to, s), index=False)
     except AssertionError as e:
         logging('WARNING', "merge failed %s %s" % (s, e))
 

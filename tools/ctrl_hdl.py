@@ -43,6 +43,7 @@ def exec_ctrl_cmd(line):
         elif cmd[1] == "TICK":
             from tools.fetch_tick_quotes_china import TickQuoteUpdaterTushare
             tick = TickQuoteUpdaterTushare()
+            print(calendar.validate_date(cmd[2]))
             tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, [calendar.validate_date(cmd[2])])
         elif cmd[1] == "SYMBOL":
             from tools.internal_func_entry import update_symbol_list
@@ -56,6 +57,9 @@ def exec_ctrl_cmd(line):
         calc_score_amount("summary", calendar.validate_date(cmd[1]))
         from analysis.script_executor.naive_score import calc_score_turnover
         calc_score_turnover("summary", calendar.validate_date(cmd[1]))
+    elif cmd[0] == "NAIVETICKSUMMARY":
+        from analysis.tick.naive_summary import naive_summary_all
+        naive_summary_all([calendar.validate_date(cmd[1])])
 
 
 if __name__ == '__main__':

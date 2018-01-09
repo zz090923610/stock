@@ -64,3 +64,5 @@ class MktCalendar:
         if day == "TODAY":
             today = self._get_today()
             return today if self.quick_dict[today] == 1 else last_tddate()
+        else:
+            return day #FIXME

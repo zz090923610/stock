@@ -63,6 +63,9 @@ def slice_all(input_path, out_path, date, rename):
     for c in trans.order_list:
         if c in result.columns.values:
             columns.append(c)
+    for c in result.columns.values:
+        if c not in columns:
+            columns.append(c)
     result.to_csv(out_path, index=False, columns=columns)
     if rename:
         rename_csv(out_path)
