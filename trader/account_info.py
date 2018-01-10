@@ -1,2 +1,2 @@
 user = ''
-passwd = ''
+passwd = 'dd'
