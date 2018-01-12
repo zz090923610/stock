@@ -91,3 +91,9 @@ class TradeAPI:
         alert.accept()
         print(alert.text)
         alert.dismiss()
+
+    def get_available_cash(self):
+        self.driver.get("https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail")
+        cash = self.driver.find_element_by_xpath(
+            "/html/body/table/tbody/tr/td/table[1]/tbody/tr/td[1]/table[2]/tbody/tr/td/table/tbody/tr[2]/td[4]").text
+        return float(cash)
