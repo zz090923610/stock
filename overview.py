@@ -10,6 +10,7 @@ class OverviewHdl:
     def __init__(self):
         self.pwd = os.getcwd()
         self.dep_list = []
+        self.apt_dep_list = []
         self.file_to_check = []
         self.todo_list = []
 
@@ -27,6 +28,7 @@ class OverviewHdl:
         for f in self.file_to_check:
             self.find_dep_in_py_file(f)
         print(self.generate_pip_cmd())
+        print(self.generate_apt_cmd())
 
     def find_dep_in_py_file(self, path):
         with open(path) as f:
@@ -38,6 +40,10 @@ class OverviewHdl:
                 for r in res:
                     if r not in self.dep_list:
                         self.dep_list.append(r)
+                res_apt = re.search(r"DEP_APT\(([-a-zA-Z0-0 ]+)\)", l).group(1).lstrip().rstrip().split(" ")
+                for r in res_apt:
+                    if r not in self.dep_list:
+                        self.apt_dep_list.append(r)
             except AttributeError:
                 continue
 
@@ -63,11 +69,11 @@ class OverviewHdl:
     def generate_pip_cmd(self):
         return "sudo pip3 install " + " ".join(self.dep_list)
 
-    def init_path(self):
-        init_data_root()
-
-    def update(self):
-        update_symbol_list()
+    def generate_apt_cmd(self):
+        if len(self.apt_dep_list) > 0:
+            return  "sudo apt-get install -y " + " ".join(self.apt_dep_list)
+        else:
+            return ''
 
 
 if __name__ == '__main__':
@@ -77,7 +83,3 @@ if __name__ == '__main__':
         a.find_all_deps()
     if '-t' in sys.argv:
         a.find_all_todos()
-    if '-i' in sys.argv:
-        a.init_path()
-    if '-u' in sys.argv:
-        a.update()
