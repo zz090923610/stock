@@ -140,7 +140,7 @@ class TradeAPI:
         print(alert.text)
         logging("logging", "TradeAPI/%s" % alert.text)
         alert.dismiss()
-	self.busy=False
+        self.busy=False
 
     def get_available_cash(self):
         self.driver.get("https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail")
