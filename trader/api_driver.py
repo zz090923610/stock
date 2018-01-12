@@ -140,13 +140,10 @@ class TradeAPI:
         print(alert.text)
         logging("logging", "TradeAPI/%s" % alert.text)
         alert.dismiss()
-<<<<<<< HEAD
+	self.busy=False
 
     def get_available_cash(self):
         self.driver.get("https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail")
         cash = self.driver.find_element_by_xpath(
             "/html/body/table/tbody/tr/td/table[1]/tbody/tr/td[1]/table[2]/tbody/tr/td/table/tbody/tr[2]/td[4]").text
         return float(cash)
-=======
-        self.busy = False
->>>>>>> c8773078a485d6034ed7cbc73f2ece5006eec7bc
