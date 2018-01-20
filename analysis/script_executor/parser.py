@@ -76,8 +76,8 @@ def load_script(script_path):
             split_line = re.split(r'[ \t]+', tmp_line)
             if (split_line[0] != '') & (split_line[0] != '#'):
                 script.append(split_line)
-    for line in script:
-        print(line)
+    #for line in script:
+    #    print(line)
     return script
 
 

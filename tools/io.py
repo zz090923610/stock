@@ -1,5 +1,5 @@
 from tools.communication.mqtt import simple_publish
-
+# DEP_APT( mosquitto mosquitto-clients )
 method = 'mqtt'
 
 
