@@ -7,7 +7,7 @@ import selenium.common.exceptions as SExceptions
 
 from tools.io import logging
 
-chromedriver = "/home/zhangzhao/chromedriver"
+chromedriver = "chromedriver"
 os.environ["webdriver.chrome.driver"] = chromedriver
 
 import trader.account_info as account
