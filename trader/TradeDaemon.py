@@ -16,12 +16,13 @@ class TradeDaemon(DaemonClass):
         self.trade_api = TradeAPI(headless=True, auth=AUTH)
         self.captcha_db = {}
         self.heart_thread = None
+        self.keep_heartbeat = False
 
     def heart_beat(self):
-        self.cancel_daemon = False
+        self.keep_heartbeat = True
         self.trade_api.respond('TradeDaemon/heartbeat started')
         cnt = 0
-        while not self.cancel_daemon:
+        while self.keep_heartbeat:
             time.sleep(.5)
             cnt += 1
             if cnt == 240:
@@ -33,7 +34,7 @@ class TradeDaemon(DaemonClass):
     def mqtt_on_message(self, mqttc, obj, msg):
         payload = msg.payload.decode('utf8')
         if payload == 'prelogin':
-            self.cancel_daemon = True
+            self.keep_heartbeat = False
             self.trade_api.pre_login()
         elif payload == 'cash':
             self.trade_api.get_available_cash()
