@@ -20,9 +20,9 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 1883
 
 
-def simple_publish(topic, payload):
+def simple_publish(topic, payload, auth=None):
     s_publish.single(topic, payload=payload, qos=0, retain=False, hostname=DEFAULT_HOST,
-                     port=DEFAULT_PORT, client_id="", keepalive=60, will=None, auth=None,
+                     port=DEFAULT_PORT, client_id="", keepalive=60, will=None, auth=auth,
                      tls=None, protocol=mqtt.MQTTv31)
 
 

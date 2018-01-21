@@ -28,6 +28,7 @@ class OverviewHdl:
             self.find_apt_dep_in_py_file(f)
         print(self.generate_apt_cmd())
         print(self.generate_pip_cmd())
+        print("-i https://pypi.tuna.tsinghua.edu.cn/simple")
 
     def find_dep_in_py_file(self, path):
         with open(path) as f:

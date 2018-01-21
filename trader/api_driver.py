@@ -19,7 +19,7 @@ status_dict = {'sleep': ['action_prelogin'],
 
 class TradeAPI:
     # DEPENDENCY( selenium )
-    def __init__(self, headless=False):
+    def __init__(self, headless=False, auth=None):
         self.driver = None
         self.user = account.user
         self.passwd = account.passwd
@@ -27,6 +27,7 @@ class TradeAPI:
         self.options = webdriver.ChromeOptions()
         self.headless = headless
         self.busy = False
+        self.auth=auth
         self.status = 'sleep'
         if headless:
             self.options.add_argument('headless')
@@ -34,7 +35,7 @@ class TradeAPI:
     def respond(self, payload, res_type='str'):
         if self.on_server:
             from tools.communication.mqtt import simple_publish
-            simple_publish("trade_res/%s" % res_type, payload)
+            simple_publish("trade_res/%s" % res_type, payload, auth=self.auth)
         else:
             logging("logging", payload)
 

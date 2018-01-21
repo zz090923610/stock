@@ -4,14 +4,14 @@ import threading
 import time
 
 from tools.daemon_class import DaemonClass
-from tools.io import logging
+from trader.account_info import AUTH
 from trader.api_driver import TradeAPI
 
 
 class TradeDaemon(DaemonClass):
-    def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str'):
-        super().__init__(topic_sub=topic_sub, topic_pub=topic_pub)
-        self.trade_api = TradeAPI(headless=True)
+    def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str',auth=None):
+        super().__init__(topic_sub=topic_sub, topic_pub=topic_pub,auth=auth)
+        self.trade_api = TradeAPI(headless=True,auth=AUTH)
         self.captcha_db = {}
         self.heart_thread = threading.Thread(target=self.heart_beat, daemon=True)
 
@@ -45,5 +45,5 @@ class TradeDaemon(DaemonClass):
 
 
 if __name__ == '__main__':
-    a = TradeDaemon()
+    a = TradeDaemon(auth=AUTH)
     a.daemon_main()
