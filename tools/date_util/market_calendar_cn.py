@@ -13,6 +13,7 @@ import pytz
 
 class MktCalendar:
     # DEPENDENCY( tushare pytz )
+    # TODO: generate calendar if not exist
     def __init__(self, tz='Asia/Shanghai', mkt='CN'):
         self.timezone = tz
         self.market = mkt
