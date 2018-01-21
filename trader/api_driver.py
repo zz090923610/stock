@@ -13,8 +13,8 @@ os.environ["webdriver.chrome.driver"] = chromedriver
 import trader.account_info as account
 
 status_dict = {'sleep': ['action_prelogin'],
-               'wait_verify_code': ['action_login_with_verify_code'],
-               'active': ['action_buy', 'action_sell', 'action_cash', 'action_heart_beat']}
+               'wait_verify_code': ['action_login_with_verify_code','action_prelogin'],
+               'active': ['action_buy', 'action_sell', 'action_cash', 'action_heart_beat','action_prelogin']}
 
 
 class TradeAPI:
@@ -23,12 +23,20 @@ class TradeAPI:
         self.driver = None
         self.user = account.user
         self.passwd = account.passwd
+        self.on_server = account.on_server
         self.options = webdriver.ChromeOptions()
         self.headless = headless
         self.busy = False
         self.status = 'sleep'
         if headless:
             self.options.add_argument('headless')
+
+    def respond(self, payload, res_type='str'):
+        if self.on_server:
+            from tools.communication.mqtt import simple_publish
+            simple_publish("trade_res/%s" % res_type, payload)
+        else:
+            logging("logging", payload)
 
     # noinspection PyBroadException
     def __del__(self):
@@ -46,7 +54,7 @@ class TradeAPI:
 
     def pre_login(self):
         if 'action_prelogin' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_prelogin"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_prelogin"))
             return
         self.driver = webdriver.Chrome(chromedriver, chrome_options=self.options)
         self.driver.get('https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=preLogin')
@@ -58,15 +66,24 @@ class TradeAPI:
         self.driver.find_element_by_name("inputid").send_keys(self.user)
         self.driver.find_element_by_name("trdpwd").send_keys(self.passwd)
         self.driver.get_screenshot_as_file('/tmp/main-page.png')
-        if self.headless:
-            from PIL import Image
-            image = Image.open('/tmp/main-page.png')
+        from PIL import Image
+        image = Image.open('/tmp/main-page.png')
+        area = (0, 0, 400, 600)
+        image = image.crop(area)
+        image.save('/tmp/main-page.png')
+        if self.headless and not self.on_server:
             image.show()
         self.status = 'wait_verify_code'
+        if self.headless and self.on_server:
+            with open('/tmp/main-page.png', 'rb') as f:
+                image = f.read()
+                payload = bytearray(image)
+                self.respond(payload, res_type='img')
+                self.respond("TradeAPI/verify_image_sent")
 
     def login_with_verify_code(self, verify_code):
         if 'action_login_with_verify_code' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_login_with_verify_code"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_login_with_verify_code"))
             return
         self.driver.find_element_by_name("AppendCode").send_keys(verify_code)
         self.driver.find_element_by_id("confirmBtn").click()
@@ -75,20 +92,20 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print("Login failed")
-            logging("logging", "TradeAPI/login_failed %s" % alert.text)
+            self.respond("TradeAPI/login_failed %s" % alert.text)
         except SExceptions.NoAlertPresentException:
             if self.driver.title == '国泰君安证券欢迎您':
                 print("Login success")
-                logging("logging", "TradeAPI/login_success")
+                self.respond("TradeAPI/login_success")
                 self.status = 'active'
             else:
                 print("Login failed")
-                logging("logging", "TradeAPI/login_failed")
+                self.respond("TradeAPI/login_failed")
                 self.status = 'sleep'
 
     def send_heartbeat(self):
         if 'action_heart_beat' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_heart_beat"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_heart_beat"))
             return
         if self.busy:
             return
@@ -96,16 +113,16 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
-            logging("logging", "TradeAPI/heartbeat_%s" % alert.text)
+            self.respond("TradeAPI/heartbeat_%s" % alert.text)
             self.status = 'sleep'
         except SExceptions.NoAlertPresentException:
             print("alive")
-            logging("logging", "TradeAPI/heartbeat_success")
+            self.respond("TradeAPI/heartbeat_success")
             self.status = 'active'
 
     def buy(self, symbol, price, quant):
         if 'action_buy' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_buy"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_buy"))
             return
         while self.busy:
             sleep(1)
@@ -122,13 +139,13 @@ class TradeAPI:
         alert = self.driver.switch_to_alert()
         alert.accept()
         print(alert.text)
-        logging("logging", "TradeAPI/%s" % alert.text)
+        self.respond("TradeAPI/%s" % alert.text)
         alert.dismiss()
         self.busy = False
 
     def sell(self, symbol, price, quant):
         if 'action_sell' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_sell"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_sell"))
             return
         while self.busy:
             sleep(1)
@@ -143,16 +160,16 @@ class TradeAPI:
         alert = self.driver.switch_to_alert()
         alert.accept()
         print(alert.text)
-        logging("logging", "TradeAPI/%s" % alert.text)
+        self.respond("TradeAPI/%s" % alert.text)
         alert.dismiss()
         self.busy = False
 
     def get_available_cash(self):
         if 'action_cash' not in self.get_current_allowed_actions():
-            logging("logging", "TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_cash"))
+            self.respond("TradeAPI/StatusActionNotMatch:%s/%s" % (self.status, "action_cash"))
             return
         self.driver.get("https://trade.gtja.com/webtrade/trade/webTradeAction.do?method=searchStackDetail")
         cash = self.driver.find_element_by_xpath(
             "/html/body/table/tbody/tr/td/table[1]/tbody/tr/td[1]/table[2]/tbody/tr/td/table/tbody/tr[2]/td[4]").text
-        logging("logging", "TradeAPI/cash_%s" % cash)
+        self.respond("TradeAPI/cash_%s" % cash)
         return float(cash)

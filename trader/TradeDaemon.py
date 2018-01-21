@@ -9,14 +9,14 @@ from trader.api_driver import TradeAPI
 
 
 class TradeDaemon(DaemonClass):
-    def __init__(self, topic_sub='trade_req', topic_pub='trade_res'):
+    def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str'):
         super().__init__(topic_sub=topic_sub, topic_pub=topic_pub)
         self.trade_api = TradeAPI(headless=True)
         self.captcha_db = {}
         self.heart_thread = threading.Thread(target=self.heart_beat, daemon=True)
 
     def heart_beat(self):
-        logging("logging", 'TradeDaemon/heartbeat started')
+        self.trade_api.respond('TradeDaemon/heartbeat started')
         while not self.cancel_daemon:
             time.sleep(120)
             self.trade_api.send_heartbeat()
@@ -30,7 +30,7 @@ class TradeDaemon(DaemonClass):
         elif payload == 'cash':
             self.trade_api.get_available_cash()
         elif payload == 'status':
-            logging("logging", 'TradeDaemon/status_%s' % self.trade_api.status)
+            self.trade_api.respond('TradeDaemon/status_%s' % self.trade_api.status)
         elif payload.split("_")[0] == "login":
             self.trade_api.login_with_verify_code(payload.split("_")[1])
             if self.trade_api.status == 'active':
