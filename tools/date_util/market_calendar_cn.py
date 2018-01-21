@@ -48,7 +48,7 @@ class MktCalendar:
         utc_now, now = datetime.utcfromtimestamp(current_time), datetime.fromtimestamp(current_time)
         return utc_now.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(self.timezone))
 
-    def _get_local_date(self):
+    def get_local_date(self):
         """
         return today's date in YYYY-MM-DD format
         :param tz: time zone
@@ -58,7 +58,7 @@ class MktCalendar:
         local_today = local_now.strftime("%Y-%m-%d")
         return local_today
 
-    def _get_local_time(self):
+    def get_local_time(self):
         local_now = self._get_local_now()
         local_time = local_now.strftime("%H:%M:%S")
         return local_time
@@ -66,15 +66,15 @@ class MktCalendar:
     def gen_date_list(self, goal, t='TODAY', in_mkt=False):
         # TODO
         if goal == "T" and t == 'TODAY':
-            return [self._get_local_date()] if not in_mkt else [last_tddate()]
+            return [self.get_local_date()] if not in_mkt else [last_tddate()]
 
     def validate_date(self, day):
         if day == "TODAY":
-            local_date_now = self._get_local_date()
+            local_date_now = self.get_local_date()
             return local_date_now if self.quick_dict[local_date_now] == 1 else last_tddate()
         if day == "LASTCLOSEDTRADEDAY":
-            local_date_now = self._get_local_date()
-            local_time_now = self._get_local_time()
+            local_date_now = self.get_local_date()
+            local_time_now = self.get_local_time()
             return local_date_now if self.quick_dict[local_date_now] == 1 and local_time_now >= '15:05:00' \
                 else last_tddate()
         else:

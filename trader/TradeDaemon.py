@@ -20,7 +20,7 @@ class TradeDaemon(DaemonClass):
 
     def heart_beat(self):
         self.keep_heartbeat = True
-        self.trade_api.respond('TradeDaemon/heartbeat started')
+        self.trade_api.respond('TradeDaemon/heartbeat_started')
         cnt = 0
         while self.keep_heartbeat:
             time.sleep(.5)
@@ -40,6 +40,9 @@ class TradeDaemon(DaemonClass):
             self.trade_api.get_available_cash()
         elif payload == 'status':
             self.trade_api.respond('TradeDaemon/status_%s' % self.trade_api.status)
+        elif payload == 'sleep':
+            self.keep_heartbeat = False
+            self.trade_api.status = 'sleep'
         elif payload.split("_")[0] == "login":
             self.trade_api.login_with_verify_code(payload.split("_")[1])
             if self.trade_api.status == 'active':
@@ -51,6 +54,7 @@ class TradeDaemon(DaemonClass):
         elif payload.split("_")[0] == "sell":
             (s, symbol, price, quant) = payload.split("_")
             threading.Thread(target=self.trade_api.sell, args=(symbol, price, quant)).start()
+
 
 
 if __name__ == '__main__':

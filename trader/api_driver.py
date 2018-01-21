@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
 import selenium.common.exceptions as SExceptions
 
+from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging
 
 chromedriver = "chromedriver"
@@ -29,6 +30,7 @@ class TradeAPI:
         self.busy = False
         self.auth=auth
         self.status = 'sleep'
+        self.mkt_cal = MktCalendar()
         if headless:
             self.options.add_argument('headless')
 
@@ -93,7 +95,7 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print("Login failed")
-            self.respond("TradeAPI/login_failed %s" % alert.text)
+            self.respond("TradeAPI/login_failed_%s" % alert.text)
         except SExceptions.NoAlertPresentException:
             if self.driver.title == '国泰君安证券欢迎您':
                 print("Login success")
@@ -114,11 +116,11 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
-            self.respond("TradeAPI/heartbeat_%s" % alert.text)
+            self.respond("TradeAPI/heartbeat_%s_%s" % (alert.text, self.mkt_cal.get_local_time()))
             self.status = 'sleep'
         except SExceptions.NoAlertPresentException:
             print("alive")
-            self.respond("TradeAPI/heartbeat_success")
+            self.respond("TradeAPI/heartbeat_success_%s" % self.mkt_cal.get_local_time())
             self.status = 'active'
 
     def buy(self, symbol, price, quant):

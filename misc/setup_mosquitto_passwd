@@ -1,0 +1,8 @@
+mosquitto_passwd -c passwordfile user
+mosquitto_passwd -b passwordfile user password
+mosquitto_passwd -D passwordfile user
+
+sudo mv passwordfile /etc/mosquitto/
+
+sudo echo "allow_anonymous false" >> /etc/mosquitto/mosquitto.conf
+sudo echo "password_file /etc/mosquitto/passwordfile" >> /etc/mosquitto/mosquitto.conf
