@@ -139,6 +139,7 @@ class TradeAPI:
         self.driver.find_element_by_name("qty").clear()
         self.driver.find_element_by_name("qty").send_keys(quant)
         self.driver.find_element_by_name("Submit").click()
+        sleep(2)
         alert = self.driver.switch_to_alert()
         alert.accept()
         print(alert.text)
