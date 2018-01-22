@@ -139,13 +139,13 @@ class TradeAPI:
         self.driver.find_element_by_name("qty").clear()
         self.driver.find_element_by_name("qty").send_keys(quant)
         self.driver.find_element_by_name("Submit").click()
-        sleep(2)
-        alert = self.driver.switch_to_alert()
-        alert.accept()
-        print(alert.text)
-        self.respond("TradeAPI/%s" % alert.text)
-        alert.dismiss()
-        self.busy = False
+        self.driver.get_screenshot_as_file('/tmp/main-page.png')
+        #alert = self.driver.switch_to_alert()
+        #alert.accept()
+        #print(alert.text)
+        #self.respond("TradeAPI/%s" % alert.text)
+        #alert.dismiss()
+        #self.busy = False
 
     def sell(self, symbol, price, quant):
         if 'action_sell' not in self.get_current_allowed_actions():
