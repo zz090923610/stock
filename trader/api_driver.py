@@ -145,16 +145,16 @@ class TradeAPI:
             print(alert.text)
             alert.accept()
         except SExceptions.NoAlertPresentException:
-            self.respond("no response")
+            self.respond("NoAlertPresentException_BUY_POS1")
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
             alert.accept()
 
-            self.respond("TradeAPI/%s" % alert.text)
+            self.respond("TradeAPI/buy_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
-            self.respond("no response")
+            self.respond("NoAlertPresentException_BUY_POS2")
         self.busy = False
 
     def sell(self, symbol, price, quant):
@@ -181,16 +181,16 @@ class TradeAPI:
             print(alert.text)
             alert.accept()
         except SExceptions.NoAlertPresentException:
-            self.respond("no response")
+            self.respond("NoAlertPresentException_sell_POS1")
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
             alert.accept()
 
-            self.respond("TradeAPI/%s" % alert.text)
+            self.respond("TradeAPI/sell_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
-            self.respond("no response")
+            self.respond("NoAlertPresentException_sell_POS2")
         self.busy = False
 
     def get_available_cash(self):
