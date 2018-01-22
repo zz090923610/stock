@@ -137,7 +137,7 @@ class TradeAPI:
         self.driver.find_element_by_name("stkcode").send_keys(symbol)
         self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").send_keys(quant)
-
+        sleep(0.3)
         self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("Submit").click()
         try:
@@ -145,7 +145,7 @@ class TradeAPI:
             print(alert.text)
             alert.accept()
         except SExceptions.NoAlertPresentException:
-            self.respond("NoAlertPresentException_BUY_POS1")
+            self.respond("TradeAPI/NoAlertPresentException_BUY_POS1")
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
@@ -154,7 +154,7 @@ class TradeAPI:
             self.respond("TradeAPI/buy_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
-            self.respond("NoAlertPresentException_BUY_POS2")
+            self.respond("TradeAPI/NoAlertPresentException_BUY_POS2")
         self.busy = False
 
     def sell(self, symbol, price, quant):
@@ -181,7 +181,7 @@ class TradeAPI:
             print(alert.text)
             alert.accept()
         except SExceptions.NoAlertPresentException:
-            self.respond("NoAlertPresentException_sell_POS1")
+            self.respond("TradeAPI/NoAlertPresentException_sell_POS1")
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
@@ -190,7 +190,7 @@ class TradeAPI:
             self.respond("TradeAPI/sell_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
-            self.respond("NoAlertPresentException_sell_POS2")
+            self.respond("TradeAPI/NoAlertPresentException_sell_POS2")
         self.busy = False
 
     def get_available_cash(self):
