@@ -144,6 +144,7 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
+            self.respond(alert.text)
             alert.accept()
         except SExceptions.NoAlertPresentException:
             self.respond("TradeAPI/NoAlertPresentException_BUY_POS1")
