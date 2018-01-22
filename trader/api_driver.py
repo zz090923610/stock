@@ -153,8 +153,6 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
-            alert.accept()
-
             self.respond("TradeAPI/buy_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
