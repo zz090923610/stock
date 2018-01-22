@@ -44,6 +44,9 @@ class TradeDaemon(DaemonClass):
             self.trade_api.get_available_cash()
         elif payload == 'status':
             self.trade_api.respond('TradeDaemon/status_%s' % self.trade_api.status)
+        elif payload == 'exit':
+            self.cancel_daemon = True
+            self.keep_heartbeat = False
         elif payload == 'sleep':
             self.keep_heartbeat = False
             self.trade_api.status = 'sleep'

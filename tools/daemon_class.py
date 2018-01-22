@@ -67,5 +67,5 @@ class DaemonClass:
         self.MQTT_START()
         self.publish('%s/alive_%d' % (self.alive_name, os.getpid()))
         while not self.cancel_daemon:
-            time.sleep(2)
+            time.sleep(.5)
         self.MQTT_CANCEL()
