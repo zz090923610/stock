@@ -95,6 +95,7 @@ class TradeAPI:
         try:
             alert = self.driver.switch_to_alert()
             self.respond("TradeAPI/login_failed_%s" % alert.text)
+            self.status = 'sleep'
         except SExceptions.NoAlertPresentException:
             if self.driver.title == '国泰君安证券欢迎您':
                 self.respond("TradeAPI/login_success")
