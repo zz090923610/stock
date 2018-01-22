@@ -130,7 +130,6 @@ class TradeAPI:
         while self.busy:
             sleep(1)
         self.busy = True
-        self.driver.get_screenshot_as_file('/tmp/main-page.png')
         self.driver.get("https://trade.gtja.com/webtrade/trade/PaperBuy.jsp")
         self.driver.find_element_by_name("stkcode").clear()
         self.driver.find_element_by_name("stkcode").send_keys(symbol)
@@ -139,6 +138,7 @@ class TradeAPI:
         self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").clear()
         self.driver.find_element_by_name("qty").send_keys(quant)
+        self.driver.get_screenshot_as_file('/tmp/main-page.png')
         self.driver.find_element_by_name("Submit").click()
         self.driver.get_screenshot_as_file('/tmp/main-page.png')
         #alert = self.driver.switch_to_alert()
