@@ -137,7 +137,7 @@ class TradeAPI:
         self.driver.find_element_by_name("stkcode").send_keys(symbol)
         self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").send_keys(quant)
-        sleep(0.3)
+
         self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("Submit").click()
         try:
@@ -165,17 +165,32 @@ class TradeAPI:
             sleep(1)
         self.busy = True
         self.driver.get("https://trade.gtja.com/webtrade/trade/Papersale.jsp")
-        self.driver.find_element_by_name("stkcode").send_keys(symbol)
-        self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("price").clear()
+        self.driver.find_element_by_name("stkcode").clear()
+        self.driver.find_element_by_name("qty").clear()
+
+        self.driver.find_element_by_name("stkcode").send_keys(symbol)
         self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").send_keys(quant)
+
+        sleep(0.3)
+        self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("Submit2").click()
-        alert = self.driver.switch_to_alert()
-        alert.accept()
-        print(alert.text)
-        self.respond("TradeAPI/%s" % alert.text)
-        alert.dismiss()
+        try:
+            alert = self.driver.switch_to_alert()
+            print(alert.text)
+            alert.accept()
+        except SExceptions.NoAlertPresentException:
+            self.respond("no response")
+        try:
+            alert = self.driver.switch_to_alert()
+            print(alert.text)
+            alert.accept()
+
+            self.respond("TradeAPI/%s" % alert.text)
+            alert.dismiss()
+        except SExceptions.NoAlertPresentException:
+            self.respond("no response")
         self.busy = False
 
     def get_available_cash(self):
