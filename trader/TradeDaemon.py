@@ -15,7 +15,7 @@ class TradeDaemon(DaemonClass):
         self.captcha_db = {}
         self.heart_thread = None
         self.keep_heartbeat = False
-        threading.Thread(target=self.status_report, daemon=True)
+        threading.Thread(target=self.status_report, daemon=True).start()
 
     def heart_beat(self):
         self.keep_heartbeat = True
