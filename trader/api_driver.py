@@ -38,8 +38,8 @@ class TradeAPI:
         if self.on_server:
             from tools.communication.mqtt import simple_publish
             simple_publish("trade_res/%s" % res_type, payload, auth=self.auth)
-        else:
-            logging("logging", payload)
+        if res_type == "str":
+            logging("logging", payload, method=account.logging_method)
 
     # noinspection PyBroadException
     def __del__(self):
@@ -94,15 +94,12 @@ class TradeAPI:
         t.find_element_by_xpath("//img[@src='/webtrade/pic/images/chahao.png']").click()
         try:
             alert = self.driver.switch_to_alert()
-            print("Login failed")
             self.respond("TradeAPI/login_failed_%s" % alert.text)
         except SExceptions.NoAlertPresentException:
             if self.driver.title == '国泰君安证券欢迎您':
-                print("Login success")
                 self.respond("TradeAPI/login_success")
                 self.status = 'active'
             else:
-                print("Login failed")
                 self.respond("TradeAPI/login_failed")
                 self.status = 'sleep'
 
@@ -115,11 +112,9 @@ class TradeAPI:
         self.driver.get("https://trade.gtja.com/webtrade/trade/PaperBuy.jsp")
         try:
             alert = self.driver.switch_to_alert()
-            print(alert.text)
             self.respond("TradeAPI/heartbeat_%s_%s" % (alert.text, self.mkt_cal.get_local_time()))
             self.status = 'sleep'
         except SExceptions.NoAlertPresentException:
-            print("alive")
             self.respond("TradeAPI/heartbeat_success_%s" % self.mkt_cal.get_local_time())
             self.status = 'active'
 
@@ -143,15 +138,12 @@ class TradeAPI:
         handle = self.driver.current_window_handle
         try:
             alert = self.driver.switch_to_alert()
-            print(alert.text)
-            self.respond(alert.text)
             alert.accept()
             self.driver.switch_to.window(handle)
         except SExceptions.NoAlertPresentException:
             self.respond("TradeAPI/NoAlertPresentException_BUY_POS1")
         try:
             alert = self.driver.switch_to_alert()
-            print(alert.text)
             self.respond("TradeAPI/buy_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
@@ -180,15 +172,12 @@ class TradeAPI:
         handle = self.driver.current_window_handle
         try:
             alert = self.driver.switch_to_alert()
-            print(alert.text)
-            self.respond(alert.text)
             alert.accept()
             self.driver.switch_to.window(handle)
         except SExceptions.NoAlertPresentException:
             self.respond("TradeAPI/NoAlertPresentException_SELL_POS1")
         try:
             alert = self.driver.switch_to_alert()
-            print(alert.text)
             self.respond("TradeAPI/sell_%s_%s_%s/%s" % (symbol, price, quant, alert.text))
             alert.dismiss()
         except SExceptions.NoAlertPresentException:

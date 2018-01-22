@@ -8,8 +8,6 @@ from trader.account_info import AUTH
 from trader.api_driver import TradeAPI
 
 
-
-
 class TradeDaemon(DaemonClass):
     def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str', auth=None):
         super().__init__(topic_sub=topic_sub, topic_pub=topic_pub, auth=auth)
@@ -17,6 +15,7 @@ class TradeDaemon(DaemonClass):
         self.captcha_db = {}
         self.heart_thread = None
         self.keep_heartbeat = False
+        threading.Thread(target=self.status_report, daemon=True)
 
     def heart_beat(self):
         self.keep_heartbeat = True
@@ -30,6 +29,11 @@ class TradeDaemon(DaemonClass):
                 cnt = 0
             if self.trade_api.status != 'active':
                 return
+
+    def status_report(self):
+        while not self.cancel_daemon:
+            self.trade_api.respond('TradeDaemon/status_%s' % self.trade_api.status)
+            time.sleep(1)
 
     def mqtt_on_message(self, mqttc, obj, msg):
         payload = msg.payload.decode('utf8')
@@ -54,7 +58,6 @@ class TradeDaemon(DaemonClass):
         elif payload.split("_")[0] == "sell":
             (s, symbol, price, quant) = payload.split("_")
             threading.Thread(target=self.trade_api.sell, args=(symbol, price, quant)).start()
-
 
 
 if __name__ == '__main__':
