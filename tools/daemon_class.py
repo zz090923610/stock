@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 import paho.mqtt.publish as single_publish
 
 class DaemonClass:
-    def __init__(self, topic_sub=None, topic_pub='', auth=None):
+    def __init__(self, topic_sub=None, topic_pub='', auth=None, name=''):
 
         if topic_sub is None:
             topic_sub = []
@@ -14,6 +14,7 @@ class DaemonClass:
         self.client.on_message = self.mqtt_on_message
         self.client.on_subscribe = self.mqtt_on_subscribe
         self.client.on_publish = self.mqtt_on_publish
+        self.alive_name = name
         if auth is not None:
             self.client.username_pw_set(auth['username'], auth['password'])
         self.client.connect("localhost", 1883, 60)
@@ -64,7 +65,7 @@ class DaemonClass:
 
     def daemon_main(self):
         self.MQTT_START()
-        self.publish('alive_%d' % os.getpid())
+        self.publish('%s/alive_%d' % (self.alive_name, os.getpid()))
         while not self.cancel_daemon:
             time.sleep(2)
         self.MQTT_CANCEL()

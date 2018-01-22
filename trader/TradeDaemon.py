@@ -9,8 +9,8 @@ from trader.api_driver import TradeAPI
 
 
 class TradeDaemon(DaemonClass):
-    def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str', auth=None):
-        super().__init__(topic_sub=topic_sub, topic_pub=topic_pub, auth=auth)
+    def __init__(self, topic_sub='trade_req', topic_pub='trade_res/str', auth=None, name="TradeDaemon"):
+        super().__init__(topic_sub=topic_sub, topic_pub=topic_pub, auth=auth, name=name)
         self.trade_api = TradeAPI(headless=True, auth=AUTH)
         self.captcha_db = {}
         self.heart_thread = None
