@@ -146,10 +146,10 @@ class TradeAPI:
             print(alert.text)
             self.respond(alert.text)
             alert.accept()
+            self.driver.switch_to.window(handle)
         except SExceptions.NoAlertPresentException:
             self.respond("TradeAPI/NoAlertPresentException_BUY_POS1")
-        handle = self.driver.current_window_handle
-        self.driver.switch_to.window(handle)
+
         try:
             alert = self.driver.switch_to_alert()
             print(alert.text)
@@ -160,7 +160,6 @@ class TradeAPI:
         except SExceptions.NoAlertPresentException:
             self.respond("TradeAPI/NoAlertPresentException_BUY_POS2")
         self.busy = False
-        self.driver.switch_to.window(handle)
 
     def sell(self, symbol, price, quant):
         if 'action_sell' not in self.get_current_allowed_actions():
