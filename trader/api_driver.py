@@ -132,20 +132,23 @@ class TradeAPI:
         self.busy = True
         self.driver.get("https://trade.gtja.com/webtrade/trade/PaperBuy.jsp")
         self.driver.find_element_by_name("stkcode").clear()
-        self.driver.find_element_by_name("stkcode").send_keys(symbol)
-        self.driver.find_element_by_name("radiobutton").click()
-        self.driver.find_element_by_name("price").clear()
-        self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").clear()
+        self.driver.find_element_by_name("price").clear()
+        self.driver.find_element_by_name("stkcode").send_keys(symbol)
+        self.driver.find_element_by_name("price").send_keys(price)
         self.driver.find_element_by_name("qty").send_keys(quant)
-        self.driver.get_screenshot_as_file('/tmp/main-page.png')
+        sleep(0.3)
+        self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("Submit").click()
         self.driver.get_screenshot_as_file('/tmp/main-page.png')
-        #alert = self.driver.switch_to_alert()
-        #alert.accept()
-        #print(alert.text)
-        #self.respond("TradeAPI/%s" % alert.text)
-        #alert.dismiss()
+        try:
+            alert = self.driver.switch_to_alert()
+            alert.accept()
+            print(alert.text)
+            self.respond("TradeAPI/%s" % alert.text)
+            alert.dismiss()
+        except SExceptions.NoAlertPresentException:
+            self.respond("no response")
         self.busy = False
 
     def sell(self, symbol, price, quant):
