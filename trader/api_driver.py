@@ -140,11 +140,18 @@ class TradeAPI:
         sleep(0.3)
         self.driver.find_element_by_name("radiobutton").click()
         self.driver.find_element_by_name("Submit").click()
+        try:
+            alert = self.driver.switch_to_alert()
+            print(alert.text)
+            alert.accept()
+        except SExceptions.NoAlertPresentException:
+            self.respond("no response")
         self.driver.get_screenshot_as_file('/tmp/main-page.png')
         try:
             alert = self.driver.switch_to_alert()
-            alert.accept()
             print(alert.text)
+            alert.accept()
+
             self.respond("TradeAPI/%s" % alert.text)
             alert.dismiss()
         except SExceptions.NoAlertPresentException:
