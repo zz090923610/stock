@@ -130,6 +130,7 @@ class TradeAPI:
         while self.busy:
             sleep(1)
         self.busy = True
+        self.driver.get_screenshot_as_file('/tmp/main-page.png')
         self.driver.get("https://trade.gtja.com/webtrade/trade/PaperBuy.jsp")
         self.driver.find_element_by_name("stkcode").clear()
         self.driver.find_element_by_name("stkcode").send_keys(symbol)
@@ -145,7 +146,7 @@ class TradeAPI:
         #print(alert.text)
         #self.respond("TradeAPI/%s" % alert.text)
         #alert.dismiss()
-        #self.busy = False
+        self.busy = False
 
     def sell(self, symbol, price, quant):
         if 'action_sell' not in self.get_current_allowed_actions():
