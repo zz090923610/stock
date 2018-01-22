@@ -28,6 +28,7 @@ class TradeDaemon(DaemonClass):
                 self.trade_api.send_heartbeat()
                 cnt = 0
             if self.trade_api.status != 'active':
+                self.keep_heartbeat = False
                 return
 
     def status_report(self):
