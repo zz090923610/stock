@@ -6,3 +6,4 @@ python3 -m tools.ctrl_hdl ctrls/anomaly.ctrl
 cp ../stockdata/naive_score/*.csv ~/
 cp ../stockdata/slice/*.csv ~/
 eval `python3 -m misc.zip_report TODAY`
+rm ~/*.csv # todo: warning don't save any csv on ~/
