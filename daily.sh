@@ -5,3 +5,4 @@ python3 -m tools.ctrl_hdl ctrls/everyday_analysis_v2.ctrl
 python3 -m tools.ctrl_hdl ctrls/anomaly.ctrl
 cp ../stockdata/naive_score/*.csv ~/
 cp ../stockdata/slice/*.csv ~/
+eval `python3 -m misc.zip_report TODAY`

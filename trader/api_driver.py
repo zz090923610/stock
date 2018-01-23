@@ -1,9 +1,8 @@
 import os
 from time import sleep
 
-from selenium.webdriver.common.keys import Keys
-from selenium import webdriver
 import selenium.common.exceptions as SExceptions
+from selenium import webdriver
 
 from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging

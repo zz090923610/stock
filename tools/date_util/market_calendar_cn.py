@@ -1,14 +1,12 @@
 import os
+import time
 
 import pandas as pd
+import pytz
 from tushare import trade_cal
 from tushare.util.dateu import last_tddate
 
-from configs.path import DIRs
-from tools.io import test_internet, out
-import tushare as ts
-import time
-import pytz
+
 
 
 class MktCalendar:
@@ -17,7 +15,11 @@ class MktCalendar:
     def __init__(self, tz='Asia/Shanghai', mkt='CN'):
         self.timezone = tz
         self.market = mkt
-        self.cal_path = os.path.join(DIRs.get("CALENDAR"), "%s.csv" % self.market)
+        try:
+            from configs.path import DIRs
+            self.cal_path = os.path.join(DIRs.get("CALENDAR"), "%s.csv" % self.market)
+        except Exception as e:
+            self.cal_path = "%s.csv" % self.market
         self.cal = self.load_calendar()
         self.quick_dict = self.build_quick_dict()
 
@@ -29,7 +31,6 @@ class MktCalendar:
             a.to_csv(self.cal_path, index=False)
             return a
         except Exception as e:
-            out("mkt_calendar", 'Load calendar failed %s' % e)
             return None
 
     def build_quick_dict(self):

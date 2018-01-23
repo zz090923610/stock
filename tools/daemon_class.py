@@ -4,6 +4,7 @@ import time
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as single_publish
 
+
 class DaemonClass:
     def __init__(self, topic_sub=None, topic_pub='', auth=None, name=''):
 
