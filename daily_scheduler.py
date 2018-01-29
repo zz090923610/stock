@@ -9,7 +9,7 @@ def daily_analysis():
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("08:58").do(daily_analysis)
+    schedule.every().day.at("03:00").do(daily_analysis)
     while True:
 
         schedule.run_pending()
