@@ -14,5 +14,10 @@ def generate_zip_cmd(day):
            '/home/zhangzhao/data/stockdata/slice/anomaly_%s.csv' % (day, day, day, day, day)
 
 
+def generate_send_report_cmd(day):
+    return "wccmd -f /home/zhangzhao/%s.zip 张志远" % day
+
+
 if __name__ == '__main__':
-    print(generate_zip_cmd(sys.argv[1]))
+    res = generate_zip_cmd(sys.argv[1]) + "&&" + generate_send_report_cmd(sys.argv[1])
+    print(res)
