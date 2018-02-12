@@ -1,11 +1,7 @@
 class Alarm:
-    def __init__(self):
-        self.type = None  # msg, order
-        self.msg = None
-        self.order = None
-
-    def set(self, type, payload):
-        pass
+    def __init__(self, type, payload):
+        self.type = type  # msg, order
+        self.payload = payload
 
     def emit(self):
-        pass
+        print(self.type, self.payload)

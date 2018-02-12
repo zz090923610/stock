@@ -1,11 +1,12 @@
 # DEP_APT( zip )
 import sys
 from tools.date_util.market_calendar_cn import MktCalendar
+
 calendar = MktCalendar()
+
 
 def generate_zip_cmd(day):
     # todo ugly
-
 
     day = calendar.validate_date(day)
     return "zip -j ~/%s.zip " \

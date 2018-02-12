@@ -1,3 +1,150 @@
+import re
+
+from mkt_monitor.alarm import Alarm
+from tools.date_util.market_calendar_cn import MktDateTime, MktCalendar
+
+
 class Rule:
-    def __init__(self):
-        pass
+    def __init__(self, cal: MktCalendar):
+        self.cal = cal
+        self.name = ''
+        self.function = ''
+        self.t0 = None
+        self.unit = ''
+        self.trigger = ''
+        self.action = []
+        self.status = ''
+        self.valid = ''
+        self.valid_until = ''
+        self.callback = []
+        self.create_date = ''
+
+    def reset(self):
+        self.__init__(self.cal)
+
+    def parse_line(self, line):
+        self.reset()
+        # a line like this:
+        # name:pressure unit:d func:p=11-0.1(t-t0) t0:2018-02-01&09:30:00 status:pending valid:1d action:sendmsg action:sell callback:activate_support callback:sleep_self
+        # name:support unit:d func:p=9-0.1t status:pending valid:1d action:sendmsg action:buy
+        items = line.strip().split(" ")
+        for i in items:
+            (k, v) = i.split(":", 1)
+            if k == "name":
+                self.name = v
+            elif k == "func":
+                self.function = v
+            elif k == "t0":
+                self.t0 = MktDateTime(v, self.cal)
+            elif k == "unit":
+                self.unit = v
+            elif k == "trigger":
+                self.trigger = v
+            elif k == "status":
+                self.status = v
+            elif k == "valid":
+                self.valid = v
+            elif k == "action":
+                self.action.append(v)
+            elif k == "callback":
+                self.callback.append(v)
+        self.create_date = self.cal.get_local_date()
+        self.calc_valid_until()
+
+    def generate_line(self):
+        action_str = " ".join(["action:%s" % i for i in self.action])
+        valid_str = " ".join(["valid:%s" % i for i in self.valid])
+        callback_str = " ".join(["callback:%s" % i for i in self.callback])
+        line = " ".join(["name:" + self.name, "func:" + self.function, "unit:" + self.unit, "status: " + self.status,
+                         valid_str, action_str, callback_str])
+        return line
+
+    def calc_delta_t(self, t0, t):
+        dt = t - t0
+        if self.unit == "s":
+            dt /= 1
+        elif self.unit == "1m":
+            dt /= 60
+        elif self.unit == "3m":
+            dt /= 180
+        elif self.unit == "5m":
+            dt /= 300
+        elif self.unit == "10m":
+            dt /= 600
+        elif self.unit == "15m":
+            dt /= 900
+        elif self.unit == "30m":
+            dt /= 1800
+        elif (self.unit == "60m") | (self.unit == "h"):
+            dt /= 3600
+        elif self.unit == "d":
+            dt /= 14400
+        elif self.unit == "m":
+            dt /= 288000
+        return dt
+
+    def calc_value_of_func_now(self):
+        t0 = self.t0
+        t = MktDateTime(self.cal.get_local_dt(), self.cal)
+        dt = self.calc_delta_t(t0, t)
+        # t = MktDateTime("2018-02-01&13:10:00", self.cal)  # TODO
+        func = self.function.split("=")[1]
+        res_var = self.function.split("=")[0].strip()
+
+        res_val = eval(func)
+        return {"var": res_var, "val": res_val, "timestamp": t}
+
+    def calc_valid_until(self):
+        m = re.search('[0-9]+', self.valid)
+        try:
+            num = m.group()
+        except AttributeError:
+            num = 1
+        m = re.search('[a-zA-Z]+', self.valid)
+        try:
+            unit = m.group()
+        except AttributeError:
+            unit = 'd'
+
+        if unit == 'd':
+            num *= 1
+        elif unit == 'w':
+            num *= 5
+        elif unit == 'm':
+            num *= 20
+        valid_until_date = self.cal.get_day('t+%s' % num, self.create_date)
+        self.valid_until = "%s&15:00:00" % valid_until_date
+
+    def check_val(self, val_now):
+        # val_now should be in {var:"",  val:'', "timestamp": t} format
+        t_now = self.cal.get_local_dt()
+        if (self.status == "finished") | (self.status == 'pending'):
+            return []
+        if t_now >= self.valid_until:
+            self.status = "finished"
+            return []
+        val_calc = self.calc_value_of_func_now()
+        m = re.search('[<>=]+', "<=")
+        try:
+            trigger_direction = m.group()
+        except AttributeError:
+            trigger_direction = "=="
+
+        result = eval("%s %s %s" % (val_calc['val'], trigger_direction, val_now['val']))
+
+        if result:
+            for a in self.action:
+                if 'sendmsg' in a:
+                    Alarm('msg', a).emit()
+                elif 'trade' in a:
+                    Alarm('order', a).emit()
+            cb_list = []
+            for c in self.callback:
+                (cb_action, cb_obj) = c.split("_")
+                if cb_obj == "self":
+                    self.status = {"pend": "pending", "finish": "finished", "activate": "active"}[cb_action]
+                else:
+                    cb_list.append(c)
+            return cb_list
+        else:
+            return []
