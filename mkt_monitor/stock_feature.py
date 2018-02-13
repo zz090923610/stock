@@ -1,11 +1,11 @@
-# REGISTER_DATA_DIR {"stock_monitor_rules_dir": "%root/stock_feature/rules"}
+# REGISTER_DATA_DIR {"stock_monitor_rules_dir": "%root/stock_feature"}
 # TODO: handle dir register, init.
 import os
 
 from mkt_monitor.rules import Rule
 from tools.date_util.market_calendar_cn import MktCalendar
 
-stock_monitor_rules_dir = "/home/zhangzhao/data/stockdata/stock_feature/rules"  # REMOVE_WHEN_DIR_REGISTER
+stock_monitor_rules_dir = "/home/zhangzhao/data/stockdata/stock_feature"  # REMOVE_WHEN_DIR_REGISTER
 
 
 # TODO: remove dir from file
@@ -13,7 +13,6 @@ stock_monitor_rules_dir = "/home/zhangzhao/data/stockdata/stock_feature/rules"  
 class StockFeature:
     def __init__(self, symbol,  cal: MktCalendar):
         self.rules = {}
-        self.info = {}
         self.symbol = symbol
         self.cal = cal
 
@@ -43,19 +42,17 @@ class StockFeature:
     def load_rules(self, path):
         if not os.path.exists(stock_monitor_rules_dir):
             os.makedirs(stock_monitor_rules_dir, exist_ok=True)
-
         if os.path.isfile(path):
             with open(path) as f:
                 raw_rules = f.readlines()
         else:
             raw_rules = ''
         for line in raw_rules:
-            new_rule = Rule(self.cal)
-            new_rule.parse_line(line)
-            self.rules[new_rule.name] = new_rule
-
-    def load_info(self):
-        pass
+            line = line.strip()
+            if len(line):
+                new_rule = Rule(self.cal)
+                new_rule.parse_line(line)
+                self.rules[new_rule.name] = new_rule
 
     def check_rules(self, val_now):
         for rule in self.rules.values():
@@ -64,3 +61,9 @@ class StockFeature:
                 (cb_action, cb_obj) = cb.split("_")
                 if cb_obj in self.rules.keys():
                     self.rules[cb_obj] = {"pend": "pending", "finish": "finished", "activate": "active"}[cb_action]
+
+    def generate_output(self):
+        out_str = self.symbol + "\n"
+        for k in self.rules.keys():
+            out_str += "%s: %s\n" % (k, self.rules[k].generate_line())
+        return out_str

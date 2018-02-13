@@ -23,40 +23,47 @@ class Rule:
         self.__init__(self.cal)
 
     def parse_line(self, line):
+        if len(line) <= 1:
+            return
         self.reset()
         # a line like this:
         # name:pressure unit:d func:p=11-0.1(t-t0) t0:2018-02-01&09:30:00 status:pending valid:1d action:sendmsg action:sell callback:activate_support callback:sleep_self
         # name:support unit:d func:p=9-0.1t status:pending valid:1d action:sendmsg action:buy
         items = line.strip().split(" ")
         for i in items:
-            (k, v) = i.split(":", 1)
-            if k == "name":
-                self.name = v
-            elif k == "func":
-                self.function = v
-            elif k == "t0":
-                self.t0 = MktDateTime(v, self.cal)
-            elif k == "unit":
-                self.unit = v
-            elif k == "trigger":
-                self.trigger = v
-            elif k == "status":
-                self.status = v
-            elif k == "valid":
-                self.valid = v
-            elif k == "action":
-                self.action.append(v)
-            elif k == "callback":
-                self.callback.append(v)
+            try:
+                (k, v) = i.split(":", 1)
+                if k == "name":
+                    self.name = v
+                elif k == "func":
+                    self.function = v
+                elif k == "t0":
+                    self.t0 = MktDateTime(v, self.cal)
+                elif k == "unit":
+                    self.unit = v
+                elif k == "trigger":
+                    self.trigger = v
+                elif k == "status":
+                    self.status = v
+                elif k == "valid":
+                    self.valid = v
+                elif k == "action":
+                    self.action.append(v)
+                elif k == "callback":
+                    self.callback.append(v)
+            except Exception as e:
+                print("ERR when parsing %s" % i)
+                print(e)
         self.create_date = self.cal.get_local_date()
         self.calc_valid_until()
 
     def generate_line(self):
         action_str = " ".join(["action:%s" % i for i in self.action])
-        valid_str = " ".join(["valid:%s" % i for i in self.valid])
         callback_str = " ".join(["callback:%s" % i for i in self.callback])
-        line = " ".join(["name:" + self.name, "func:" + self.function, "unit:" + self.unit, "status: " + self.status,
-                         valid_str, action_str, callback_str])
+        line = " ".join(
+            ["name:" + self.name, "func:" + self.function, "t0:" + self.t0.datetime_specified, "unit:" + self.unit,
+             "trigger:" + self.trigger, "status:" + self.status,
+             "valid:" + self.valid, action_str, callback_str])
         return line
 
     def calc_delta_t(self, t0, t):
@@ -97,7 +104,7 @@ class Rule:
     def calc_valid_until(self):
         m = re.search('[0-9]+', self.valid)
         try:
-            num = m.group()
+            num = int(m.group())
         except AttributeError:
             num = 1
         m = re.search('[a-zA-Z]+', self.valid)
@@ -105,7 +112,6 @@ class Rule:
             unit = m.group()
         except AttributeError:
             unit = 'd'
-
         if unit == 'd':
             num *= 1
         elif unit == 'w':
@@ -116,7 +122,7 @@ class Rule:
         self.valid_until = "%s&15:00:00" % valid_until_date
 
     def check_val(self, val_now):
-        # val_now should be in {var:"",  val:'', "timestamp": t} format
+        # val_now should be in {"var":"",  "val":'', "timestamp": t} format
         t_now = self.cal.get_local_dt()
         if (self.status == "finished") | (self.status == 'pending'):
             return []
@@ -124,6 +130,7 @@ class Rule:
             self.status = "finished"
             return []
         val_calc = self.calc_value_of_func_now()
+        print("[%s] calc/now: %s/%s" % (self.name, val_calc['val'], val_now['val']))
         m = re.search('[<>=]+', "<=")
         try:
             trigger_direction = m.group()
@@ -135,7 +142,7 @@ class Rule:
         if result:
             for a in self.action:
                 if 'sendmsg' in a:
-                    Alarm('msg', a).emit()
+                    Alarm('msg', self.generate_line()).emit()
                 elif 'trade' in a:
                     Alarm('order', a).emit()
             cb_list = []
