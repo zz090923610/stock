@@ -6,6 +6,7 @@ from tools.date_util.market_calendar_cn import MktDateTime, MktCalendar
 
 class Rule:
     def __init__(self, cal: MktCalendar):
+        self.symbol = ''
         self.cal = cal
         self.name = ''
         self.function = ''
@@ -27,13 +28,15 @@ class Rule:
             return
         self.reset()
         # a line like this:
-        # name:pressure unit:d func:p=11-0.1(t-t0) t0:2018-02-01&09:30:00 status:pending valid:1d action:sendmsg action:sell callback:activate_support callback:sleep_self
+        # symbol:000001 name:pressure unit:d func:p=11-0.1(t-t0) t0:2018-02-01&09:30:00 status:pending valid:1d action:sendmsg action:sell callback:activate_support callback:sleep_self
         # name:support unit:d func:p=9-0.1t status:pending valid:1d action:sendmsg action:buy
         items = line.strip().split(" ")
         for i in items:
             try:
                 (k, v) = i.split(":", 1)
-                if k == "name":
+                if k == "symbol":
+                    self.symbol = v
+                elif k == "name":
                     self.name = v
                 elif k == "func":
                     self.function = v
@@ -61,8 +64,8 @@ class Rule:
         action_str = " ".join(["action:%s" % i for i in self.action])
         callback_str = " ".join(["callback:%s" % i for i in self.callback])
         line = " ".join(
-            ["name:" + self.name, "func:" + self.function, "t0:" + self.t0.datetime_specified, "unit:" + self.unit,
-             "trigger:" + self.trigger, "status:" + self.status,
+            ["symbol:"+self.symbol, "name:" + self.name, "func:" + self.function, "t0:" + self.t0.datetime_specified,
+             "unit:" + self.unit, "trigger:" + self.trigger, "status:" + self.status,
              "valid:" + self.valid, action_str, callback_str])
         return line
 
@@ -143,7 +146,8 @@ class Rule:
         if result:
             for a in self.action:
                 if 'sendmsg' in a:
-                    Alarm('msg', self.generate_line()).emit()
+                    msg = "[ %s ] rule %s triggered, %s(calc) %s %s(now)"%(self.symbol, self.name, val_calc['val'],self.trigger, val_now['val'])
+                    Alarm('msg', msg).emit()
                 elif 'trade' in a:
                     Alarm('order', a).emit()
             cb_list = []
