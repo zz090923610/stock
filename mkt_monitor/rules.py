@@ -133,7 +133,7 @@ class Rule:
             self.status = "finished"
             return []
         val_calc = self.calc_value_of_func_now()
-        print("[%s] calc/now: %s/%s" % (self.name, val_calc['val'], val_now['val']))
+        print("[%s:%s] calc/now: %s/%s" % (self.symbol, self.name, val_calc['val'], val_now['val']))
         m = re.search('[<>=]+', self.trigger)
         try:
             trigger_direction = m.group()

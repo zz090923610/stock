@@ -17,9 +17,7 @@ def fetch_real_time_quotes(symbol):
 
 def monitoring_cycle():
     for s in m_api.stock_feature_dict.keys():
-        print(s)
         real_time_res = fetch_real_time_quotes(s)
-        print(real_time_res)
         s_feature = m_api.stock_feature_dict[s]
         for r in s_feature.rules.values():
             r.check_val(real_time_res)
