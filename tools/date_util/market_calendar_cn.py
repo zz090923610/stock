@@ -245,6 +245,12 @@ class MktDateTime:
                 (datetime.strptime(self.datetime_r, FMT) - datetime.strptime(self.datetime_specified,
                                                                              FMT)).total_seconds())
 
+    def secs_to(self, target):
+        FMT = '%Y-%m-%d&%H:%M:%S'
+        return int(
+            (datetime.strptime(target, FMT) - datetime.strptime(self.datetime_specified,
+                                                                FMT)).total_seconds())
+
     # noinspection PyBroadException,PyMethodMayBeStatic
     def split_date_time(self, target):
         try:

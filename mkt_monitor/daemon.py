@@ -3,6 +3,7 @@ import tushare as ts
 
 # DEPENDENCY( tushare )
 from mkt_monitor.monitorAPI import MonitorAPI
+from tools.date_util.market_calendar_cn import MktDateTime
 
 m_api = MonitorAPI()
 m_api.load_stock_features()
@@ -16,6 +17,9 @@ def fetch_real_time_quotes(symbol):
 
 
 def monitoring_cycle():
+    time_now = MktDateTime( m_api.cal.get_local_dt(), m_api.cal)
+    if time_now.equiv_date:
+        time.sleep(time_now.secs_to(time_now.datetime_r))
     for s in m_api.stock_feature_dict.keys():
         real_time_res = fetch_real_time_quotes(s)
         s_feature = m_api.stock_feature_dict[s]
