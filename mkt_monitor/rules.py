@@ -131,12 +131,13 @@ class Rule:
             return []
         val_calc = self.calc_value_of_func_now()
         print("[%s] calc/now: %s/%s" % (self.name, val_calc['val'], val_now['val']))
-        m = re.search('[<>=]+', "<=")
+        m = re.search('[<>=]+', self.trigger)
         try:
             trigger_direction = m.group()
         except AttributeError:
             trigger_direction = "=="
 
+        print("eval: ", "%s %s %s" % (val_calc['val'], trigger_direction, val_now['val']))
         result = eval("%s %s %s" % (val_calc['val'], trigger_direction, val_now['val']))
 
         if result:
