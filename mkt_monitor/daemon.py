@@ -28,3 +28,8 @@ if __name__ == '__main__':
     while True:
         monitoring_cycle()
         time.sleep(1)
+
+# TODO this daemon should always run, it should also be able to handle incoming feature/rule modify requests.
+# TODO changes of feature/rule should be saved once made.
+# TODO proper messages should be prepared.
+# TODO trading actions should be implemented

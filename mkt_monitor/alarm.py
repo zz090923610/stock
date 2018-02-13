@@ -11,3 +11,5 @@ class Alarm:
         if self.type == "msg":
             cmd = "wccmd -m '%s' ZZSELF" % self.payload
             os.system(cmd)
+            cmd = "wccmd -m '%s' 张志远" % self.payload
+            os.system(cmd)
