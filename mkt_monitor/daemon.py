@@ -29,8 +29,11 @@ def monitoring_cycle():
 
 if __name__ == '__main__':
     while True:
-        monitoring_cycle()
-        time.sleep(1)
+        try:
+            monitoring_cycle()
+            time.sleep(1)
+        except Exception as e:
+            pass
 
 # TODO this daemon should always run, it should also be able to handle incoming feature/rule modify requests.
 # TODO changes of feature/rule should be saved once made.
