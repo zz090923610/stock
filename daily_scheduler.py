@@ -2,15 +2,22 @@ import os
 
 import schedule
 import time
-# DEPENDENCY( schedule)
 
-def daily_analysis():
-    os.system('./daily.sh')
+# DEPENDENCY( schedule)
+from tools.date_util.market_calendar_cn import MktCalendar
+
+cal = MktCalendar()
+
+
+def daily_job():
+    if cal.quick_dict[cal.get_local_date()]:
+        os.system('./daily.sh')
+    if cal.get_local_date().split("-")[2] == "28":
+        cal.update_calendar()
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("03:00").do(daily_analysis)
+    schedule.every().day.at("03:00").do(daily_job)
     while True:
-
         schedule.run_pending()
         time.sleep(1)

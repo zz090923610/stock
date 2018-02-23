@@ -57,9 +57,9 @@ def validate_script_path(script_path):
 def validate_output_path(output_path):
     if os.path.isfile(output_path):
         return output_path
-    elif output_path.split('/')[0] in os.listdir(DIRs.get("QA")):
-        return DIRs.get("QA") + '/' + output_path
     else:
+        if not os.path.exists(DIRs.get("QA") + '/' + output_path):
+            os.makedirs(DIRs.get("QA") + '/' + output_path, exist_ok=True)
         return DIRs.get("QA") + '/' + output_path
 
 
