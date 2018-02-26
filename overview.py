@@ -76,7 +76,15 @@ class OverviewHdl:
             print(i)
 
     def generate_pip_cmd(self):
-        return "sudo -H pip3 install " + " ".join(self.dep_list)
+        res = ''
+        if "tushare" in self.dep_list: # TODO: tushare has bad dependency which should be installed at last
+            self.dep_list.remove("tushare")
+            res += "sudo -H pip3 install " + " ".join(self.dep_list) + "\n"
+            res += "sudo -H pip3 install tushare"
+
+        else:
+            res += "sudo -H pip3 install " + " ".join(self.dep_list)
+        return res
 
     def generate_apt_cmd(self):
         return "sudo apt-get install -y " + " ".join(self.apt_dep_list)
