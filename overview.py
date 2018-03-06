@@ -28,7 +28,7 @@ class OverviewHdl:
             self.find_apt_dep_in_py_file(f)
         print(self.generate_apt_cmd())
         print(self.generate_pip_cmd())
-        print("-i https://pypi.tuna.tsinghua.edu.cn/simple")
+        # print("-i https://pypi.tuna.tsinghua.edu.cn/simple")
 
     def find_dep_in_py_file(self, path):
         with open(path) as f:
@@ -64,7 +64,7 @@ class OverviewHdl:
             try:
                 res = re.search(r"#[ \t]*[tT][oO][dD][oO][:,.a-zA-Z0-9_\(\) ]*", l).group(0)
                 if res not in self.todo_list:
-                    self.todo_list.append(path + ': ' + res)
+                    self.todo_list.append(res + "\t\t\t(%s)" % path)
             except AttributeError:
                 continue
 
@@ -75,9 +75,26 @@ class OverviewHdl:
         for i in self.todo_list:
             print(i)
 
+    def find_not_windows_guaranteed(self):
+        self.search_down_sub_path(self.pwd)
+        for path in self.file_to_check:
+            with open(path) as f:
+                content = f.readlines()
+            content = [x.strip() for x in content]
+            found = False
+            for l in content:
+                try:
+                    res = re.search(r"# WINDOWS_GUARANTEED", l).group(0)
+                    found = True
+                    break
+                except AttributeError:
+                    continue
+            if not found:
+                print(path)
+
     def generate_pip_cmd(self):
         res = ''
-        if "tushare" in self.dep_list: # TODO: tushare has bad dependency which should be installed at last
+        if "tushare" in self.dep_list:  # TODO: tushare has bad dependency which should be installed at last
             self.dep_list.remove("tushare")
             res += "sudo -H pip3 install " + " ".join(self.dep_list) + "\n"
             res += "sudo -H pip3 install tushare"
@@ -97,3 +114,5 @@ if __name__ == '__main__':
         a.find_all_deps()
     if '-t' in sys.argv:
         a.find_all_todos()
+    if '-w' in sys.argv:
+        a.find_not_windows_guaranteed()
