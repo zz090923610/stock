@@ -3,6 +3,8 @@ from configs.path import DIRs
 import configs.path as path
 import os
 
+# DELETE_FUTURE
+
 
 def init_data_root():
     for p in DIRs.keys():

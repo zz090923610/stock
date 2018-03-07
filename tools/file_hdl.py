@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# WINDOWS_GUARANTEED
+
 import csv
 
 
@@ -6,7 +9,7 @@ def load_csv(path, col_type=None):
         col_type = {}
     final_list = []
     try:
-        with open(path) as csvfile:
+        with open(path, encoding='utf8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 # noinspection PyTypeChecker

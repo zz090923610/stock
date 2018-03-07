@@ -1,21 +1,30 @@
-from tools.io import *
+# -*- coding: utf-8 -*-
+# WINDOWS_GUARANTEED
+
 from multiprocessing import Pool
+
 import tushare as ts
 
+from tools.data.path_hdl import path_expand, directory_ensure
+from tools.date_util.market_calendar_cn import MktCalendar
+from tools.io import *
 from tools.symbol_list_china_hdl import SymbolListHDL
-from configs.path import DIRs
 
 msg_source = 'day_level_quotes_china'
 
-
 # TODO: implement backup sources, implement automatic source switch
-# TODO: add windows support
+
+# DIRREG( day_quotes/china )
+
+calendar = MktCalendar()
+
 
 class DayLevelQuoteUpdaterTushare:
     # DEPENDENCY( tushare )
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
-        self.dir = DIRs.get('DAY_LEVEL_QUOTES_CHINA')
+        self.dir = path_expand('day_quotes/china')
+        directory_ensure(self.dir)
         self.symbol_dict = SymbolListHDL()
         self.symbol_dict.load()
 
@@ -55,6 +64,7 @@ class DayLevelQuoteUpdaterGTJA:
     pass
 
 
-if __name__ == '__main__':
+# CMDEXPORT ( FETCH OHCL {} {} ) update_day_level_quotes
+def update_day_level_quotes(start_date, end_date):
     a = DayLevelQuoteUpdaterTushare()
-    a.get_data_all_stock(start='2017-01-01', end='2017-12-20')
+    a.get_data_all_stock(start=calendar.validate_date(start_date), end=calendar.validate_date(end_date))

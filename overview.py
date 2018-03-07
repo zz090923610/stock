@@ -31,7 +31,7 @@ class OverviewHdl:
         # print("-i https://pypi.tuna.tsinghua.edu.cn/simple")
 
     def find_dep_in_py_file(self, path):
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             content = f.readlines()
         content = [x.strip() for x in content]
         for l in content:
@@ -44,7 +44,7 @@ class OverviewHdl:
                 continue
 
     def find_apt_dep_in_py_file(self, path):
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             content = f.readlines()
         content = [x.strip() for x in content]
         for l in content:
@@ -57,7 +57,7 @@ class OverviewHdl:
                 continue
 
     def find_todo_in_py_file(self, path):
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             content = f.readlines()
         content = [x.strip() for x in content]
         for l in content:
@@ -78,7 +78,7 @@ class OverviewHdl:
     def find_not_windows_guaranteed(self):
         self.search_down_sub_path(self.pwd)
         for path in self.file_to_check:
-            with open(path) as f:
+            with open(path, encoding='utf-8') as f:
                 content = f.readlines()
             content = [x.strip() for x in content]
             found = False
@@ -106,6 +106,28 @@ class OverviewHdl:
     def generate_apt_cmd(self):
         return "sudo apt-get install -y " + " ".join(self.apt_dep_list)
 
+    def set_default_data_path(self, path):
+        pass # TODO
+
+    def init_single_registered_dir(self, path):
+        with open(path, encoding='utf-8') as f:
+            content = f.readlines()
+        content = [x.strip() for x in content]
+        for l in content:
+            try:
+                reged_dir = re.search(r"DIRREG\((.+)\)", l).group(1).strip()
+                print("initing: %s" % reged_dir)
+                from tools.data.path_hdl import directory_ensure
+                directory_ensure(reged_dir)
+
+            except AttributeError:
+                continue
+
+    def init_dirs(self):
+        self.search_down_sub_path(self.pwd)
+        for f in self.file_to_check:
+            self.init_single_registered_dir(f)
+
 
 if __name__ == '__main__':
 
@@ -116,3 +138,5 @@ if __name__ == '__main__':
         a.find_all_todos()
     if '-w' in sys.argv:
         a.find_not_windows_guaranteed()
+    if '-i' in sys.argv:
+        a.init_dirs()

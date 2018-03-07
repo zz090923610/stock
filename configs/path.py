@@ -1,7 +1,6 @@
 import os
-
+# DELETE_FUTURE
 # COMPATIBLE( linux )
-# TODO: add windows support
 
 # noinspection PyDictCreation
 DIRs = {}

@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
+# WINDOWS_GUARANTEED
+
 import re
 import os
 
+from tools.data.path_hdl import path_expand
 from tools.file_hdl import load_csv
 from configs.path import DIRs
 # TODO: check windows COMPATIBLE
+
+# DIRUSE symbol_list/china
 
 class SymbolListHDL:
     def __init__(self):
@@ -18,7 +24,7 @@ class SymbolListHDL:
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
 
     def load(self):
-        basic_info_list = load_csv(os.path.join(DIRs.get("SYMBOL_LIST_ROOT_CHINA"), 'symbol_list.csv'))
+        basic_info_list = load_csv(os.path.join(path_expand("symbol_list/china"), 'symbol_list.csv'))
         for i in basic_info_list:
             try:
                 assert i['market'] in ['sse', 'szse']

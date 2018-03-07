@@ -1,15 +1,19 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-# COMPATIBLE( linux windows )
+# WINDOWS_GUARANTEED
 
 import csv
-import os
 import sys
 
 import pandas as pd
 import requests
 
+from tools.data.path_hdl import directory_ensure, file_remove, path_expand
+
 USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
+
+
+# DIRREG( symbol_list/china )
 
 
 # noinspection PyUnboundLocalVariable,SpellCheckingInspection
@@ -25,13 +29,14 @@ class SymbolListUpdater:
     # DEPENDENCY( requests pandas xlrd )
 
     """
+
     # TODO implement a function to return string of first Pinyin letter of name
 
-    def __init__(self, out_dir):
+    def __init__(self, out_dir=None):
         self.market_dict = {}
         self.symbol_list = []
         self.market_open_days = []
-        self.out_dir = out_dir
+        self.out_dir = path_expand(out_dir) if out_dir is not None else path_expand('symbol_list/china')
         self.encoding = 'utf-8'
 
     def _get_sse_company_list(self):
@@ -78,8 +83,7 @@ class SymbolListUpdater:
                                  converters={'A股代码': str, 'A股上市日期': str})
 
         data_xls.to_csv('%s/szse_company_%s.csv' % (self.out_dir, market_type), encoding=self.encoding)
-
-        os.remove('%s/szse_company.xlsx' % self.out_dir)
+        file_remove('%s/szse_company.xlsx' % self.out_dir)
 
     def _get_szse_company_list(self):
         print('Updating Shenzhen Stock Exchange List')
@@ -114,11 +118,16 @@ class SymbolListUpdater:
             b[col_order].to_csv(out_file, index=add_index, encoding=self.encoding)
 
     def update(self):
-        if not os.path.exists(self.out_dir):
-            os.makedirs(self.out_dir)
+        directory_ensure(self.out_dir)
         self._get_sse_company_list()
         self._get_szse_company_list()
         self._merge_company_list()
+
+
+# CMDEXPORT ( FETCH SYMBOL ) update_symbol_list
+def update_symbol_list():
+    a = SymbolListUpdater()
+    a.update()
 
 
 if __name__ == '__main__':
@@ -126,4 +135,4 @@ if __name__ == '__main__':
         a = SymbolListUpdater(sys.argv[1])
         a.update()
     else:
-        print("Usage: python3 fetch_symbol_list_china_a output_dir")
+        update_symbol_list()

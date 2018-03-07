@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# WINDOWS_GUARANTEED
+
+
 import os
 import time
 
@@ -7,6 +11,9 @@ from tushare import trade_cal
 from tushare.util.dateu import last_tddate
 from datetime import datetime
 
+# DIRREG( calendar )
+from tools.data.path_hdl import path_expand, directory_ensure
+
 
 class MktCalendar:
     # DEPENDENCY( tushare pytz )
@@ -15,8 +22,9 @@ class MktCalendar:
         self.timezone = tz
         self.market = mkt
         try:
-            from configs.path import DIRs
-            self.cal_path = os.path.join(DIRs.get("CALENDAR"), "%s.csv" % self.market)
+
+            self.cal_path = os.path.join(path_expand('calendar'), "%s.csv" % self.market)
+            directory_ensure(path_expand('calendar'))
         except Exception as e:
             self.cal_path = "%s.csv" % self.market
         self.cal = self.load_calendar()
