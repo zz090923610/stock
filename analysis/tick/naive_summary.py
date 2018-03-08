@@ -1,3 +1,4 @@
+# WINDOWS_GUARANTEED
 import itertools
 import multiprocessing as mp
 import os

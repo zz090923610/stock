@@ -1,4 +1,7 @@
 # DEPENDENCY( pandas )
+# WINDOWS_GUARANTEED
+
+
 import multiprocessing as mp
 import os
 import sys

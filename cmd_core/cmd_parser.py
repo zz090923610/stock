@@ -17,7 +17,7 @@ def exec_ctrl_cmd(line, calendar):
             print(calendar.validate_date(cmd[2]))
             tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, [calendar.validate_date(cmd[2])])
         elif cmd[1] == "SYMBOL":
-            from tools.internal_func_entry import update_symbol_list
+            from tools.fetch_symbol_list_china_a import update_symbol_list
             update_symbol_list()
     elif cmd[0] == "SLICE":
         from analysis.script_executor.slice import slice_all

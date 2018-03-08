@@ -1,3 +1,6 @@
+
+# WINDOWS_GUARANTEED
+
 import multiprocessing as mp
 import os
 

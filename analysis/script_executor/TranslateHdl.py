@@ -1,3 +1,4 @@
+# WINDOWS_GUARANTEED
 import os
 import pickle
 

@@ -1,10 +1,12 @@
+# WINDOWS_GUARANTEED
+
+import multiprocessing as mp
 import os
 import pickle
 
 import pandas as pd
-import multiprocessing as mp
-from configs.path import DIRs
-from tools.data.path_hdl import path_expand
+
+from tools.data.path_hdl import path_expand, directory_ensure
 from tools.io import logging
 
 
@@ -15,6 +17,7 @@ class ConditionalStatisticsHdl:
         self.params = params
         self.probability_dict = {}
         self.base_dir = path_expand(data_folder)
+        directory_ensure(data_folder)
         self.symbol_list = os.listdir(self.base_dir)
         self.data = None
         self.name = name
@@ -46,12 +49,12 @@ class ConditionalStatisticsHdl:
         self.save()
 
     def save(self):
-        with open('%s' % (os.path.join(DIRs.get("MODEL"), "%s.pickle" % self.name)), 'wb') as f:
+        with open('%s' % (os.path.join(path_expand("model"), "%s.pickle" % self.name)), 'wb') as f:
             pickle.dump(self.probability_dict, f, -1)
 
     def load(self):
         try:
-            with open('%s' % (os.path.join(DIRs.get("MODEL"), "%s.pickle" % self.name)), 'rb') as f:
+            with open('%s' % (os.path.join(path_expand("model"), "%s.pickle" % self.name)), 'rb') as f:
                 self.probability_dict = pickle.load(f)
         except FileNotFoundError:
             self.probability_dict = {}

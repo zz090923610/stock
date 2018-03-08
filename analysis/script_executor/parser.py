@@ -12,7 +12,7 @@ from tools.io import *
 
 msg_topic = "SCRIPT_ENGINE"
 
-
+# WINDOWS_GUARANTEED
 # DEPENDENCY( pandas )
 
 def load_data(input_data):
@@ -46,7 +46,7 @@ def validate_script_path(script_path):
 
 def load_script(script_path):
     if os.path.isfile(script_path):
-        with open(script_path) as f:
+        with open(script_path,encoding='utf8') as f:
             raw_script = f.readlines()
     else:
         raw_script = ''

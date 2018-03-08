@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
 
-import re
 import os
+import re
 
 from tools.data.path_hdl import path_expand
 from tools.file_hdl import load_csv
-from configs.path import DIRs
+
+
 # TODO: check windows COMPATIBLE
 
 # DIRUSE symbol_list/china

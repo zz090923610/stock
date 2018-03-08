@@ -1,4 +1,5 @@
 # DEPENDENCY( pandas )
+# WINDOWS_GUARANTEED
 import math
 import os
 
