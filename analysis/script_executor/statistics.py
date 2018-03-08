@@ -4,31 +4,20 @@ import pickle
 import pandas as pd
 import multiprocessing as mp
 from configs.path import DIRs
+from tools.data.path_hdl import path_expand
 from tools.io import logging
 
+
+# TODO it seems I forgot how to generate naive model
 
 class ConditionalStatisticsHdl:
     def __init__(self, params, data_folder, name):
         self.params = params
         self.probability_dict = {}
-        self.base_dir = self._validate_input_path(data_folder)
+        self.base_dir = path_expand(data_folder)
         self.symbol_list = os.listdir(self.base_dir)
         self.data = None
         self.name = name
-
-    @staticmethod
-    def _validate_input_path(p):
-        if os.path.isfile(p):
-            return p
-        elif p.split('/')[0] in os.listdir(DIRs.get("QA")):
-            if os.path.exists(DIRs.get("QA") + '/' + p):
-                return DIRs.get("QA") + '/' + p
-
-        elif p.split('/')[0] in os.listdir(DIRs.get("DATA_ROOT")):
-            if os.path.exists(DIRs.get("DATA_ROOT") + '/' + p):
-                return DIRs.get("DATA_ROOT") + '/' + p
-        else:
-            return DIRs.get("QA") + '/' + p
 
     def generate_path_list(self):
         path_list = []

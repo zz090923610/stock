@@ -1,14 +1,14 @@
-import pandas as pd
-import os
 import math
-import re
 import multiprocessing as mp
-
+import os
+import re
 import sys
 
+import pandas as pd
+
 from analysis.script_executor.TranslateHdl import TranslateHdl
+from tools.data.path_hdl import path_expand, directory_ensure
 from tools.io import *
-from configs.path import DIRs
 
 msg_topic = "SCRIPT_ENGINE"
 
@@ -22,26 +22,13 @@ def load_data(input_data):
         data = input_data
     elif type(input_data) == str:
         try:
-            data = pd.read_csv(validate_input_path(input_data))
+            data = pd.read_csv(path_expand(input_data))
         except FileNotFoundError:
             #            print('Load data file failed: %s' % input_data)
             data = None
     else:
         data = None
     return data
-
-
-def validate_input_path(input_path):
-    if os.path.isfile(input_path):
-        return input_path
-    elif input_path.split('/')[0] in os.listdir(DIRs.get("QA")):
-        if os.path.exists(DIRs.get("QA") + '/' + input_path):
-            return DIRs.get("QA") + '/' + input_path
-    elif input_path.split('/')[0] in os.listdir(DIRs.get("DATA_ROOT")):
-        if os.path.exists(DIRs.get("DATA_ROOT") + '/' + input_path):
-            return DIRs.get("DATA_ROOT") + '/' + input_path
-    else:
-        return input_path
 
 
 def validate_script_path(script_path):
@@ -54,13 +41,7 @@ def validate_script_path(script_path):
         return "/tmp"
 
 
-def validate_output_path(output_path):
-    if os.path.isfile(output_path):
-        return output_path
-    else:
-        if not os.path.exists(DIRs.get("QA") + '/' + output_path):
-            os.makedirs(DIRs.get("QA") + '/' + output_path, exist_ok=True)
-        return DIRs.get("QA") + '/' + output_path
+
 
 
 def load_script(script_path):
@@ -76,7 +57,7 @@ def load_script(script_path):
             split_line = re.split(r'[ \t]+', tmp_line)
             if (split_line[0] != '') & (split_line[0] != '#'):
                 script.append(split_line)
-    #for line in script:
+    # for line in script:
     #    print(line)
     return script
 
@@ -101,11 +82,10 @@ def parse_script_head(script_path):
         if line[0] == 'PLEV':
             parallel_level = line[1]
         elif line[0] == 'FIN':
-            input_dir_file = validate_input_path(line[1])
+            input_dir_file = path_expand(line[1])
         elif line[0] == 'PLFDOUT':
-            output_dir_file = validate_output_path(line[1])
-        elif line[0] == 'SGFLOUT':
-            output_dir_file = validate_output_path(line[1])
+            directory_ensure(path_expand(line[1]))
+            output_dir_file = path_expand(line[1])
         elif line[0] == 'OUTCOLS':
             output_cols += re.split(r',', line[1])
         elif line[0] == 'TRANSLATE':

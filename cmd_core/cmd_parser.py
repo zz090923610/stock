@@ -1,33 +1,4 @@
-import os
-
-import re
-
-import sys
-
-from tools.date_util.market_calendar_cn import MktCalendar
-
-calendar = MktCalendar()
-
-
-def load_script(script_path):
-    if os.path.isfile(script_path):
-        with open(script_path) as f:
-            raw_script = f.readlines()
-    else:
-        raw_script = ''
-    script = []
-    for line in raw_script:
-        if len(line.lstrip().rstrip()) > 0:
-            tmp_line = line.split('#')[0].lstrip().rstrip()
-            split_line = re.split(r'[ \t]+', tmp_line)
-            if (split_line[0] != '') & (split_line[0] != '#'):
-                script.append(split_line)
-    for line in script:
-        print(line)
-    return script
-
-
-def exec_ctrl_cmd(line):
+def exec_ctrl_cmd(line, calendar):
     cmd = line
     if cmd[0] == "MERGE":
         import analysis.script_executor.merge_data as md
@@ -60,9 +31,3 @@ def exec_ctrl_cmd(line):
     elif cmd[0] == "NAIVETICKSUMMARY":
         from analysis.tick.naive_summary import naive_summary_all
         naive_summary_all([calendar.validate_date(cmd[1])])
-
-
-if __name__ == '__main__':
-    script = load_script(sys.argv[1])
-    for l in script:
-        exec_ctrl_cmd(l)

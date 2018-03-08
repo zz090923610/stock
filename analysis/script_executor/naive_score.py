@@ -1,31 +1,28 @@
 # DEPENDENCY( pandas )
+import math
 import os
 
-import math
 import pandas as pd
-import sys
 
-from analysis.script_executor.TranslateHdl import TranslateHdl
 from analysis.script_executor.statistics import ConditionalStatisticsHdl
-from configs.path import DIRs
-from tools.io import logging
-from tools.symbol_list_china_hdl import SymbolListHDL
-import multiprocessing as mp
+# USEDIR( slice )
+# REGDIR( naive_score )
+from tools.data.path_hdl import path_expand, directory_ensure
 
-
-def validate_input_path(data, date):
-    return os.path.join(DIRs.get("DATA_ROOT"), "slice", "%s_%s.csv" % (data, date))
+out_dir = path_expand("naive_score")
+directory_ensure(path_expand("naive_score"))
 
 
 def validate_output_path(data, date, type):
-    return os.path.join(DIRs.get("DATA_ROOT"), "naive_score", "%s_%s_%s.csv" % (data, type, date))
+    return os.path.join(out_dir, "%s_%s_%s.csv" % (data, type, date))
 
 
 def calc_score_turnover(data, date):
-    path = validate_input_path(data, date)
-    cond_buy = ConditionalStatisticsHdl("", 'merged', 'cond_buy')
+
+    path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
+    cond_buy = ConditionalStatisticsHdl("", 'qa/merged', 'cond_buy')
     cond_buy.load()
-    cond_sell = ConditionalStatisticsHdl("", 'merged', 'cond_sell')
+    cond_sell = ConditionalStatisticsHdl("", 'qa/merged', 'cond_sell')
     cond_sell.load()
     raw_data = pd.read_csv(path)
     result_list = raw_data.to_dict('records')
@@ -42,11 +39,12 @@ def calc_score_turnover(data, date):
         l['score'] = score
     r = pd.DataFrame(result_list)
     r = r.sort_values(by='score', ascending=False)
-    r.to_csv(validate_output_path(data, "turnover", date), index=False, columns=['name', 'symbol', 'score'])
+    r.to_csv(os.path.join(out_dir, "%s_%s_%s.csv" % (data, "turnover", date)), index=False,
+             columns=['name', 'symbol', 'score'])
 
 
 def calc_score_amount(data, date):
-    path = validate_input_path(data, date)
+    path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     raw_data = pd.read_csv(path)
     result_list = raw_data.to_dict('records')
     for l in result_list:
@@ -54,4 +52,5 @@ def calc_score_amount(data, date):
         l['score'] = score
     r = pd.DataFrame(result_list)
     r = r.sort_values(by='score', ascending=False)
-    r.to_csv(validate_output_path(data, "amount", date), index=False, columns=['name', 'symbol', 'score'])
+    r.to_csv(os.path.join(out_dir, "%s_%s_%s.csv" % (data, "amount", date)), index=False,
+             columns=['name', 'symbol', 'score'])

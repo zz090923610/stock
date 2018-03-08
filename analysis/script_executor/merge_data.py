@@ -1,22 +1,24 @@
 # DEPENDENCY( pandas )
 import multiprocessing as mp
 import os
-
-import pandas as pd
 import sys
 
-from configs.path import DIRs
+import pandas as pd
+
+from tools.data.path_hdl import path_expand, directory_ensure, directory_exists
 from tools.io import logging
 
 msg_topic = 'data_merger'
 
 
+# TODO efficient improvement
+
 class DataMerger:
     def __init__(self, path_from, path_to, index):
-
         self.path_list = None
         self.index = index
-        self.to = self._validate_input_path(path_to)
+        self.to = path_expand(path_to)
+        directory_ensure(self.to)
         os.makedirs(self.to, exist_ok=True)
         self.validate_input_path(path_from)
         self.symbol_list = None
@@ -24,26 +26,14 @@ class DataMerger:
 
     def validate_input_path(self, input_path):
         input_path = input_path.split("&")
-        parsed = []
-        for p in input_path:
-            parsed.append(self._validate_input_path(p))
-        self.path_list = parsed
-
-    @staticmethod
-    def _validate_input_path(p):
-        if os.path.isfile(p):
-            return p
-        elif p.split('/')[0] in os.listdir(DIRs.get("QA")):
-            if os.path.exists(DIRs.get("QA") + '/' + p):
-                return DIRs.get("QA") + '/' + p
-
-        elif p.split('/')[0] in os.listdir(DIRs.get("DATA_ROOT")):
-            if os.path.exists(DIRs.get("DATA_ROOT") + '/' + p):
-                return DIRs.get("DATA_ROOT") + '/' + p
-        else:
-            return DIRs.get("QA") + '/' + p
+        self.path_list = [path_expand(i) for i in input_path]
+        for p in self.path_list:
+            if not directory_exists(p):
+                logging('ERROR', "path doesn't exist %s" % p)
 
     def collect_symbols(self):
+        # TODO this function is here to get a file list in first dir of path_from, and I assume all other dirs have
+        # TODO same files as the first
         path = self.path_list[0]
         self.symbol_list = os.listdir(path)
 

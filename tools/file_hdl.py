@@ -3,6 +3,9 @@
 
 import csv
 
+from tools.data.path_hdl import file_exist
+from tools.io import out
+
 
 def load_csv(path, col_type=None):
     if col_type is None:
@@ -31,3 +34,12 @@ def load_csv(path, col_type=None):
         return final_list
     except FileNotFoundError:
         return None
+
+
+def load_text(path):
+    if not file_exist(path):
+        out("LOADTEXT", "ERROR, file not exist %s" % path)
+        return None
+    with open(path, encoding='utf8') as f:
+        raw_text = f.readlines()
+    return raw_text

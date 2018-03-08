@@ -1,14 +1,16 @@
+import os
 import pickle
 
-import os
-
-from configs.path import DIRs
+from tools.data.path_hdl import path_expand, directory_ensure
 
 
+# DIRREG( translate )
 class TranslateHdl:
     def __init__(self):
         self.dict = {}
         self.order_list = []
+        self.trans_dir = path_expand('translate')
+        directory_ensure(self.trans_dir)
 
     def add_translation(self, line):
         # parse line, two conditions
@@ -33,19 +35,19 @@ class TranslateHdl:
 
     def load(self):
         try:
-            with open('%s' % (os.path.join(DIRs.get("TRANSLATE"), "translation.pickle")), 'rb') as f:
+            with open('%s' % (os.path.join(self.trans_dir, "translation.pickle")), 'rb') as f:
                 self.dict = pickle.load(f)
         except FileNotFoundError:
             self.dict = {}
 
         try:
-            with open('%s' % (os.path.join(DIRs.get("TRANSLATE"), "key_order.pickle")), 'rb') as f:
+            with open('%s' % (os.path.join(self.trans_dir, "key_order.pickle")), 'rb') as f:
                 self.order_list = pickle.load(f)
         except FileNotFoundError:
             self.order_list = []
 
     def save(self):
-        with open('%s' % (os.path.join(DIRs.get("TRANSLATE"), "translation.pickle")), 'wb') as f:
+        with open('%s' % (os.path.join(self.trans_dir, "translation.pickle")), 'wb') as f:
             pickle.dump(self.dict, f, -1)
-        with open('%s' % (os.path.join(DIRs.get("TRANSLATE"), "key_order.pickle")), 'wb') as f:
+        with open('%s' % (os.path.join(self.trans_dir, "key_order.pickle")), 'wb') as f:
             pickle.dump(self.order_list, f, -1)

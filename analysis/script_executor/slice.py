@@ -1,16 +1,22 @@
+import multiprocessing as mp
 import os
 
-import itertools
 import pandas as pd
-import multiprocessing as mp
 
 from analysis.script_executor.TranslateHdl import TranslateHdl
-from configs.path import DIRs
+from tools.data.path_hdl import path_expand, directory_ensure, file_exist
 from tools.io import logging
+
+# DIRREG( slice )
+out_dir = path_expand("slice")
+directory_ensure(out_dir)
 
 
 def slice_one(in_path, date):
     try:
+        if not file_exist(in_path):
+            logging("ERROR", "file not exist %s" % in_path)
+            return None
         result = pd.read_csv(in_path)
         result = result[result['date'] == date]
         logging("SLICING", "sliced %s" % in_path)
@@ -20,26 +26,9 @@ def slice_one(in_path, date):
         return None
 
 
-def validate_input_path(input_path):
-    if os.path.isfile(input_path):
-        return input_path
-    elif input_path.split('/')[0] in os.listdir(DIRs.get("QA")):
-        if os.path.exists(DIRs.get("QA") + '/' + input_path):
-            return DIRs.get("QA") + '/' + input_path
-    elif input_path.split('/')[0] in os.listdir(DIRs.get("DATA_ROOT")):
-        if os.path.exists(DIRs.get("DATA_ROOT") + '/' + input_path):
-            return DIRs.get("DATA_ROOT") + '/' + input_path
-    else:
-        return input_path
-
-
-def validate_output_path(output_file_name, date):
-        return os.path.join(DIRs.get("SLICE"), "%s_%s.csv" % (output_file_name, date))
-
-
 def slice_all(input_path, out_path, date, rename):
-    input_path = validate_input_path(input_path)
-    out_path = validate_output_path(out_path, date)
+    input_path = path_expand(input_path)
+    out_path = os.path.join(out_dir, "%s_%s.csv" % (out_path, date))
     from tools.symbol_list_china_hdl import SymbolListHDL
     symbol_dict = SymbolListHDL()
     symbol_dict.load()

@@ -1,6 +1,6 @@
 PLEV	FOLDER
-FIN	ma
-PLFDOUT candle_stick_shape_analysis
+FIN	qa/ma
+PLFDOUT qa/candle_stick_shape_analysis
 
 # 基本列
 OUTCOLS date,YIN,YANG,LARGEYANG,MIDYANG,SMALLYANG,LARGEYIN,MIDYIN,SMALLYIN

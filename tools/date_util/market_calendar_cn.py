@@ -4,12 +4,11 @@
 
 import os
 import time
+from datetime import datetime
 
 import pandas as pd
 import pytz
 from tushare import trade_cal
-from tushare.util.dateu import last_tddate
-from datetime import datetime
 
 # DIRREG( calendar )
 from tools.data.path_hdl import path_expand, directory_ensure
@@ -28,6 +27,7 @@ class MktCalendar:
         except Exception as e:
             self.cal_path = "%s.csv" % self.market
         self.cal = self.load_calendar()
+        self.cal_open = self.cal[self.cal['isOpen'] == 1].reset_index()
         self.quick_dict = self.build_quick_dict()
         self.lr_pair_list = []
         self.lr_pair_dict = {}
@@ -63,7 +63,6 @@ class MktCalendar:
     def get_local_date(self):
         """
         return today's date in YYYY-MM-DD format
-        :param tz: time zone
         :return: string
         """
         local_now = self._get_local_now()
@@ -84,21 +83,31 @@ class MktCalendar:
     def gen_date_list(self, goal, t='TODAY', in_mkt=False):
         # TODO
         if goal == "T" and t == 'TODAY':
-            return [self.get_local_date()] if not in_mkt else [last_tddate()]
+            return [self.get_local_date()] if not in_mkt else [self.get_last_trade_date()]
 
     def validate_date(self, day):
         if day == "TODAY":
             local_date_now = self.get_local_date()
-            return local_date_now if self.quick_dict[local_date_now] == 1 else last_tddate()
+            return local_date_now if self.quick_dict[local_date_now] == 1 else self.get_last_trade_date()
         if day == "LASTCLOSEDTRADEDAY":
             local_date_now = self.get_local_date()
             local_time_now = self.get_local_time()
             return local_date_now if self.quick_dict[local_date_now] == 1 and local_time_now >= '15:05:00' \
-                else last_tddate()
-        else:
+                else self.get_last_trade_date()
+        else:  # TODO, implement t plus 12345
             return day  # FIXME
 
+    def get_last_trade_date(self):
+        local_date_now = self.get_local_date()
+        local_time_now = self.get_local_time()
+        idx = int(self.cal_open.index[self.cal_open['calendarDate'] == local_date_now].tolist()[0])
+        idx = idx if idx >= 1 else 1
+
+        return local_date_now if self.quick_dict[local_date_now] == 1 and local_time_now >= '15:05:00' \
+            else self.cal_open.iloc[idx - 1]['calendarDate']
+
     def get_day(self, target, t='TODAY'):
+        # TODO rewrite this, why so ugly....
         try:
             t = self.validate_date(t)
             req_ascending = True if '+' in target else False

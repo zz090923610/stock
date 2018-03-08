@@ -1,6 +1,6 @@
 PLEV	FOLDER
-FIN	DQNS
-PLFDOUT anomaly # strong buy, price downward, strong sell, price upward
+FIN	qa/DQNS
+PLFDOUT qa/anomaly # strong buy, price downward, strong sell, price upward
 
 OUTCOLS date,symbol,name
 OUTCOLS SBPD,SSPU

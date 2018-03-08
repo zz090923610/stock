@@ -1,5 +1,6 @@
 /trader/account_info.py
 nohup.out
+/cmd_core/cmd_parser.py
 install_dep.sh
 # Byte-compiled / optimized / DLL files
 __pycache__/

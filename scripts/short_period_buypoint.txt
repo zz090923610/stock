@@ -7,7 +7,7 @@
 
 PLEV	FOLDER
 FIN	day_quotes/china
-PLFDOUT spb
+PLFDOUT qa/spb
 OUTCOLS date,QUICK_BUYPOINT,QUICK_SELLPOINT
 
 

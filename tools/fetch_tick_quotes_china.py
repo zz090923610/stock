@@ -44,7 +44,6 @@ class TickQuoteUpdaterTushare:
 
     def get_tick_multiple(self, stock_list, date_list, force=False):
         force = [force]
-        print(date_list)
         out(msg_source, '%s/start_%d' % (msg_source, len(self.symbol_list_hdl.symbol_list)))
         pool = Pool(16)
         for params in itertools.product(stock_list, date_list, force):
@@ -54,7 +53,7 @@ class TickQuoteUpdaterTushare:
         out(msg_source, '%s/finish' % msg_source)
 
 
-# CMDEXPORT ( FETCH TICK {} ) update_tick_quotes
+# CMDEXPORT ( FETCH TICK {date_or_dates} ) update_tick_quotes
 def update_tick_quotes(date_or_dates):
     dates = [date_or_dates] if type(date_or_dates) == str else date_or_dates
     dates = [calendar.validate_date(i) for i in dates]
