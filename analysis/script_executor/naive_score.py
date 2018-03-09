@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 
-from analysis.script_executor.statistics import ConditionalStatisticsHdl
+from analysis.models.conditional_freqency import ConditionalFreqHdl
 # USEDIR( slice )
 # REGDIR( naive_score )
 from tools.data.path_hdl import path_expand, directory_ensure
@@ -21,9 +21,9 @@ def validate_output_path(data, date, type):
 def calc_score_turnover(data, date):
 
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
-    cond_buy = ConditionalStatisticsHdl("", 'qa/merged', 'cond_buy')
+    cond_buy = ConditionalFreqHdl("cond_buy", None, None)
     cond_buy.load()
-    cond_sell = ConditionalStatisticsHdl("", 'qa/merged', 'cond_sell')
+    cond_sell = ConditionalFreqHdl("cond_sell", None, None)
     cond_sell.load()
     raw_data = pd.read_csv(path)
     result_list = raw_data.to_dict('records')

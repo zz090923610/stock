@@ -31,3 +31,8 @@ def exec_ctrl_cmd(line, calendar):
     elif cmd[0] == "NAIVETICKSUMMARY":
         from analysis.tick.naive_summary import naive_summary_all
         naive_summary_all([calendar.validate_date(cmd[1])])
+    elif cmd[0] == "CONDFREQ":
+        if cmd[1] == "TRAIN":
+            from analysis.models.conditional_freqency import cond_freq_train
+            params = " ".join(cmd[4:])
+            cond_freq_train(cmd[2], cmd[3], params)

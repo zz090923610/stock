@@ -1,8 +1,8 @@
-#SCRIPT ma
-#SCRIPT candle_stick_shape_analysis
-#SCRIPT inflow
-#MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow summary date
-#SLICE summary summary LASTCLOSEDTRADEDAY FALSE
+SCRIPT ma
+SCRIPT candle_stick_shape_analysis
+SCRIPT inflow
+MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow summary date
+SLICE summary summary LASTCLOSEDTRADEDAY FALSE
 NAIVESCORE LASTCLOSEDTRADEDAY
 #NAIVETICKSUMMARY LASTCLOSEDTRADEDAY
 
