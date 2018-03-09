@@ -14,7 +14,7 @@ msg_topic = "SCRIPT_ENGINE"
 
 # WINDOWS_GUARANTEED
 # DEPENDENCY( pandas )
-
+# TODO implement cmd export
 def load_data(input_data):
     #    print('func load_data(input_data)\n'
     #          '%s %s' % (type(input_data), input_data))

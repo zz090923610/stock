@@ -2,24 +2,26 @@
 # WINDOWS_GUARANTEED
 import math
 import os
-
 import pandas as pd
-
-from analysis.models.conditional_freqency import ConditionalFreqHdl
-# USEDIR( slice )
-# REGDIR( naive_score )
+from analysis.models.conditional_frequency import ConditionalFreqHdl
 from tools.data.path_hdl import path_expand, directory_ensure
+from tools.io import logging
 
 out_dir = path_expand("naive_score")
 directory_ensure(path_expand("naive_score"))
 
 
-def validate_output_path(data, date, type):
-    return os.path.join(out_dir, "%s_%s_%s.csv" % (data, type, date))
+# USEDIR( $USER_SPECIFIED )
+# REGDIR ( naive_score )
+
+# this model using the result of conditional_frequency.
+
+def validate_output_path(data, date, score_type):
+    return os.path.join(out_dir, "%s_%s_%s.csv" % (data, score_type, date))
 
 
-def calc_score_turnover(data, date):
-
+# CMDEXPORT ( NAIVESCORE TURNOVER {data} {date}) naive_score_turnover
+def naive_score_turnover(data, date):
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     cond_buy = ConditionalFreqHdl("cond_buy", None, None)
     cond_buy.load()
@@ -37,14 +39,17 @@ def calc_score_turnover(data, date):
             score += (cond_buy.probability_dict[target] * (1 + turnover) if l[target.split("|")[1]] else 0)
         for target in cond_sell.probability_dict.keys():
             score -= (cond_sell.probability_dict[target] if l[target.split("|")[1]] else 0)
+        score = -999 if score == 0 else score
         l['score'] = score
     r = pd.DataFrame(result_list)
     r = r.sort_values(by='score', ascending=False)
     r.to_csv(os.path.join(out_dir, "%s_%s_%s.csv" % (data, "turnover", date)), index=False,
              columns=['name', 'symbol', 'score'])
+    logging("NAIVESCORE TURNOVER", "[ INFO ] applied %s %s" % (data, date))
 
 
-def calc_score_amount(data, date):
+# CMDEXPORT ( NAIVESCORE AMOUNT {data} {date}) naive_score_amount
+def naive_score_amount(data, date):
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     raw_data = pd.read_csv(path)
     result_list = raw_data.to_dict('records')
@@ -55,3 +60,4 @@ def calc_score_amount(data, date):
     r = r.sort_values(by='score', ascending=False)
     r.to_csv(os.path.join(out_dir, "%s_%s_%s.csv" % (data, "amount", date)), index=False,
              columns=['name', 'symbol', 'score'])
+    logging("NAIVESCORE AMOUNT", "[ INFO ] applied %s %s" % (data, date))

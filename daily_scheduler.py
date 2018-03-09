@@ -9,6 +9,8 @@ from tools.date_util.market_calendar_cn import MktCalendar
 cal = MktCalendar()
 
 
+# TODO a good scheduler should read scheduled tasks cmd from a config file, with proper
+
 def daily_job():
     if cal.quick_dict[cal.get_local_date()]:
         os.system('./daily.sh')

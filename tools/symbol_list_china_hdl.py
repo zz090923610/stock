@@ -8,9 +8,7 @@ from tools.data.path_hdl import path_expand
 from tools.file_hdl import load_csv
 
 
-# TODO: check windows COMPATIBLE
-
-# DIRUSE symbol_list/china
+# USEDIR( symbol_list/china )
 
 class SymbolListHDL:
     def __init__(self):

@@ -9,8 +9,8 @@ from tools.data.path_hdl import path_expand, directory_ensure
 from tools.io import logging
 from tools.symbol_list_china_hdl import SymbolListHDL
 
-# DIRUSE( tick_quotes/china )
-# DIRREG( naive_summary/china )
+# USEDIR( tick_quotes/china )
+# REGDIR( naive_summary/china )
 out_dir = path_expand("naive_summary/china")
 directory_ensure(out_dir)
 
@@ -38,6 +38,7 @@ def naive_summary_one_stock(symbol, date):
                 'amount_buy': amount_buy, 'amount_sell': amount_sell, 'amount_unknown': amount_unknown,
                 'ave_price_tick': ave_price}]
     new_row_pd = pd.DataFrame(new_row).round(4)
+    # noinspection PyBroadException,PyUnusedLocal
     try:
         ori_pd = pd.read_csv(generate_out_path_for(symbol))
         if date not in ori_pd['date'].tolist():
@@ -66,6 +67,7 @@ def naive_summary_multiple(symbol_list, date_list):
     pool.join()
 
 
-def naive_summary_all(date_list):
+# CMDEXPORT ( NAIVETICKSUMMARY {date} ) naive_summary_tick
+def naive_summary_tick(date_list):
     symbol_list_hdl = SymbolListHDL()
     naive_summary_multiple(symbol_list_hdl.symbol_list, date_list)

@@ -12,6 +12,7 @@ from tushare import trade_cal
 
 # DIRREG( calendar )
 from tools.data.path_hdl import path_expand, directory_ensure
+from tools.io import logging
 
 
 class MktCalendar:
@@ -100,11 +101,21 @@ class MktCalendar:
     def get_last_trade_date(self):
         local_date_now = self.get_local_date()
         local_time_now = self.get_local_time()
-        idx = int(self.cal_open.index[self.cal_open['calendarDate'] == local_date_now].tolist()[0])
+        idx = -1
+        try:
+            idx = int(self.cal_open.index[self.cal_open['calendarDate'] == local_date_now].tolist()[0])
+        except Exception as e:
+            for i in range(9, len(self.cal_open.index)):
+                if self.cal_open.iloc[i]['calendarDate'] > local_date_now:
+                    idx = i
+                    break
         idx = idx if idx >= 1 else 1
-
-        return local_date_now if self.quick_dict[local_date_now] == 1 and local_time_now >= '15:05:00' \
-            else self.cal_open.iloc[idx - 1]['calendarDate']
+        try:
+            return local_date_now if self.quick_dict[local_date_now] == 1 and local_time_now >= '15:05:00' \
+                else self.cal_open.iloc[idx - 1]['calendarDate']
+        except Exception as e:
+            logging("MKT_CAL", "[ ERROR ] failed to find previous closed trade day of %s" % local_date_now)
+            return None
 
     def get_day(self, target, t='TODAY'):
         # TODO rewrite this, why so ugly....

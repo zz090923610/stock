@@ -1,8 +1,8 @@
 def exec_ctrl_cmd(line, calendar):
     cmd = line
     if cmd[0] == "MERGE":
-        import analysis.script_executor.merge_data as md
-        md.script_exec(" ".join(cmd[1:]))
+        from analysis.script_executor.merge_data import cmd_merge
+        cmd_merge(cmd[1], cmd[2], cmd[3])
     elif cmd[0] == "SCRIPT":
         from analysis.script_executor.parser import engine
         engine(cmd[1])
@@ -19,20 +19,22 @@ def exec_ctrl_cmd(line, calendar):
         elif cmd[1] == "SYMBOL":
             from tools.fetch_symbol_list_china_a import update_symbol_list
             update_symbol_list()
-    elif cmd[0] == "SLICE":
-        from analysis.script_executor.slice import slice_all
+    elif cmd[0] == "SLICECOMBINE":
+        from analysis.script_executor.slice import slice_combine
         rename = True if cmd[4] == 'TRUE' else False
-        slice_all(cmd[1], cmd[2], calendar.validate_date(cmd[3]), rename)
+        slice_combine(cmd[1], cmd[2], calendar.validate_date(cmd[3]), rename)
     elif cmd[0] == "NAIVESCORE":
-        from analysis.script_executor.naive_score import calc_score_amount
-        calc_score_amount("summary", calendar.validate_date(cmd[1]))
-        from analysis.script_executor.naive_score import calc_score_turnover
-        calc_score_turnover("summary", calendar.validate_date(cmd[1]))
+        if cmd[1] == "TURNOVER":
+            from analysis.models.naive_score import naive_score_turnover
+            naive_score_turnover(cmd[2], calendar.validate_date(cmd[3]))
+        elif cmd[1] == "AMOUNT":
+            from analysis.models.naive_score import naive_score_amount
+            naive_score_amount(cmd[2], calendar.validate_date(cmd[3]))
     elif cmd[0] == "NAIVETICKSUMMARY":
-        from analysis.tick.naive_summary import naive_summary_all
-        naive_summary_all([calendar.validate_date(cmd[1])])
+        from analysis.tick.naive_summary import naive_summary_tick
+        naive_summary_tick([calendar.validate_date(cmd[1])])
     elif cmd[0] == "CONDFREQ":
         if cmd[1] == "TRAIN":
-            from analysis.models.conditional_freqency import cond_freq_train
+            from analysis.models.conditional_frequency import cond_freq_train
             params = " ".join(cmd[4:])
             cond_freq_train(cmd[2], cmd[3], params)

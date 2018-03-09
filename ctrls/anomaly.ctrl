@@ -1,4 +1,4 @@
 
 MERGE day_quotes/china&naive_summary/china qa/DQNS date
 SCRIPT anomaly1
-SLICE qa/anomaly anomaly LASTCLOSEDTRADEDAY TRUE
+SLICECOMBINE qa/anomaly anomaly LASTCLOSEDTRADEDAY TRUE
