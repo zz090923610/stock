@@ -72,6 +72,7 @@ class OverviewHdl:
         self.search_down_sub_path(self.pwd)
         for f in self.file_to_check:
             self.find_todo_in_py_file(f)
+        print("######## %d TODOs remaining ########" % len(self.todo_list))
         for i in self.todo_list:
             print(i)
 
@@ -107,7 +108,7 @@ class OverviewHdl:
         return "sudo apt-get install -y " + " ".join(self.apt_dep_list)
 
     def set_default_data_path(self, path):
-        pass # TODO
+        pass  # TODO
 
     def init_single_registered_dir(self, path):
         with open(path, encoding='utf-8') as f:

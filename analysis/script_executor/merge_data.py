@@ -74,6 +74,7 @@ def merge(path_list, symbol_filename, output_path, index, msg_from):
                 result = result.drop_duplicates(keep='last')
         result.to_csv(os.path.join(output_path, symbol_filename))
         result.rename(columns={'Unnamed: 0': 'date'}, inplace=True)
+        result.index.names = ['date']
         result.to_csv(os.path.join(output_path, symbol_filename))
         logging(msg_from, "[ INFO ] %s merged" % symbol_filename)
     except AssertionError as e:

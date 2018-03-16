@@ -46,8 +46,9 @@ def naive_summary_one_stock(symbol, date):
     except Exception as e:
         ori_pd = new_row_pd
     ori_pd = ori_pd.sort_values(by='date', ascending=True)
-
-    ori_pd.to_csv(generate_out_path_for(symbol), index=False)
+    col_order = ['date', 'quant_buy', 'quant_sell', 'quant_unknown', 'amount_buy', 'amount_sell', 'amount_unknown',
+                 'ave_price_tick']
+    ori_pd[col_order].to_csv(generate_out_path_for(symbol), index=False)
     logging("naive_summary", "finish %s %s" % (symbol, date))
 
 

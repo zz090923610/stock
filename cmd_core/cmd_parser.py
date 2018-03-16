@@ -8,16 +8,16 @@ def exec_ctrl_cmd(line, calendar):
         engine(cmd[1])
     elif cmd[0] == "FETCH":
         if cmd[1] == "OHCL":
-            from tools.fetch_day_level_quotes_china import DayLevelQuoteUpdaterTushare
+            from tools.data.mkt_chn.fetch_day_level_quotes_china import DayLevelQuoteUpdaterTushare
             a = DayLevelQuoteUpdaterTushare()
-            a.get_data_all_stock(start=calendar.validate_date(cmd[2]), end=calendar.validate_date(cmd[3]))
+            a.get_data_all_symbols(start=calendar.validate_date(cmd[2]), end=calendar.validate_date(cmd[3]))
         elif cmd[1] == "TICK":
-            from tools.fetch_tick_quotes_china import TickQuoteUpdaterTushare
+            from tools.data.mkt_chn.fetch_tick_quotes_china import TickQuoteUpdaterTushare
             tick = TickQuoteUpdaterTushare()
             print(calendar.validate_date(cmd[2]))
             tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, [calendar.validate_date(cmd[2])])
         elif cmd[1] == "SYMBOL":
-            from tools.fetch_symbol_list_china_a import update_symbol_list
+            from tools.data.mkt_chn.fetch_symbol_list_china_a import update_symbol_list
             update_symbol_list()
     elif cmd[0] == "SLICECOMBINE":
         from analysis.script_executor.slice import slice_combine

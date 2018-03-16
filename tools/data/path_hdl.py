@@ -3,9 +3,9 @@ from pathlib import Path
 import os
 import re
 
+from configs.conf import PROGRAM_DATA_ROOT
+
 HOST_OS = platform.system()
-PROGRAM_DATA_ROOT = os.path.join(Path.home(), "Documents", 'stock_data') if HOST_OS == "Windows" else \
-    os.path.join(Path.home(), 'data', 'stock_data')  # TODO this root may be user initialized and not such ugly.
 
 
 def directory_ensure(target_directory):
@@ -30,8 +30,8 @@ def directory_clear_content(target_directory, touch_info=None):
         return
     files = os.listdir(expanded_path)
     paths = [os.path.join(expanded_path, i) for i in files]
-    for i in files:
-        file_remove(os.path.join(expanded_path, i), touch_info=touch_info)
+    for i in paths:
+        file_remove(i, touch_info=touch_info)
 
 
 def file_exist(target_file):
@@ -87,3 +87,9 @@ def path_expand(path):
         return os.path.join(PROGRAM_DATA_ROOT, path.strip())
     else:  # something happen.
         return os.path.join(PROGRAM_DATA_ROOT, "undefined", path.strip())
+
+
+class TouchHdl:
+    def __init__(self):
+        self.locking_level = None
+        self.locking_path = None

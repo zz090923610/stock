@@ -97,6 +97,7 @@ def parse_script_head(script_path):
 
 
 def engine(script_path):
+    print("EXEC Script %s " % script_path)
     script_path = validate_script_path(script_path)
     script, parallel_level, input_dir_file, output_dir_file, output_cols = parse_script_head(script_path)
     if parallel_level == 'FOLDER':

@@ -1,4 +1,4 @@
-SCRIPT inflow
+# SCRIPT inflow # done in everyday_analysis.ctrl
 MERGE day_quotes/china&qa/inflow analysis_v2 date
 SLICECOMBINE analysis_v2 analysis_v2 LASTCLOSEDTRADEDAY TRUE
 
