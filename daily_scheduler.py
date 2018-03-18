@@ -1,11 +1,10 @@
+# -*- coding: utf-8 -*-
 import os
-
 import schedule
 import time
-
-# DEPENDENCY( schedule)
 from tools.date_util.market_calendar_cn import MktCalendar
 
+# DEPENDENCY( schedule )
 cal = MktCalendar()
 
 
@@ -19,7 +18,7 @@ def daily_job():
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("03:00").do(daily_job)
+    schedule.every().day.at("04:00").do(daily_job)
     while True:
         schedule.run_pending()
         time.sleep(1)

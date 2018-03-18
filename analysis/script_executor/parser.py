@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import math
 import multiprocessing as mp
 import os
@@ -37,7 +38,7 @@ def validate_script_path(script_path):
     elif script_path.split("/")[-1].split(".")[0] + ".txt" in os.listdir(os.path.join(os.getcwd(), "scripts")):
         return os.path.join(os.getcwd(), "scripts", script_path.split("/")[-1].split(".")[0] + ".txt")
     else:
-        out("ERROR", "invalid script path %s" % script_path)
+        logging("ERROR", "invalid script path %s" % script_path)
         return "/tmp"
 
 
@@ -107,12 +108,12 @@ def engine(script_path):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         pool = mp.Pool()
-        out(msg_topic, '%s/parallel_start_%s_%d' % (msg_topic, script_path, len(dir_list)))
+        logging(msg_topic, '%s/parallel_start_%s_%d' % (msg_topic, script_path, len(dir_list)))
         for i in dir_list:
             pool.apply_async(execute_script, args=(input_dir + '/' + i, script, output_dir + '/' + i, output_cols))
         pool.close()
         pool.join()
-        out(msg_topic, '%s/parallel_finish_%s' % (msg_topic, script_path))
+        logging(msg_topic, '%s/parallel_finish_%s' % (msg_topic, script_path))
     elif parallel_level == 'SINGLE':
         execute_script(input_dir_file, script, output_dir_file, output_cols)
 

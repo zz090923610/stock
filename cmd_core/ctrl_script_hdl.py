@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
 import re
 import sys
 
 from cmd_core.cmd_parser import exec_ctrl_cmd
 from tools.date_util.market_calendar_cn import MktCalendar
-from tools.file_hdl import load_text
+from tools.data.file_hdl import load_text
 
 calendar = MktCalendar()
 

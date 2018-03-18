@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 from mkt_monitor.stock_feature import stock_monitor_rules_dir, StockFeature

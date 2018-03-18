@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 user_defined_data_root = None
 PROGRAM_DATA_ROOT = None
 

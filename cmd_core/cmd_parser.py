@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def exec_ctrl_cmd(line, calendar):
     cmd = line
     if cmd[0] == "MERGE":
@@ -14,7 +15,6 @@ def exec_ctrl_cmd(line, calendar):
         elif cmd[1] == "TICK":
             from tools.data.mkt_chn.fetch_tick_quotes_china import TickQuoteUpdaterTushare
             tick = TickQuoteUpdaterTushare()
-            print(calendar.validate_date(cmd[2]))
             tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, [calendar.validate_date(cmd[2])])
         elif cmd[1] == "SYMBOL":
             from tools.data.mkt_chn.fetch_symbol_list_china_a import update_symbol_list

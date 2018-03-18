@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # DEPENDENCY( pandas )
 # WINDOWS_GUARANTEED
 import math
@@ -40,6 +41,7 @@ def naive_score_turnover(data, date):
         for target in cond_sell.probability_dict.keys():
             score -= (cond_sell.probability_dict[target] if l[target.split("|")[1]] else 0)
         score = -999 if score == 0 else score
+        print(score)
         l['score'] = score
     r = pd.DataFrame(result_list)
     r = r.sort_values(by='score', ascending=False)

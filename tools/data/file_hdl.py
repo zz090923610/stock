@@ -4,16 +4,22 @@
 import csv
 
 from tools.data.path_hdl import file_exist
-from tools.io import out
+from tools.io import logging
 
 
 def load_csv(path, col_type=None):
+    """
+    naive csv file loader.
+    :param path: input csv path
+    :param col_type: optional dict, specify column data type, like float, int, etc.
+    :return: a list of dict. like [{'col1':'row1_col1_val'},{'col1':'row2_col1_val'}]
+    """
     if col_type is None:
         col_type = {}
     final_list = []
     try:
-        with open(path, encoding='utf8') as csvfile:
-            reader = csv.DictReader(csvfile)
+        with open(path, encoding='utf8') as f:
+            reader = csv.DictReader(f)
             for row in reader:
                 # noinspection PyTypeChecker
                 if len(col_type.keys()) > 0:
@@ -25,20 +31,23 @@ def load_csv(path, col_type=None):
                                 row[key] = int(float(row[key]))
                         final_list.append(row)
                     except ValueError as e:
-                        # FIXME should be logging
-                        print('Loading csv error: %s %s' % (e, '%s %r' % (path, row)))
+                        logging("CSVLoader", "[ ERROR ] Exception when loading %s row:%r : %s" % (path, row, e),
+                                method='all')
                 else:
                     final_list.append(row)
-            for row in reader:
-                final_list.append(row)
         return final_list
     except FileNotFoundError:
         return None
 
 
 def load_text(path):
+    """
+    naive text file loader
+    :param path: input text file path
+    :return: a list of string, each string represents a line from text file
+    """
     if not file_exist(path):
-        out("LOADTEXT", "ERROR, file not exist %s" % path)
+        logging("TextLoader", "[ ERROR ] file not exist %s" % path)
         return None
     with open(path, encoding='utf8') as f:
         raw_text = f.readlines()

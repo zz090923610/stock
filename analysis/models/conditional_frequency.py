@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
 
 import multiprocessing as mp

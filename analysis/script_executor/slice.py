@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
 
 import multiprocessing as mp
@@ -31,7 +32,7 @@ def slice_one(in_path, date):
 def slice_combine(input_path, out_path, date, rename):
     input_path = path_expand(input_path)
     out_path = os.path.join(out_dir, "%s_%s.csv" % (out_path, date))
-    from tools.symbol_list_china_hdl import SymbolListHDL
+    from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
     symbol_dict = SymbolListHDL()
     symbol_dict.load()
     result_list = []

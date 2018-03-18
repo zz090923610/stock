@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
 import itertools
 import multiprocessing as mp
@@ -7,7 +8,7 @@ import pandas as pd
 
 from tools.data.path_hdl import path_expand, directory_ensure
 from tools.io import logging
-from tools.symbol_list_china_hdl import SymbolListHDL
+from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
 
 # USEDIR( tick_quotes/china )
 # REGDIR( naive_summary/china )

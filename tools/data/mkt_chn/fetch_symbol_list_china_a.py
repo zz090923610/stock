@@ -3,44 +3,50 @@
 # WINDOWS_GUARANTEED
 
 import csv
-import sys
-
 import pandas as pd
 import requests
-
 from tools.data.path_hdl import directory_ensure, file_remove, path_expand
+from tools.io import logging
 
 USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
 
 
-# DIRREG( symbol_list/china )
+# REGDIR( symbol_list/china )
 
 
 # noinspection PyUnboundLocalVariable,SpellCheckingInspection
-class SymbolListUpdater:
+class SymbolListUpdateHdl:
     """
-    Get most updated type A stock symbol list from Shanghai Stock Exchange List & Shenzhen Stock Exchange List
-    After update there should be three csv files in out_dir
+    Get most updated class A stock symbol list from Shanghai Stock Exchange & Shenzhen Stock Exchange
+    After update there should be three csv files in registered out_dir
     symbol_list.csv: Combined symbol list from both SSE and SZSE with header
         [symbol,name,market,outstanding,totals,timeToMarket]
-    sse_company.csv: raw symbol list from SSE
-    szse_company_a: raw Symbol list from SZSE
+    where:
+        symbol: Listing symbol of the company
+        name:   Listing short name of the company
+        market: On which exchange of the company listed, either SSE or SZSE
+        outstanding: outstanding shares / 10^8
+        totals: Total shares / 10^8
+        timeToMarket: Date on which the company was listed.
+
+    sse_company.csv: raw symbol list fetched from SSE website
+    szse_company_a: raw Symbol list fetch from SZSE website
+
+    Fetched symbol lists will be saved to $PROGRAM_DATA_ROOT/symbol_list/china/
 
     # DEPENDENCY( requests pandas xlrd )
-
     """
 
-    # TODO implement a function to return string of first Pinyin letter of name
+    def __init__(self):
 
-    def __init__(self, out_dir=None):
         self.market_dict = {}
         self.symbol_list = []
         self.market_open_days = []
-        self.out_dir = path_expand(out_dir) if out_dir is not None else path_expand('symbol_list/china')
+        self.out_dir = path_expand('symbol_list/china')
         self.encoding = 'utf-8'
 
     def _get_sse_company_list(self):
-        print('Updating Shanghai Stock Exchange List')
+        logging("SymbolListUpdater", '[ INFO ] fetching_from_ShanghaiStockExchange_SSE', method='all')
         req_url = 'http://query.sse.com.cn/security/stock/downloadStockListFile.do'
         get_headers = {'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                        'Accept-Encoding': 'gzip, deflate, sdch',
@@ -86,10 +92,11 @@ class SymbolListUpdater:
         file_remove('%s/szse_company.xlsx' % self.out_dir)
 
     def _get_szse_company_list(self):
-        print('Updating Shenzhen Stock Exchange List')
+        logging("SymbolListUpdater", '[ INFO ] fetching_from_Shenzhen_Stock_Exchange_SZSE', method='all')
         self._get_szse_sub_company_list('a')
 
     def _merge_company_list(self):
+        logging("SymbolListUpdater", '[ INFO ] merging_lists', method='all')
         final_list = []
         with open('%s/sse_company.csv' % self.out_dir, encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
@@ -119,20 +126,15 @@ class SymbolListUpdater:
 
     def update(self):
         directory_ensure(self.out_dir)
+        logging("SymbolListUpdater", '[ INFO ] start_fetching_symbol_list', method='all')
         self._get_sse_company_list()
         self._get_szse_company_list()
         self._merge_company_list()
+        logging("SymbolListUpdater", '[ INFO ] finished_fetching_symbol_list', method='all')
 
 
 # CMDEXPORT ( FETCH SYMBOL ) update_symbol_list
 def update_symbol_list():
-    a = SymbolListUpdater()
+    a = SymbolListUpdateHdl()
     a.update()
 
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        a = SymbolListUpdater(sys.argv[1])
-        a.update()
-    else:
-        update_symbol_list()

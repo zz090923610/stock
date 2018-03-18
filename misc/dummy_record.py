@@ -1,6 +1,11 @@
+# This .py doesn't perform any operations. It simply provides a place to hold some to-dos and dependencies which 
+# may have no proper files to store.
+
+
+# WINDOWS_GUARANTEED
+
 # DEPENDENCY( beautifulsoup4 lxml beautifulsoup4 pandas pillow ) #FOR tushare
 # DEP_APT( python3-pip cython3 )
-# WINDOWS_GUARANTEED
 
 # TODO: add utility to register new module exported command.
 # TODO: function binding syntax

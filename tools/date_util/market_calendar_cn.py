@@ -5,24 +5,26 @@
 import os
 import time
 from datetime import datetime
-
 import pandas as pd
 import pytz
 from tushare import trade_cal
 
-# DIRREG( calendar )
 from tools.data.path_hdl import path_expand, directory_ensure
 from tools.io import logging
 
+# REGDIR( calendar )
 
+
+# noinspection PyBroadException,PyUnusedLocal
 class MktCalendar:
     # DEPENDENCY( tushare pytz )
-    # TODO: generate calendar if not exist
     def __init__(self, tz='Asia/Shanghai', mkt='CN'):
+        # currently only considered tz='Asia/Shanghai', mkt='CN'
+        # calendar fetched using tushare.
+        # important: need to call load_calendar() after creating new instance.
         self.timezone = tz
         self.market = mkt
         try:
-
             self.cal_path = os.path.join(path_expand('calendar'), "%s.csv" % self.market)
             directory_ensure(path_expand('calendar'))
         except Exception as e:
@@ -35,6 +37,7 @@ class MktCalendar:
         self.generate_lr_pair()
 
     def load_calendar(self):
+
         try:
             return pd.read_csv(self.cal_path)
         except FileNotFoundError:

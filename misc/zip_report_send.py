@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # DEP_APT( zip )
 import sys
 from tools.date_util.market_calendar_cn import MktCalendar

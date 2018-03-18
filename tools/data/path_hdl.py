@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import platform
 from pathlib import Path
 import os
@@ -24,14 +25,14 @@ def directory_exists(target_directory):
         return False
 
 
-def directory_clear_content(target_directory, touch_info=None):
+def directory_clear_content(target_directory):
     expanded_path = path_expand(target_directory)
     if not os.path.exists(expanded_path):
         return
     files = os.listdir(expanded_path)
     paths = [os.path.join(expanded_path, i) for i in files]
     for i in paths:
-        file_remove(i, touch_info=touch_info)
+        file_remove(i)
 
 
 def file_exist(target_file):
@@ -42,19 +43,10 @@ def file_exist(target_file):
         return False
 
 
-def file_status(target_file):
-    pass  # TODO return touch info
-
-
-def file_touch(target_file, touch_info=None):
-    pass  # TODO need implementation
-
-
-def file_remove(target_file, touch_info=None):
+def file_remove(target_file):
     if os.path.split(target_file)[-1] == "TOUCH_INFO":
         return
     os.remove(target_file)
-    # TODO update touch_info
 
 
 def path_expand(path):
@@ -88,8 +80,3 @@ def path_expand(path):
     else:  # something happen.
         return os.path.join(PROGRAM_DATA_ROOT, "undefined", path.strip())
 
-
-class TouchHdl:
-    def __init__(self):
-        self.locking_level = None
-        self.locking_path = None

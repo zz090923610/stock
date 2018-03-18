@@ -9,12 +9,11 @@ import tushare as ts
 from tools.data.path_hdl import path_expand, directory_ensure
 from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import *
-from tools.symbol_list_china_hdl import SymbolListHDL
+from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
 
-msg_source = '[ DayLevelQuoteUpdater ]'
+msg_source = 'DayLevelQuoteUpdater'
 
-# TODO: implement backup sources, implement automatic source switch
-# TODO: serious data missing when using ts.get_hist_data
+# TODO: implement backup sources when necessary, implement automatic source switch
 
 # REGDIR( day_quotes/china )
 
@@ -23,7 +22,7 @@ calendar = MktCalendar()
 # This module can fetch day level quotes(aka candlestick data) for all symbols from Chinese Stock Markets.
 # Intended to implemented all 5 sources, each should work as backup of others if failed.
 
-# all sources should implement:
+# class for every source should implement:
 
 #    def __init__(self):
 #        pass
@@ -39,6 +38,30 @@ calendar = MktCalendar()
 
 
 class DayLevelQuoteUpdaterTushare:
+    """
+    Fetch day level data of list of symbols given a date range.
+    Downloaded files should be saved to $PROGRAM_DATA_ROOT/day_quotes/china/%s.csv % symbol
+    $symbol.csv: contains day level data with header:
+        [date,open,high,close,low,volume,price_change,p_change,ma5,ma10,ma20,v_ma5,v_ma10,v_ma20,turnover,name,symbol]
+    where:
+        date:  date in format YYYY-MM-DD
+        open:  stock price at 09:30AM YYYY-MM-DD
+        high:   highest price among all prices of YYYY-MM-DD
+        close:  stock price at 15:00PM YYYY-MM-DD
+        low:    lowest price among all prices of YYYY-MM-DD
+        volume: traded shares / 100
+        price_change: close - prev_close
+        p_change:   (close - prev_close) / prev_close * 100
+        ma5:    moving average of price, with window size = 5
+        ma10:    moving average of price, with window size = 10
+        ma20:    moving average of price, with window size = 20
+        v_ma5:  moving average of volume, with window size = 5
+        v_ma10:  moving average of volume, with window size = 10
+        v_ma20:  moving average of volume, with window size = 20
+        turnover:   volume / outstanding shares * 100
+        name:   short company name
+        symbol: company symbol
+    """
     # DEPENDENCY( tushare )
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
@@ -51,20 +74,19 @@ class DayLevelQuoteUpdaterTushare:
     def get_data_one_symbol(self, symbol, start, end, store_dir):
         df = ts.get_hist_data(symbol, start=start, end=end)
         if df is None:
-            out(msg_source, '[ ERROR ] % failed' % symbol)
+            logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushare_%s failed' % symbol)
             return symbol
         df = df.reindex(index=df.index[::-1])
-        symbol_str = self.symbol_dict.market_symbol_of_stock(symbol)
+        symbol_str = self.symbol_dict.market_code_of_stock(symbol)
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
         df['symbol'] = symbol_str
         df.to_csv('%s/%s.csv' % (store_dir, symbol))
-        out(msg_source, '[ INFO ] %s_success' % symbol)
+        logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
         return None
 
     def get_data_all_symbols(self, start, end):
-        print("DayLevelQuoteUpdaterTushare Fetching all symbols from %s to %s" % (start, end))
-        out(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list))
+        logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
         failed_list = []
         pool = Pool(16)
         for i in self.symbol_list_hdl.symbol_list:
@@ -74,17 +96,19 @@ class DayLevelQuoteUpdaterTushare:
         # Use backup source to fetch failed symbols.
         failed_list = [x for x in failed_list if x is not None]
         if len(failed_list):
-            print('retry:', failed_list)
+            logging(msg_source,"[ INFO ] retry_%d_failed_symbols" % len(failed_list), method='all')
             a = DayLevelQuoteUpdaterTushareTXD()
             for i in failed_list:
                 a.get_data_one_symbol(i, start, end, self.dir)
             a.__del__()
-        out(msg_source, '[ INFO ] finished_fetching')
-        print("DayLevelQuoteUpdaterTushare Fetching Finished")
+        logging(msg_source, '[ INFO ] finished_fetching', method='all')
 
 
 class DayLevelQuoteUpdaterTushareTXD:
     # DEPENDENCY( tushare )
+    """
+    Same input/output format as DayLevelQuoteUpdaterTushare
+    """
     def __init__(self):
         self.ts_api = None
         self.symbol_list_hdl = SymbolListHDL()
@@ -113,9 +137,8 @@ class DayLevelQuoteUpdaterTushareTXD:
             if df is not None:
                 break
             sleep(1)
-            print("retry:", symbol)
         if df is None:
-            out(msg_source, '[ ERROR ] % failed' % symbol)
+            logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushareTXD_%s_failed' % symbol)
             return
         for x in [5, 10, 20]:
             df['v_ma%d' % x] = MA(df['vol'], x).map(ct.FORMAT).shift(-(x - 1))
@@ -126,8 +149,8 @@ class DayLevelQuoteUpdaterTushareTXD:
         df = df.rename(columns={'code': 'symbol', 'vol': 'volume', 'tor': 'turnover'})
         df.index.names = ['date']
 
-        df = df.reindex(index=df.index[::-1])  # ???
-        symbol_str = self.symbol_dict.market_symbol_of_stock(symbol)
+        df = df.reindex(index=df.index[::-1])  # reverse rows
+        symbol_str = self.symbol_dict.market_code_of_stock(symbol)
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
         df['symbol'] = symbol_str
@@ -135,17 +158,15 @@ class DayLevelQuoteUpdaterTushareTXD:
                         'ma20',
                         'v_ma5', 'v_ma10', 'v_ma20', 'turnover', 'name', 'symbol']
         df[column_order].to_csv('%s/%s.csv' % (store_dir, symbol), float_format='%.2f')
-        out(msg_source, '[ INFO ] %s_success' % symbol)
+        logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushareTXD_%s_success' % symbol)
 
     def get_data_all_symbols(self, start, end):
-        print("DayLevelQuoteUpdaterTushareTXD Fetching all symbols from %s to %s" % (start, end))
         if not self.ts_api:
             self.ts_api = ts.get_apis()
-        out(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list))
+        logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
         for i in self.symbol_list_hdl.symbol_list:
             self.get_data_one_symbol(i, start, end, self.dir)
-        out(msg_source, '[ INFO ] finished_fetching')
-        print("DayLevelQuoteUpdaterTushareTXD Fetching Finished")
+        logging(msg_source, '[ INFO ] finished_fetching', method='all')
         self.__del__()
 
 

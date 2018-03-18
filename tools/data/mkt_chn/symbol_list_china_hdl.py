@@ -5,12 +5,15 @@ import os
 import re
 
 from tools.data.path_hdl import path_expand
-from tools.file_hdl import load_csv
+from tools.data.file_hdl import load_csv
 
 
 # USEDIR( symbol_list/china )
 
 class SymbolListHDL:
+    """
+    This class handles some vital information of all symbols from both exchanges, actually it's a set of dicts.
+    """
     def __init__(self):
         self.market_dict = {}
         self.name_dict = {}
@@ -30,66 +33,91 @@ class SymbolListHDL:
                 assert (re.match(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", i['timeToMarket']) is not None)
                 assert (re.match(r"[0-9]{6}", i['symbol']) is not None)
             except AssertionError as e:
-                if i['symbol'] == '600996':
+                if i['symbol'] == '600996':  # this is a exception missing data from official source.
                     i['timeToMarket'] = '2016-12-26'
                 else:
                     e.args += i
                     raise
+                continue
             self.market_dict[i['symbol']] = i['market']
             self.name_dict[i['symbol']] = i['name']
             self.outstanding_dict[i['symbol']] = i['outstanding']
             self.totals_dict[i['symbol']] = i['totals']
             self.time_to_market_dict[i['symbol']] = i['timeToMarket']
             self.symbol_list.append(i['symbol'])
-        self.symbol_list = list(set(self.symbol_list))
 
     # Below functions should be called after data loaded
-    def link_of_stock(self, stock):
+    def link_of_stock(self, symbol):
+        """
+        get http link where visual data of symbol can be found.
+        :param symbol:
+        :return:
+        """
         mkt = ''
         try:
-            if self.market_dict[stock] == 'sse':
+            if self.market_dict[symbol] == 'sse':
                 mkt = 'sh'
-            elif self.market_dict[stock] == 'szse':
+            elif self.market_dict[symbol] == 'szse':
                 mkt = 'sz'
         except KeyError:
             mkt = ''
-        link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, stock, stock)
+        link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, symbol, symbol)
         return link
 
-    def market_symbol_of_stock(self, stock):
+    def market_code_of_stock(self, symbol):
+        """
+        return longer version of symbol prefixed by short exchange code.
+        :param symbol:
+        :return:
+        """
         try:
             mkt = ''
-            if self.market_dict[stock] == 'sse':
+            if self.market_dict[symbol] == 'sse':
                 mkt = 'sh'
-            elif self.market_dict[stock] == 'szse':
+            elif self.market_dict[symbol] == 'szse':
                 mkt = 'sz'
-            return '%s%s' % (mkt, stock)
+            return '%s%s' % (mkt, symbol)
         except KeyError:
             return ''
 
-    def market_of_stock(self, stock):
+    def market_of_stock(self, symbol):
+        """
+        return exchange code on which the symbol is listed.
+        :param symbol:
+        :return:
+        """
         try:
             mkt = ''
-            if self.market_dict[stock] == 'sse':
+            if self.market_dict[symbol] == 'sse':
                 mkt = 'sh'
-            elif self.market_dict[stock] == 'szse':
+            elif self.market_dict[symbol] == 'szse':
                 mkt = 'sz'
             return mkt
         except KeyError:
             return ''
 
-    def in_sse(self, stock):
+    def in_sse(self, symbol):
+        """
+        check if the symbol is listed on Shanghai Stock Exchange.
+        :param symbol:
+        :return:
+        """
         try:
-            if self.market_dict[stock] == 'sse':
+            if self.market_dict[symbol] == 'sse':
                 return True
             else:
                 return False
         except KeyError:
             return False
 
-    def in_szse(self, stock):
+    def in_szse(self, symbol):
+        """
+        check if the symbol is listed on Shenzhen Stock Exchange.
+        :param symbol:
+        :return:
+        """
         try:
-            if self.market_dict[stock] == 'szse':
+            if self.market_dict[symbol] == 'szse':
                 return True
             else:
                 return False

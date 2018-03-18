@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # REGISTER_DATA_DIR {"stock_monitor_rules_dir": "%root/stock_feature"}
 # TODO: handle dir register, init.
 import os

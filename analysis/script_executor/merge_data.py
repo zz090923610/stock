@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # DEPENDENCY( pandas )
 # WINDOWS_GUARANTEED
 
