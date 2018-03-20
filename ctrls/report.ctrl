@@ -1,0 +1,6 @@
+ZIP ~/{{LASTCLOSEDTRADEDAY}}.zip naive_score/summary_turnover_{{LASTCLOSEDTRADEDAY}}.csv
+ZIP ~/{{LASTCLOSEDTRADEDAY}}.zip naive_score/summary_amount_{{LASTCLOSEDTRADEDAY}}.csv
+ZIP ~/{{LASTCLOSEDTRADEDAY}}.zip slice/analysis_v2_{{LASTCLOSEDTRADEDAY}}.csv
+ZIP ~/{{LASTCLOSEDTRADEDAY}}.zip slice/anomaly_{{LASTCLOSEDTRADEDAY}}.csv
+
+SEND FILE WECHAT ~/{{LASTCLOSEDTRADEDAY}}.zip ZZY

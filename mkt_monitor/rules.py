@@ -58,14 +58,14 @@ class Rule:
             except Exception as e:
                 print("ERR when parsing %s" % i)
                 print(e)
-        self.create_date = self.cal.get_local_date()
+        self.create_date = self.cal.now('d')
         self.calc_valid_until()
 
     def generate_line(self):
         action_str = " ".join(["action:%s" % i for i in self.action])
         callback_str = " ".join(["callback:%s" % i for i in self.callback])
         line = " ".join(
-            ["symbol:"+self.symbol, "name:" + self.name, "func:" + self.function, "t0:" + self.t0.datetime_specified,
+            ["symbol:" + self.symbol, "name:" + self.name, "func:" + self.function, "t0:" + self.t0.datetime_specified,
              "unit:" + self.unit, "trigger:" + self.trigger, "status:" + self.status,
              "valid:" + self.valid, action_str, callback_str])
         return line
@@ -94,11 +94,12 @@ class Rule:
             dt /= 288000
         return dt
 
+    # noinspection PyUnusedLocal
     def calc_value_of_func_now(self):
         t0 = self.t0
-        t = MktDateTime(self.cal.get_local_dt(), self.cal)
+        t = MktDateTime(self.cal.now('dt'), self.cal)
         dt = self.calc_delta_t(t0, t)
-        # t = MktDateTime("2018-02-01&13:10:00", self.cal)  # TODO
+        # above var would be called when eval-ing func
         func = self.function.split("=")[1]
         res_var = self.function.split("=")[0].strip()
 
@@ -122,12 +123,12 @@ class Rule:
             num *= 5
         elif unit == 'm':
             num *= 20
-        valid_until_date = self.cal.get_day('t+%s' % num, self.create_date)
+        valid_until_date = self.cal.calc_t(self.create_date, "+", num)
         self.valid_until = "%s&15:00:00" % valid_until_date
 
     def check_val(self, val_now):
         # val_now should be in {"var":"",  "val":'', "timestamp": t} format
-        t_now = self.cal.get_local_dt()
+        t_now = self.cal.now('dt')
         if (self.status == "finished") | (self.status == 'pending'):
             return []
         if t_now >= self.valid_until:
@@ -147,7 +148,8 @@ class Rule:
         if result:
             for a in self.action:
                 if 'sendmsg' in a:
-                    msg = "[ %s ] rule %s triggered, %s(calc) %s %s(now)"%(self.symbol, self.name, val_calc['val'],self.trigger, val_now['val'])
+                    msg = "[ %s ] rule %s triggered, %s(calc) %s %s(now)" % (
+                        self.symbol, self.name, val_calc['val'], self.trigger, val_now['val'])
                     Alarm('msg', msg).emit()
                 elif 'trade' in a:
                     Alarm('order', a).emit()

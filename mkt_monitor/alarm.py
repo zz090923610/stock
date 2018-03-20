@@ -3,8 +3,8 @@ import os
 
 
 class Alarm:
-    def __init__(self, type, payload):
-        self.type = type  # msg, order
+    def __init__(self, msg_type, payload):
+        self.type = msg_type  # msg, order
         self.payload = payload
 
     def emit(self):

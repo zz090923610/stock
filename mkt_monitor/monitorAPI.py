@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 
-from mkt_monitor.stock_feature import stock_monitor_rules_dir, StockFeature
+from mkt_monitor.stock_feature import StockFeature
+from tools.data.path_hdl import path_expand
 from tools.date_util.market_calendar_cn import MktCalendar
+
+stock_monitor_rules_dir = path_expand("stock_feature")
 
 
 class MonitorAPI:

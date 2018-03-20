@@ -12,17 +12,17 @@ calendar = MktCalendar()
 
 def load_script(script_path):
     raw_script = load_text(script_path)
-    script = []
+    scripts = []
     for line in raw_script:
         if len(line.lstrip().rstrip()) > 0:
             tmp_line = line.split('#')[0].lstrip().rstrip()
             split_line = re.split(r'[ \t]+', tmp_line)
             if (split_line[0] != '') & (split_line[0] != '#'):
-                script.append(split_line)
-    return script
+                scripts.append(split_line)
+    return scripts
 
 
 if __name__ == '__main__':
     script = load_script(sys.argv[1])
     for l in script:
-        exec_ctrl_cmd(l, calendar)
+        exec_ctrl_cmd(l)

@@ -7,6 +7,7 @@ import os
 import pandas as pd
 
 from tools.data.path_hdl import path_expand, directory_ensure
+from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging
 from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
 
@@ -14,6 +15,7 @@ from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
 # REGDIR( naive_summary/china )
 out_dir = path_expand("naive_summary/china")
 directory_ensure(out_dir)
+calendar = MktCalendar()
 
 
 def generate_out_path_for(symbol):
@@ -70,6 +72,7 @@ def naive_summary_multiple(symbol_list, date_list):
 
 
 # CMDEXPORT ( NAIVETICKSUMMARY {date} ) naive_summary_tick
-def naive_summary_tick(date_list):
+def naive_summary_tick(date):
+    date_list = [calendar.parse_date(date)]
     symbol_list_hdl = SymbolListHDL()
     naive_summary_multiple(symbol_list_hdl.symbol_list, date_list)

@@ -61,11 +61,11 @@ def path_expand(path):
     *, Other path types are considered undefined. Undefined path can be returned, but should with an error log,
         a expanded path should be expanded to DATA_ROOT/undefined/path to make sure other
         paths are not polluted.
-    #TODO this function should be called thousand times during processing a normal daily analysis. current
-    #TODO implementation is still too heavy.
+    #TODO this function should be called thousand times during processing a normal daily analysis. current implementation is still too heavy.
     :param path: a user specified path string
     :return: a expanded path string which can be used by other functions.
     """
+    path = os.path.expanduser(path)
     if os.path.exists(path):
         return path
     elif path == "DATA_ROOT":

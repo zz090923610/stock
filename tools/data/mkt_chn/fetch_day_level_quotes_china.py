@@ -13,11 +13,12 @@ from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL
 
 msg_source = 'DayLevelQuoteUpdater'
 
-# TODO: implement backup sources when necessary, implement automatic source switch
+# need to implement backup sources when necessary, implement automatic source switch
 
 # REGDIR( day_quotes/china )
 
 calendar = MktCalendar()
+
 
 # This module can fetch day level quotes(aka candlestick data) for all symbols from Chinese Stock Markets.
 # Intended to implemented all 5 sources, each should work as backup of others if failed.
@@ -62,6 +63,7 @@ class DayLevelQuoteUpdaterTushare:
         name:   short company name
         symbol: company symbol
     """
+
     # DEPENDENCY( tushare )
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
@@ -95,20 +97,26 @@ class DayLevelQuoteUpdaterTushare:
         pool.join()
         # Use backup source to fetch failed symbols.
         failed_list = [x for x in failed_list if x is not None]
-        if len(failed_list):
-            logging(msg_source,"[ INFO ] retry_%d_failed_symbols" % len(failed_list), method='all')
-            a = DayLevelQuoteUpdaterTushareTXD()
-            for i in failed_list:
-                a.get_data_one_symbol(i, start, end, self.dir)
-            a.__del__()
+        logging(msg_source, "[ INFO ] %d_symbols_update_failed" % len(failed_list), method='all')
+        print(failed_list)
+        # FIXME: TXD source as backup is way too unstable.
+        # if len(failed_list):
+        #    logging(msg_source, "[ INFO ] retry_%d_failed_symbols" % len(failed_list), method='all')
+        #    print(failed_list)
+        #    a = DayLevelQuoteUpdaterTushareTXD()
+        #    for i in failed_list:
+        #        a.get_data_one_symbol(i, start, end, self.dir)
+        #    a.__del__()
         logging(msg_source, '[ INFO ] finished_fetching', method='all')
 
 
+# noinspection PyBroadException
 class DayLevelQuoteUpdaterTushareTXD:
     # DEPENDENCY( tushare )
     """
     Same input/output format as DayLevelQuoteUpdaterTushare
     """
+
     def __init__(self):
         self.ts_api = None
         self.symbol_list_hdl = SymbolListHDL()
@@ -122,18 +130,31 @@ class DayLevelQuoteUpdaterTushareTXD:
             self.ts_api[0].disconnect()
             self.ts_api[1].disconnect()
 
-    # noinspection PyMethodMayBeStatic
     def get_data_one_symbol(self, symbol, start, end, store_dir):
+        retry_cnt = 0
+        while retry_cnt < 5:
+            if retry_cnt > 0:
+                try:
+                    self.__del__()
+                except Exception:
+                    pass
+            try:
+                self.__del__()
+                self._get_data_one_symbol(symbol, start, end, store_dir)
+                break
+            except OSError:
+                retry_cnt += 1
+
+    # noinspection PyMethodMayBeStatic
+    def _get_data_one_symbol(self, symbol, start, end, store_dir):
         from tushare.util.formula import MA
         from tushare.stock import cons as ct
         if not self.ts_api:
             self.ts_api = ts.get_apis()
-        # TODO by implementing calendar start-n validation, fill out right upper corner of df's MAs.
-        # df = ts.bar(symbol, self.ts_api, start_date=start-20, end_date=end, adj='qfq', ma=[5, 10, 20],
-        # factors=['tor'])
         df = None
         for _ in range(5):
-            df = ts.bar(symbol, self.ts_api, start_date=start, end_date=end, adj='qfq', ma=[5, 10, 20], factors=['tor'])
+            df = ts.bar(symbol, self.ts_api, start_date=calendar.calc_t(start, '-', 20), end_date=end, adj='qfq',
+                        ma=[5, 10, 20], factors=['tor'])
             if df is not None:
                 break
             sleep(1)
@@ -157,6 +178,7 @@ class DayLevelQuoteUpdaterTushareTXD:
         column_order = ['open', 'high', 'close', 'low', 'volume', 'price_change', 'p_change', 'ma5', 'ma10',
                         'ma20',
                         'v_ma5', 'v_ma10', 'v_ma20', 'turnover', 'name', 'symbol']
+        df = df[df.index >= start]
         df[column_order].to_csv('%s/%s.csv' % (store_dir, symbol), float_format='%.2f')
         logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushareTXD_%s_success' % symbol)
 
@@ -212,7 +234,9 @@ class DayLevelQuoteUpdaterGTJA:
         pass
 
 
-# CMDEXPORT ( FETCH OHCL {} {} ) update_day_level_quotes
+# CMDEXPORT ( FETCH OHCL {start_date} {end_date} ) update_day_level_quotes
 def update_day_level_quotes(start_date, end_date):
-    a = DayLevelQuoteUpdaterTushareTXD()
-    a.get_data_all_symbols(start=calendar.validate_date(start_date), end=calendar.validate_date(end_date))
+    start_date = calendar.parse_date(start_date)
+    end_date = calendar.parse_date(end_date)
+    a = DayLevelQuoteUpdaterTushare()
+    a.get_data_all_symbols(start=calendar.parse_date(start_date), end=calendar.parse_date(end_date))

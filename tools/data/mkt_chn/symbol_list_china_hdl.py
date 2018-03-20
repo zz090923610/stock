@@ -26,6 +26,7 @@ class SymbolListHDL:
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
 
     def load(self):
+        self.symbol_list = []
         basic_info_list = load_csv(os.path.join(path_expand("symbol_list/china"), 'symbol_list.csv'))
         for i in basic_info_list:
             try:

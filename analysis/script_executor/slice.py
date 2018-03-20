@@ -6,12 +6,14 @@ import os
 import pandas as pd
 from analysis.script_executor.TranslateHdl import TranslateHdl
 from tools.data.path_hdl import path_expand, directory_ensure, file_exist
+from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging
 
 # USEDIR( $USER_SPECIFIED )
 # REGDIR( slice )
 out_dir = path_expand("slice")
 directory_ensure(out_dir)
+calendar = MktCalendar()
 
 
 def slice_one(in_path, date):
@@ -30,6 +32,8 @@ def slice_one(in_path, date):
 
 # CMDEXPORT ( SLICECOMBINE {input_path} {out_path} {date} {rename} ) slice_combine
 def slice_combine(input_path, out_path, date, rename):
+    date = calendar.parse_date(date)
+    rename = True if rename == 'TRUE' else False
     input_path = path_expand(input_path)
     out_path = os.path.join(out_dir, "%s_%s.csv" % (out_path, date))
     from tools.data.mkt_chn.symbol_list_china_hdl import SymbolListHDL

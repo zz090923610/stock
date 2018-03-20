@@ -33,6 +33,7 @@ class TickQuoteUpdaterTushare:
         amount: volume * 100 * price
         type::  buy(on purpose)/sell(on purpose) or cannot_decide
     """
+
     # DEPENDENCY( tushare )
     def __init__(self):
         self.symbol_list_hdl = SymbolListHDL()
@@ -56,7 +57,7 @@ class TickQuoteUpdaterTushare:
 
     def get_tick_multiple(self, stock_list, date_list, force=False):
         force = [force]
-        logging(msg_source, '%s/start_%d' % (msg_source, len(self.symbol_list_hdl.symbol_list)),method='all')
+        logging(msg_source, '%s/start_%d' % (msg_source, len(self.symbol_list_hdl.symbol_list)), method='all')
         pool = Pool(16)
         for params in itertools.product(stock_list, date_list, force):
             pool.apply_async(self.get_tick_one_stock_one_day, args=params)
@@ -68,6 +69,6 @@ class TickQuoteUpdaterTushare:
 # CMDEXPORT ( FETCH TICK {date_or_dates} ) update_tick_quotes
 def update_tick_quotes(date_or_dates):
     dates = [date_or_dates] if type(date_or_dates) == str else date_or_dates
-    dates = [calendar.validate_date(i) for i in dates]
+    dates = [calendar.parse_date(i) for i in dates]
     tick = TickQuoteUpdaterTushare()
     tick.get_tick_multiple(tick.symbol_list_hdl.symbol_list, dates)

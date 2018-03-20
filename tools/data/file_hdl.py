@@ -52,3 +52,27 @@ def load_text(path):
     with open(path, encoding='utf8') as f:
         raw_text = f.readlines()
     return raw_text
+
+
+def save_text(path, content):
+    with open(path, "w", encoding='utf8') as f:
+        f.write(content)
+
+
+def load_pickle(path):
+    try:
+        with open(path, 'rb') as f:
+            import pickle
+            return pickle.load(f)
+    except FileNotFoundError:
+        logging("PickleLoader", "[ ERROR ] file not found %s" % path)
+        return None
+
+
+def save_pickle(obj, path):
+    try:
+        with open(path, 'wb') as f:
+            import pickle
+            pickle.dump(obj, f, -1)
+    except Exception as e:
+        logging("PickleSaver", "[ ERROR ] save to %s failed %s" % (path, e))

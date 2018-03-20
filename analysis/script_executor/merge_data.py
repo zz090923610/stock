@@ -82,7 +82,7 @@ def merge(path_list, symbol_filename, output_path, index, msg_from):
         logging(msg_from, "[ ERROR ] merge failed %s %s" % (symbol_filename, e))
 
 
-# CMDEXPORT ( {MERGE path_from {path_to} {index} ) cmd_merge
+# CMDEXPORT ( MERGE {path_from} {path_to} {index} ) cmd_merge
 def cmd_merge(path_from, path_to, index):
     a = DataMerger(path_from, path_to, index)
     a.collect_symbols()

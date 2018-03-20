@@ -13,9 +13,9 @@ from tools.io import *
 
 msg_topic = "SCRIPT_ENGINE"
 
+
 # WINDOWS_GUARANTEED
 # DEPENDENCY( pandas )
-# TODO implement cmd export
 def load_data(input_data):
     #    print('func load_data(input_data)\n'
     #          '%s %s' % (type(input_data), input_data))
@@ -42,12 +42,9 @@ def validate_script_path(script_path):
         return "/tmp"
 
 
-
-
-
 def load_script(script_path):
     if os.path.isfile(script_path):
-        with open(script_path,encoding='utf8') as f:
+        with open(script_path, encoding='utf8') as f:
             raw_script = f.readlines()
     else:
         raw_script = ''
@@ -63,6 +60,7 @@ def load_script(script_path):
     return script
 
 
+# noinspection PyBroadException
 def is_num(target):
     try:
         float(target)
@@ -97,6 +95,7 @@ def parse_script_head(script_path):
     return script, parallel_level, input_dir_file, output_dir_file, output_cols
 
 
+# CMDEXPORT ( SCRIPT {script_path}) engine
 def engine(script_path):
     print("EXEC Script %s " % script_path)
     script_path = validate_script_path(script_path)

@@ -6,10 +6,12 @@ import os
 import pandas as pd
 from analysis.models.conditional_frequency import ConditionalFreqHdl
 from tools.data.path_hdl import path_expand, directory_ensure
+from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging
 
 out_dir = path_expand("naive_score")
 directory_ensure(path_expand("naive_score"))
+calendar = MktCalendar()
 
 
 # USEDIR( $USER_SPECIFIED )
@@ -23,6 +25,7 @@ def validate_output_path(data, date, score_type):
 
 # CMDEXPORT ( NAIVESCORE TURNOVER {data} {date}) naive_score_turnover
 def naive_score_turnover(data, date):
+    date = calendar.parse_date(date)
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     cond_buy = ConditionalFreqHdl("cond_buy", None, None)
     cond_buy.load()
@@ -52,6 +55,7 @@ def naive_score_turnover(data, date):
 
 # CMDEXPORT ( NAIVESCORE AMOUNT {data} {date}) naive_score_amount
 def naive_score_amount(data, date):
+    date = calendar.parse_date(date)
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     raw_data = pd.read_csv(path)
     result_list = raw_data.to_dict('records')

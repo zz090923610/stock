@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-# REGISTER_DATA_DIR {"stock_monitor_rules_dir": "%root/stock_feature"}
-# TODO: handle dir register, init.
+
 import os
 
 from mkt_monitor.rules import Rule
+from tools.data.file_hdl import save_text, load_text
+from tools.data.path_hdl import directory_ensure, path_expand, file_exist
 from tools.date_util.market_calendar_cn import MktCalendar
 
-stock_monitor_rules_dir = "/home/zhangzhao/data/stockdata/stock_feature"  # REMOVE_WHEN_DIR_REGISTER
 
-
-# TODO: remove dir from file
+# REGDIR ( stock_feature )
 
 class StockFeature:
-    def __init__(self, symbol,  cal: MktCalendar):
+    def __init__(self, symbol, cal: MktCalendar):
         self.rules = {}
         self.symbol = symbol
         self.cal = cal
+        self.stock_monitor_rules_dir = path_expand("stock_feature")
+        directory_ensure(self.stock_monitor_rules_dir)
 
     def create_rule(self, line):
         new_rule = Rule(self.cal)
@@ -33,21 +34,16 @@ class StockFeature:
         self.rules[key] = new_rule
 
     def save_rules(self):
-        os.makedirs(stock_monitor_rules_dir, exist_ok=True)
-        with open(os.path.join(stock_monitor_rules_dir, "%s.rules" % self.symbol), 'w') as f:
-            for r in self.rules.keys():
-                f.write(self.rules[r].generate_line())
-                f.write("\n")
-            f.flush()
+        content = ''
+        for r in self.rules.keys():
+            content += "%s\n" % self.rules[r].generate_line()
+        save_text(os.path.join(self.stock_monitor_rules_dir, "%s.rules" % self.symbol), content)
 
     def load_rules(self, path):
-        if not os.path.exists(stock_monitor_rules_dir):
-            os.makedirs(stock_monitor_rules_dir, exist_ok=True)
-        if os.path.isfile(path):
-            with open(path) as f:
-                raw_rules = f.readlines()
-        else:
+        if not file_exist(path):
             raw_rules = ''
+        else:
+            raw_rules = load_text(path)
         for line in raw_rules:
             line = line.strip()
             if len(line):
