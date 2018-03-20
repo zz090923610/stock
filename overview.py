@@ -3,7 +3,24 @@ import os
 import re
 import sys
 
-from tools.data.file_hdl import load_text, save_text
+
+def load_text(path):
+    """
+    naive text file loader
+    :param path: input text file path
+    :return: a list of string, each string represents a line from text file
+    """
+    if not os.path.exists(path):
+        print("TextLoader", "[ ERROR ] file not exist %s" % path)
+        return None
+    with open(path, encoding='utf8') as f:
+        raw_text = f.readlines()
+    return raw_text
+
+
+def save_text(path, content):
+    with open(path, "w", encoding='utf8') as f:
+        f.write(content)
 
 
 class OverviewHdl:
