@@ -3,68 +3,68 @@
 
 
 def exec_ctrl_cmd(cmd):
-    if len(cmd) == 2:
-        if cmd[0] == 'SCRIPT':
-            from analysis.script_executor.parser import engine
-            engine(cmd[1])
-            return
     if len(cmd) == 4:
-        if cmd[0] == 'MERGE':
+        if (cmd[0] == 'MERGE') :
             from analysis.script_executor.merge_data import cmd_merge
             cmd_merge(cmd[1], cmd[2], cmd[3])
             return
     if len(cmd) == 5:
-        if cmd[0] == 'SLICECOMBINE':
+        if (cmd[0] == 'SLICECOMBINE') :
             from analysis.script_executor.slice import slice_combine
             slice_combine(cmd[1], cmd[2], cmd[3], cmd[4])
             return
     if len(cmd) == 2:
-        if cmd[0] == 'RENAMECOL':
+        if (cmd[0] == 'RENAMECOL') :
             from analysis.script_executor.slice import rename_column_title
             rename_column_title(cmd[1])
             return
+    if len(cmd) == 2:
+        if (cmd[0] == 'SCRIPT') :
+            from analysis.script_executor.script_exec_hdl import exec_script
+            exec_script(cmd[1])
+            return
     if len(cmd) == 4:
-        if (cmd[0] == 'NAIVESCORE') & (cmd[1] == 'TURNOVER'):
+        if (cmd[0] == 'NAIVESCORE') &(cmd[1] == 'TURNOVER'):
             from analysis.models.naive_score import naive_score_turnover
             naive_score_turnover(cmd[2], cmd[3])
             return
     if len(cmd) == 4:
-        if (cmd[0] == 'NAIVESCORE') & (cmd[1] == 'AMOUNT'):
+        if (cmd[0] == 'NAIVESCORE') &(cmd[1] == 'AMOUNT'):
             from analysis.models.naive_score import naive_score_amount
             naive_score_amount(cmd[2], cmd[3])
             return
     if len(cmd) >= 5:
-        if (cmd[0] == 'CONDFREQ') & (cmd[1] == 'TRAIN'):
+        if (cmd[0] == 'CONDFREQ') &(cmd[1] == 'TRAIN'):
             from analysis.models.conditional_frequency import cond_freq_train
             cond_freq_train(cmd[2], cmd[3], ' '.join(cmd[4:]))
             return
     if len(cmd) == 2:
-        if cmd[0] == 'NAIVETICKSUMMARY':
+        if (cmd[0] == 'NAIVETICKSUMMARY') :
             from analysis.tick.naive_summary import naive_summary_tick
             naive_summary_tick(cmd[1])
             return
     if len(cmd) == 3:
-        if (cmd[0] == 'FETCH') & (cmd[1] == 'TICK'):
+        if (cmd[0] == 'FETCH') &(cmd[1] == 'TICK'):
             from tools.data.mkt_chn.fetch_tick_quotes_china import update_tick_quotes
             update_tick_quotes(cmd[2])
             return
     if len(cmd) == 4:
-        if (cmd[0] == 'FETCH') & (cmd[1] == 'OHCL'):
+        if (cmd[0] == 'FETCH') &(cmd[1] == 'OHCL'):
             from tools.data.mkt_chn.fetch_day_level_quotes_china import update_day_level_quotes
             update_day_level_quotes(cmd[2], cmd[3])
             return
     if len(cmd) == 2:
-        if (cmd[0] == 'FETCH') & (cmd[1] == 'SYMBOL'):
+        if (cmd[0] == 'FETCH') &(cmd[1] == 'SYMBOL'):
             from tools.data.mkt_chn.fetch_symbol_list_china_a import update_symbol_list
             update_symbol_list()
             return
     if len(cmd) >= 3:
-        if cmd[0] == 'ZIP':
+        if (cmd[0] == 'ZIP') :
             from misc.report_hdl import zip_files
             zip_files(cmd[1], ' '.join(cmd[2:]))
             return
     if len(cmd) == 5:
-        if (cmd[0] == 'SEND') & (cmd[1] == 'FILE') & (cmd[2] == 'WECHAT'):
+        if (cmd[0] == 'SEND') &(cmd[1] == 'FILE')&(cmd[2] == 'WECHAT'):
             from misc.report_hdl import send_file_wechat
             send_file_wechat(cmd[3], cmd[4])
             return
