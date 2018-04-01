@@ -25,4 +25,5 @@ def load_script(script_path):
 if __name__ == '__main__':
     script = load_script(sys.argv[1])
     for l in script:
+        print(">>> %s" % ' '.join(l))
         exec_ctrl_cmd(l)
