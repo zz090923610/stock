@@ -19,12 +19,28 @@ calendar = MktCalendar()
 
 # this model using the result of conditional_frequency.
 
-def validate_output_path(data, date, score_type):
+def generate_output_path(data, date, score_type):
+    """
+    :param data:        string
+    :param date:        string
+    :param score_type:  string
+    :return:            string
+    """
     return os.path.join(out_dir, "%s_%s_%s.csv" % (data, score_type, date))
 
 
 # CMDEXPORT ( NAIVESCORE TURNOVER {data} {date}) naive_score_turnover
 def naive_score_turnover(data, date):
+    """
+    Export this function to Control Framework, a control command like:
+        NAIVESCORE TURNOVER summary LASTCLOSEDTRADEDAY
+    can be added to .ctrl batch file to save some work.
+
+    Score all stocks using conditional_frequency model.
+
+    :param data:    string, specify which file to load by proving keyword data
+    :param date:    string, YYYY-MM-DD
+    """
     date = calendar.parse_date(date)
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     cond_buy = ConditionalFreqHdl("cond_buy", None, None)
@@ -55,6 +71,16 @@ def naive_score_turnover(data, date):
 
 # CMDEXPORT ( NAIVESCORE AMOUNT {data} {date}) naive_score_amount
 def naive_score_amount(data, date):
+    """
+    Export this function to Control Framework, a control command like:
+        NAIVESCORE AMOUNT summary LASTCLOSEDTRADEDAY
+    can be added to .ctrl batch file to save some work.
+
+    Score all stocks using AMOUNT_SCALAR model.
+
+    :param data:    string, specify which file to load by proving keyword data
+    :param date:    string, YYYY-MM-DD
+    """
     date = calendar.parse_date(date)
     path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
     raw_data = pd.read_csv(path)

@@ -20,8 +20,19 @@ from tools.io import logging
 
 # noinspection PyBroadException,PyUnusedLocal
 class MktCalendar:
+    """
+    Market Calendar is a fundamental module of the whole project. Say if you want to get tick data 20 trade days ago,
+    or if you want to predict stock price 3 trade days later given a predict function. This class maintain a market
+    calendar and can return all kind of date/time described by functions or constants.
+    """
+
     # DEPENDENCY( tushare pytz )
     def __init__(self, tz='Asia/Shanghai', mkt='CN'):
+        """
+        Within the scope of MktCalendar of CN, we define "local timezone" as 'Asia/Shanghai'
+        :param tz:      timezone
+        :param mkt:     stock market
+        """
         # currently only considered tz='Asia/Shanghai', mkt='CN'
         # calendar fetched using tushare.
         # important: need to call load_calendar() after creating new instance.
@@ -63,6 +74,12 @@ class MktCalendar:
             return local_now.strftime("%Y-%m-%d&%H:%M:%S")
 
     def neighbor_trade_date(self, of_which_idx, direction):
+        """
+        Given an index of date in full_calendar, return neighbor trade date of it.
+        :param of_which_idx:    int
+        :param direction:       string, prev or next
+        :return:                string, YYYY-MM-DD
+        """
         idx = of_which_idx
         while True:
             if direction == 'prev':
@@ -75,6 +92,12 @@ class MktCalendar:
                 return self.full_cal.iloc[idx]['date']
 
     def neighbor_trade_date_given_date(self, of_which_date, direction):
+        """
+        Given an date, return neighbor trade date of it.
+        :param of_which_date:   string, YYYY-MM-DD
+        :param direction:       string, prev or next
+        :return:                string, YYYY-MM-DD
+        """
         try:
             idx = self.full_cal[of_which_date]['idx_full_cal']
             return self.neighbor_trade_date(idx, direction)
@@ -82,6 +105,9 @@ class MktCalendar:
             logging('MktCalendar', "[ ERROR ] neighbor_trade_date_given_date %s" % e, method='all')
 
     def fetch_calendar(self):
+        """
+        Fetch market calendar from tushare source
+        """
         self.full_cal = trade_cal()
         self.full_cal.rename(columns={'calendarDate': 'date', 'isOpen': 'mkt_open'}, inplace=True)
         self.trade_cal = self.full_cal[self.full_cal['mkt_open'] == 1].reset_index().drop(['index'], axis=1)
@@ -93,6 +119,11 @@ class MktCalendar:
         self.trade_cal.to_csv(self.path_trade_cal, index=False)
 
     def build_quick_dict(self):
+        """
+        once quick_dict is built, you can search 'mkt_open', 'idx_full_cal', 'idx_trade_cal', 'prev_trade_date',
+        'next_trade_date' of a specified date YYYY-MM-DD.
+        Should only be called after fetch_calendar
+        """
         # keys: mkt_open, idx_full_cal, idx_trade_cal, prev_trade_date, next_trade_date
         self.quick_dict = {}
         row_len = len(self.full_cal.index)
@@ -110,6 +141,9 @@ class MktCalendar:
         save_pickle(self.quick_dict, self.path_quick_dict)
 
     def load_calendar(self):
+        """
+        Load calendar.
+        """
         if not file_exist(self.path_full_cal) & file_exist(self.path_trade_cal) & file_exist(self.path_quick_dict):
             self.fetch_calendar()
             self.build_quick_dict()
@@ -124,6 +158,9 @@ class MktCalendar:
             self.build_quick_dict()
 
     def load_lr_pair(self):
+        """
+        lr_pair contains information to calculate how many seconds between 2 given time, pretty useful for mkt_monitor.
+        """
         if not file_exist(self.path_lr_pair_dict) & file_exist(self.path_lr_pair_list):
             self.generate_lr_pair()
         try:
@@ -134,6 +171,10 @@ class MktCalendar:
             self.generate_lr_pair()
 
     def generate_lr_pair(self):
+        """
+        lr_pair contains information to calculate how many seconds between 2 given time, pretty useful for mkt_monitor.
+        should only be called after fetch_calendar
+        """
         trade_date_list = self.full_cal[self.full_cal['mkt_open'] == 1]['date'].tolist()
         tl = ["09:30:00", "11:30:00", "13:00:00", "15:00:00"]
         open_from = ["09:30:00", "13:00:00"]
@@ -168,6 +209,12 @@ class MktCalendar:
         save_pickle(self.lr_pair_dict, self.path_lr_pair_dict)
 
     def search(self, date, key):
+        """
+        given a date, search it's property specified by key.
+        :param date:    string, YYYY-MM-DD
+        :param key:     'mkt_open', 'idx_full_cal', 'idx_trade_cal', 'prev_trade_date', 'next_trade_date'
+        :return:        string, int, None
+        """
         try:
             return self.quick_dict[date][key]
         except Exception as e:
@@ -175,6 +222,13 @@ class MktCalendar:
             return None
 
     def gen_date_list_given_range(self, start, end, trade_date_only=True):
+        """
+        given a start date and end date, return a list of dates between them.
+        :param start:   string, YYYY-MM-DD
+        :param end:     string, YYYY-MM-DD
+        :param trade_date_only: boolean
+        :return:        [] of YYYY-MM-DD
+        """
         idx_start = self.search(start, 'idx_full_cal')
         idx_end = self.search(end, 'idx_full_cal')
         if trade_date_only:
@@ -197,6 +251,12 @@ class MktCalendar:
             return df['date'].tolist()
 
     def parse_date(self, day):
+        """
+        a date can be describe as TODAY, LASTCLOSEDTRADEDAY, t, T, T+5, t-10,
+        this function return a proper TRADE DATE YYYY-MM-DD string of it.
+        :param day:     date description, TODAY, LASTCLOSEDTRADEDAY, t, T, T+5, t-10, etc.
+        :return:        YYYY-MM-DD on Trade Date Calendar which fits it.
+        """
         if (day == "TODAY") | (day == 't') | (day == 'T'):
             local_date_now = self.now('d')
             return local_date_now if self.quick_dict[local_date_now]['mkt_open'] == 1 else \
@@ -226,6 +286,12 @@ class MktCalendar:
             return day
 
     def expand_date_in_str(self, target_str):
+        """
+        given a string, search date descriptions enclosed by {{}} and replace them with a valid YYYY-MM-DD on trade date
+        calendar.
+        :param target_str:  string
+        :return:            string, YYYY-MM-DD
+        """
         if re.search(r'{{TODAY}}|{{[tT]}}', target_str) is not None:
             local_date_now = self.now('d')
             str_today = local_date_now if self.quick_dict[local_date_now]['mkt_open'] == 1 else \
@@ -258,6 +324,13 @@ class MktCalendar:
             return target_str
 
     def calc_t(self, start, oper, offset):
+        """
+        return  start_date +- offset(days) in trade date calendar
+        :param start:   string, YYYY-MM-DD
+        :param oper:    string, + or -
+        :param offset:  int
+        :return:
+        """
         try:
             if self.search(start, 'mkt_open'):
                 idx_start = self.search(start, 'idx_trade_cal')
@@ -281,6 +354,10 @@ class MktDateTime:
     Important for mkt_monitor. calc how many seconds the market is open between two given time.
     """
     def __init__(self, datetime_specified, calendar: MktCalendar):
+        """
+        :param datetime_specified: string, YYYY-MM-DD&HH:mm:SS
+        :param calendar:           a instance of MktCalendar, fully loaded and updated.
+        """
         self.datetime_specified = datetime_specified
         self.datetime_l = ""
         self.datetime_r = ""
@@ -293,6 +370,10 @@ class MktDateTime:
         self.calc_sec_to_lr()
 
     def lr_init(self, calendar: MktCalendar):
+        """
+        initialize lr pair of MktDateTime
+        :param calendar:    a instance of MktCalendar, fully loaded and updated.
+        """
         # should be call with valid self.datetime_specified
         # should be called after init self.equiv_date.
         (d, t) = self.split_date_time(self.datetime_specified)
@@ -349,6 +430,9 @@ class MktDateTime:
         self.lr_pair = (self.datetime_l, self.datetime_r)
 
     def calc_sec_to_lr(self):
+        """
+        calculate how many seconds between self and it's left right pair time.
+        """
         # should be called after lr_init
         if self.equiv_date:
             self.sec_to_l = 0
@@ -363,6 +447,11 @@ class MktDateTime:
                  datetime.strptime(self.datetime_specified, date_time_format)).total_seconds())
 
     def secs_to(self, target):
+        """
+        calc how many seconds from this to target time.
+        :param target:  string, YYYY-MM-DD&HH:mm:SS
+        :return:
+        """
         date_time_format = '%Y-%m-%d&%H:%M:%S'
         return int(
             (datetime.strptime(target, date_time_format) - datetime.strptime(self.datetime_specified,
@@ -370,6 +459,11 @@ class MktDateTime:
 
     # noinspection PyBroadException,PyMethodMayBeStatic
     def split_date_time(self, target):
+        """
+        given a YYYY-MM-DD&HH:mm:SS, return (YYYY-MM-DD, HH:mm:SS)
+        :param target: string
+        :return: set of 2 strings
+        """
         try:
             (d, t) = target.split("&")
         except Exception as e:
@@ -377,6 +471,12 @@ class MktDateTime:
         return d, t
 
     def is_in_mkt_close_period(self, target, calendar: MktCalendar) -> bool:
+        """
+        check whether target time is within market closed period
+        :param target:      YYYY-MM-DD&HH:mm:SS
+        :param calendar:    a instance of MktCalendar, fully loaded and updated.
+        :return:            boolean
+        """
         (d, t) = self.split_date_time(target)
         if calendar.search(d, 'mkt_open') == 0:
             return True
@@ -391,6 +491,11 @@ class MktDateTime:
                 return False
 
     def __sub__(self, other):
+        """
+        calculate how many market open seconds between 2 MktDateTime instances.
+        :param other:   another MktDateTime instance
+        :return:        seconds, int
+        """
         a = self.datetime_specified
         b = other.datetime_specified
         if a >= b:

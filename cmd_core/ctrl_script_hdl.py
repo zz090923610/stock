@@ -11,6 +11,10 @@ calendar = MktCalendar()
 
 
 def load_script(script_path):
+    """
+    :param script_path: string
+    :return:    list of tokens, which is a list of list of strings.
+    """
     raw_script = load_text(script_path)
     scripts = []
     for line in raw_script:

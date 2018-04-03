@@ -8,6 +8,11 @@ from tools.data.path_hdl import path_expand, directory_ensure
 
 # DIRREG( translate )
 class TranslateHdl:
+    """
+    When writting scripts you may define many cols and choose to save them to csv. However these cols only consist
+    letters, ditits and _ which may not good enough to present. To solve this problem you can add TRANSLATE commands to
+    add proper utf8 output format for col names you defined, and such translate dicts are handled here.
+    """
     def __init__(self):
         self.dict = {}
         self.order_list = []
@@ -15,6 +20,10 @@ class TranslateHdl:
         directory_ensure(self.trans_dir)
 
     def add_translation(self, line):
+        """
+        add translation into diction from command string
+        :param line:    command string, string
+        """
         # parse line, two conditions
         if ':' in line:
             trans_list = line.split(", ")  # FIXME future implementation
@@ -33,6 +42,9 @@ class TranslateHdl:
                         self.order_list.append(trans_list[0])
 
     def clear(self):
+        """
+        clear all translations
+        """
         self.dict.clear()
 
     def load(self):

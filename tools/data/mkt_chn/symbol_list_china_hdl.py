@@ -12,7 +12,7 @@ from tools.data.file_hdl import load_csv
 
 class SymbolListHDL:
     """
-    This class handles some vital information of all symbols from both exchanges, actually it's a set of dicts.
+    This class handles some vital information of all symbols from both exchanges, actually it maintains several dicts.
     """
     def __init__(self):
         self.market_dict = {}
@@ -26,6 +26,9 @@ class SymbolListHDL:
         self.symbol_szse = [s for s in self.symbol_list if self.in_szse(s)]
 
     def load(self):
+        """
+        Load data from symbol list storage.
+        """
         self.symbol_list = []
         basic_info_list = load_csv(os.path.join(path_expand("symbol_list/china"), 'symbol_list.csv'))
         for i in basic_info_list:
@@ -48,11 +51,11 @@ class SymbolListHDL:
             self.symbol_list.append(i['symbol'])
 
     # Below functions should be called after data loaded
-    def link_of_stock(self, symbol):
+    def link_of_symbol(self, symbol):
         """
         get http link where visual data of symbol can be found.
-        :param symbol:
-        :return:
+        :param symbol: symbol, string
+        :return: link, string symbol, string
         """
         mkt = ''
         try:
@@ -65,11 +68,11 @@ class SymbolListHDL:
         link = '<a href="http://stocks.sina.cn/sh/?code=%s%s&vt=4">%s</a>\n' % (mkt, symbol, symbol)
         return link
 
-    def market_code_of_stock(self, symbol):
+    def market_code_of_symbol(self, symbol):
         """
         return longer version of symbol prefixed by short exchange code.
-        :param symbol:
-        :return:
+        :param symbol: symbol, string
+        :return:    string, sh000000 or sz000000
         """
         try:
             mkt = ''
@@ -81,11 +84,11 @@ class SymbolListHDL:
         except KeyError:
             return ''
 
-    def market_of_stock(self, symbol):
+    def market_of_symbol(self, symbol):
         """
         return exchange code on which the symbol is listed.
-        :param symbol:
-        :return:
+        :param symbol:  string
+        :return:    sh or sz, prefix version of sse and szse
         """
         try:
             mkt = ''
@@ -100,8 +103,8 @@ class SymbolListHDL:
     def in_sse(self, symbol):
         """
         check if the symbol is listed on Shanghai Stock Exchange.
-        :param symbol:
-        :return:
+        :param symbol:  string
+        :return:    boolean
         """
         try:
             if self.market_dict[symbol] == 'sse':
@@ -114,8 +117,8 @@ class SymbolListHDL:
     def in_szse(self, symbol):
         """
         check if the symbol is listed on Shenzhen Stock Exchange.
-        :param symbol:
-        :return:
+        :param symbol:  string
+        :return:    boolean
         """
         try:
             if self.market_dict[symbol] == 'szse':

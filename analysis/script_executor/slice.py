@@ -17,6 +17,12 @@ calendar = MktCalendar()
 
 
 def slice_one(in_path, date):
+    """
+    Slice rows from in_path file with specified date
+    :param in_path: string
+    :param date:    string, YYYY-MM-HH
+    :return:        Dataframe, rows
+    """
     try:
         if not file_exist(in_path):
             logging("ERROR", "file not exist %s" % in_path)
@@ -32,6 +38,13 @@ def slice_one(in_path, date):
 
 # CMDEXPORT ( SLICECOMBINE {input_path} {out_path} {date} {rename} ) slice_combine
 def slice_combine(input_path, out_path, date, rename):
+    """
+    Slice rows from every file in in_path file with specified date, then append them horizontally.
+    :param input_path:  string
+    :param out_path:    where to save combined file, string
+    :param date:        string, YYYY-MM-HH
+    :param rename:      whether to rename columns using translate_dict before output, boolean
+    """
     date = calendar.parse_date(date)
     rename = True if rename == 'TRUE' else False
     input_path = path_expand(input_path)
@@ -71,6 +84,14 @@ def slice_combine(input_path, out_path, date, rename):
 
 # CMDEXPORT ( RENAMECOL {file_path} ) rename_column_title
 def rename_column_title(file_path):
+    """
+    Export this function to Control Framework, a control command like:
+        RENAMECOL OHCL/000001.csv
+    can be added to .ctrl batch file to save some work.
+
+    Rename columns of a csv file using translate_dict inplace.
+    :param file_path:   string
+    """
     data = pd.read_csv(file_path)
     translate_hdl = TranslateHdl()
     translate_hdl.load()

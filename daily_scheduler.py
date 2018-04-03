@@ -11,6 +11,9 @@ cal = MktCalendar()
 # TODO a good scheduler should read scheduled tasks from a config file and much better than this garbage.
 
 def daily_job():
+    """
+    put all jobs you want to do everyday at 04:00 local time where local means your computer is.
+    """
     if cal.quick_dict[cal.now('d')]['mkt_open']:
         os.system('./daily.sh')
     if cal.now('d').split("-")[2] == "28":

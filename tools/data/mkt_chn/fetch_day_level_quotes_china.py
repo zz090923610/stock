@@ -74,12 +74,20 @@ class DayLevelQuoteUpdaterTushare:
 
     # noinspection PyMethodMayBeStatic
     def get_data_one_symbol(self, symbol, start, end, store_dir):
+        """
+        Fetch day level quotes for one symbol.
+        :param symbol:  Stock symbol, string of 6 digits.
+        :param start:   We want data start from this date, string of "YYYY-MM-DD" format
+        :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
+        :param store_dir: the DIRECTORY where our fetched data should be stored.
+        :return: None if no exception happens else return symbol
+        """
         df = ts.get_hist_data(symbol, start=start, end=end)
         if df is None:
             logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushare_%s failed' % symbol)
             return symbol
         df = df.reindex(index=df.index[::-1])
-        symbol_str = self.symbol_dict.market_code_of_stock(symbol)
+        symbol_str = self.symbol_dict.market_code_of_symbol(symbol)
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
         df['symbol'] = symbol_str
@@ -88,6 +96,11 @@ class DayLevelQuoteUpdaterTushare:
         return None
 
     def get_data_all_symbols(self, start, end):
+        """
+        Fetch day level quotes for all symbols.
+        :param start:   We want data start from this date, string of "YYYY-MM-DD" format
+        :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
+        """
         logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
         failed_list = []
         pool = Pool(16)
@@ -126,6 +139,9 @@ class DayLevelQuoteUpdaterTushareTXD:
         self.symbol_dict.load()
 
     def __del__(self):
+        """
+        Need to disconnect from TXD server first.
+        """
         if self.ts_api:
             self.ts_api[0].disconnect()
             self.ts_api[1].disconnect()
@@ -171,7 +187,7 @@ class DayLevelQuoteUpdaterTushareTXD:
         df.index.names = ['date']
 
         df = df.reindex(index=df.index[::-1])  # reverse rows
-        symbol_str = self.symbol_dict.market_code_of_stock(symbol)
+        symbol_str = self.symbol_dict.market_code_of_symbol(symbol)
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
         df['symbol'] = symbol_str
@@ -236,6 +252,13 @@ class DayLevelQuoteUpdaterGTJA:
 
 # CMDEXPORT ( FETCH OHCL {start_date} {end_date} ) update_day_level_quotes
 def update_day_level_quotes(start_date, end_date):
+    """
+    Export this function to Control Framework, a control command like:
+        FETCH OHCL 2017-01-01 2017-01-28
+    can be added to .ctrl batch file to save some work.
+        :param start_date:   We want data start from this date, string of "YYYY-MM-DD" format
+        :param end_date:     We want data no later than this date. string of "YYYY-MM-DD" format
+    """
     start_date = calendar.parse_date(start_date)
     end_date = calendar.parse_date(end_date)
     a = DayLevelQuoteUpdaterTushare()

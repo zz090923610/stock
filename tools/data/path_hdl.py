@@ -10,6 +10,10 @@ HOST_OS = platform.system()
 
 
 def directory_ensure(target_directory):
+    """
+    make sure target_directory exists.
+    :param target_directory: string
+    """
     expanded_path = path_expand(target_directory)
     if os.path.exists(expanded_path):
         return
@@ -18,6 +22,11 @@ def directory_ensure(target_directory):
 
 
 def directory_exists(target_directory):
+    """
+    check if target_directory exists, wrapper func of os.path.exists with path_expand.
+    :param target_directory:    string
+    :return:                    boolean
+    """
     expanded_path = path_expand(target_directory)
     if os.path.exists(expanded_path):
         return True
@@ -26,6 +35,10 @@ def directory_exists(target_directory):
 
 
 def directory_clear_content(target_directory):
+    """
+    remove all files in target_directory
+    :param target_directory:    string
+    """
     expanded_path = path_expand(target_directory)
     if not os.path.exists(expanded_path):
         return
@@ -36,6 +49,11 @@ def directory_clear_content(target_directory):
 
 
 def file_exist(target_file):
+    """
+    check if target_file exists, wrapper version of os.path.exists with path_expand.
+    :param target_file: string
+    :return:            boolean
+    """
     target_file = path_expand(target_file)
     if os.path.exists(target_file):
         return True
@@ -44,7 +62,11 @@ def file_exist(target_file):
 
 
 def file_remove(target_file):
-    if os.path.split(target_file)[-1] == "TOUCH_INFO":
+    """
+    remove target_file.
+    :param target_file: string
+    """
+    if os.path.split(target_file)[-1] == "TOUCH_INFO":  # Touch info is a feature currently not implemented.
         return
     os.remove(target_file)
 
@@ -54,7 +76,7 @@ def path_expand(path):
     This function should return a full path no matter what input path is a directory or file.
     Only expand, never check whether it's exist.
     Three cases are considered:
-    1, path is already a rooted path on Linux or a path start with CDEF..Z on windows, which can be directed accessed.
+    1, path is already a rooted path on Linux or a path start with C, D, E, F..Z on windows, which can be directed accessed.
     2, Path contain ~, on linux it should be expanded to /home/user, on windows it should be expanded to User's Document
         folder.
     3, If path starts with [a-zA-Z0-9], this kind of path should be assumed to be located in program's root data path.
@@ -79,4 +101,3 @@ def path_expand(path):
         return os.path.join(PROGRAM_DATA_ROOT, path.strip())
     else:  # something happen.
         return os.path.join(PROGRAM_DATA_ROOT, "undefined", path.strip())
-

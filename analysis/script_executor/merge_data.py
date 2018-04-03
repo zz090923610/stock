@@ -17,6 +17,24 @@ from tools.io import logging
 
 
 class DataMerger:
+    """
+    Merge data vertically, i.e.,
+    if we set path_from='quotes1&quotes2', path_to='quotes', index='date'
+    by merging:
+        quotes1/0000001.csv:
+            date            open    high
+            2017-01-01      10      11
+
+        quotes2/000001.csv:
+            date            close    low
+            2017-01-01      10.5      9
+    we get:
+        quotes/0000001.csv:
+            date            open    high    close   low
+            2017-01-01      10      11      10.5     9
+
+
+    """
     def __init__(self, path_from, path_to, index):
         """
         This class is the handle to merge multiple same-shaped csv(s) together.
@@ -35,6 +53,10 @@ class DataMerger:
         self.collect_symbols()
 
     def expand_path_list(self, input_path):
+        """
+        generate a list of full paths from input_path string
+        :param input_path:  path1&path2&path3
+        """
         input_path = input_path.split("&")
         self.directory_list = [path_expand(i) for i in input_path]
         for p in self.directory_list:
@@ -42,11 +64,17 @@ class DataMerger:
                 logging(self.msg_from, "[ ERROR ] Specified input directory doesn't exist %s" % p)
 
     def collect_symbols(self):
-        # IMPORTANT: I assume all other dirs for merge have same files as the first
+        """
+        generate a list of symbol file members in input directories.
+        IMPORTANT: I assume all other input dirs to merge have same files as the first
+        """
         path = self.directory_list[0]
         self.symbol_filename_list = os.listdir(path)
 
     def merge_all(self):
+        """
+        do the merge, parallelly.
+        """
         pool = mp.Pool()
         for symbol_filename in self.symbol_filename_list:
             pool.apply_async(merge, args=(self.directory_list, symbol_filename, self.to, self.index, self.msg_from))
@@ -55,6 +83,15 @@ class DataMerger:
 
 
 def merge(path_list, symbol_filename, output_path, index, msg_from):
+    """
+    apply single operation of merge, for one file identifier in all input directories.
+    :param path_list:           input path list, [] of string
+    :param symbol_filename:     file identifier, string
+    :param output_path:         output path,    string
+    :param index:               based on which column, string
+    :param msg_from:            msg source for logging
+    :return:
+    """
     full_path = [os.path.join(i, symbol_filename) for i in path_list]
     result = None
     try:
@@ -84,6 +121,15 @@ def merge(path_list, symbol_filename, output_path, index, msg_from):
 
 # CMDEXPORT ( MERGE {path_from} {path_to} {index} ) cmd_merge
 def cmd_merge(path_from, path_to, index):
+    """
+    Export this function to Control Framework, a control command like:
+        MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow summary date
+    can be added to .ctrl batch file to save some work.
+
+    :param path_from: specify multiple input directories, will apply merge to every file in directories.
+    :param path_to: new directory to store merged files.
+    :param index: rows among different csv(s) with same index value will be merged to same row in merged files.
+    """
     a = DataMerger(path_from, path_to, index)
     a.collect_symbols()
     a.merge_all()

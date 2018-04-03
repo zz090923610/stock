@@ -58,7 +58,16 @@ def calc_cond_freq(model_name, path, params):
 
 
 class ConditionalFreqHdl:
+    """
+    This one handles everything about conditional frequency. This model simply contains 2 dicts, with features as key
+    and probability as value.
+    """
     def __init__(self, model_name, use_dir, params):
+        """
+        :param model_name:  string, specify as you wish
+        :param use_dir:     string, specify which directory you want to save you model to or load from.
+        :param params:      string, target1|given1 target2|given2 target3|given3 target4|given4 ...
+        """
         self.model_name = model_name
         if use_dir is None:
             self.base_dir = None
@@ -79,6 +88,9 @@ class ConditionalFreqHdl:
         self.data = None
 
     def train(self):
+        """
+        only call this when you need to generate new models.
+        """
         tmp = []
         pool = mp.Pool()
         for i in self.input_files:
@@ -106,12 +118,21 @@ class ConditionalFreqHdl:
         try:
             with open('%s' % (os.path.join(self.storage_dir, "%s.pickle" % self.model_name)), 'rb') as f:
                 self.probability_dict = pickle.load(f)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            logging("ConditionalFreqHdl", "[ ERROR ] model not found %s" % e, method='all')
             self.probability_dict = {}
 
 
 # CMDEXPORT ( CONDFREQ TRAIN {model_name} {use_dir} {params[4:]} ) cond_freq_train
 def cond_freq_train(model_name, use_dir, params):
+    """
+    Export this function to Control Framework, a control command like:
+        CONDFREQ TRAIN cond_buy qa/cond_freq_input QUICK_BUYPOINT|CROSS QUICK_BUYPOINT|TSHAPE
+    can be added to .ctrl batch file to save some work.
+    :param model_name:  string, specify as you wish
+    :param use_dir:     string, specify which directory you want to save you model to or load from.
+    :param params:      string, target1|given1 target2|given2 target3|given3 target4|given4 ...
+    """
     c = ConditionalFreqHdl(model_name, use_dir, params)
     c.train()
 

@@ -11,7 +11,15 @@ from tools.date_util.market_calendar_cn import MktCalendar
 # REGDIR ( stock_feature )
 
 class StockFeature:
+    """
+    # TODO
+    """
     def __init__(self, symbol, cal: MktCalendar):
+        """
+        # TODO
+        :param symbol:
+        :param cal:
+        """
         self.rules = {}
         self.symbol = symbol
         self.cal = cal
@@ -19,27 +27,58 @@ class StockFeature:
         directory_ensure(self.stock_monitor_rules_dir)
 
     def create_rule(self, line):
+        """
+        # TODO
+        :param line:
+        :return:
+        """
         new_rule = Rule(self.cal)
         new_rule.parse_line(line)
         self.rules[new_rule.name] = new_rule
 
     def add_rule(self, key, rule):
+        """
+        # TODO
+        :param key:
+        :param rule:
+        :return:
+        """
         self.rules[key] = rule
 
     def remove_rule(self, key):
+        """
+        # TODO
+        :param key:
+        :return:
+        """
         if key in self.rules.keys():
             self.rules.pop(key)
 
     def replace_rule(self, key, new_rule):
+        """
+        # TODO
+        :param key:
+        :param new_rule:
+        :return:
+        """
         self.rules[key] = new_rule
 
     def save_rules(self):
+        """
+        # TODO
+        :return:
+        """
         content = ''
         for r in self.rules.keys():
             content += "%s\n" % self.rules[r].generate_line()
         save_text(os.path.join(self.stock_monitor_rules_dir, "%s.rules" % self.symbol), content)
 
     def load_rules(self, path):
+        """
+        # TODO
+        :param path:
+        :return:
+        """
         if not file_exist(path):
             raw_rules = ''
         else:
@@ -52,6 +91,11 @@ class StockFeature:
                 self.rules[new_rule.name] = new_rule
 
     def check_rules(self, val_now):
+        """
+        # TODO
+        :param val_now:
+        :return:
+        """
         for rule in self.rules.values():
             callbacks = rule.check_val(val_now)
             for cb in callbacks:
@@ -60,6 +104,10 @@ class StockFeature:
                     self.rules[cb_obj] = {"pend": "pending", "finish": "finished", "activate": "active"}[cb_action]
 
     def generate_output(self):
+        """
+        # TODO
+        :return:
+        """
         out_str = self.symbol + "\n"
         for k in self.rules.keys():
             out_str += "%s: %s\n" % (k, self.rules[k].generate_line())

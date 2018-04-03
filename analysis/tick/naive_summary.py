@@ -19,10 +19,22 @@ calendar = MktCalendar()
 
 
 def generate_out_path_for(symbol):
+    """
+    helper function only for this .py, should bot be called elsewhere.
+    :param symbol:  string
+    :return:        string
+    """
     return os.path.join(out_dir, "%s.csv" % symbol)
 
 
 def naive_summary_one_stock(symbol, date):
+    """
+    generate one DataFrame row from one tick file.
+    contains columns:
+    ['date', 'quant_buy', 'quant_sell', 'quant_unknown', 'amount_buy', 'amount_sell', 'amount_unknown', 'ave_price_tick']
+    :param symbol:  string
+    :param date:    string, YYYY-MM-DD
+    """
     data = pd.read_csv(os.path.join(path_expand("tick_quotes/china"), symbol, "%s.csv" % date))
     sub_data_buy = data[data['type'] == '买盘']
     sub_data_sell = data[data['type'] == '卖盘']
@@ -56,6 +68,11 @@ def naive_summary_one_stock(symbol, date):
 
 
 def _naive_summary_one_stock_multiple_date(symbol, date_list):
+    """
+    do naive summary for one symbol, multiple dates.
+    :param symbol:      string
+    :param date_list:   [] of string YYYY-MM-DD
+    """
     for (s, d) in itertools.product([symbol], date_list):
         try:
             naive_summary_one_stock(s, d)
@@ -64,6 +81,11 @@ def _naive_summary_one_stock_multiple_date(symbol, date_list):
 
 
 def naive_summary_multiple(symbol_list, date_list):
+    """
+    do naive summary among a list of symbols and a list of dates.
+    :param symbol_list: [] of string
+    :param date_list:   [] of string, YYYY-MM-DD
+    """
     pool = mp.Pool()
     for s in symbol_list:
         pool.apply_async(_naive_summary_one_stock_multiple_date, args=(s, date_list))
@@ -73,6 +95,12 @@ def naive_summary_multiple(symbol_list, date_list):
 
 # CMDEXPORT ( NAIVETICKSUMMARY {date} ) naive_summary_tick
 def naive_summary_tick(date):
+    """
+    Export this function to Control Framework, a control command like:
+        NAIVETICKSUMMARY 2017-01-28
+    can be added to .ctrl batch file to save some work.
+    :param date:    string, YYYY-MM-DD
+    """
     date_list = [calendar.parse_date(date)]
     symbol_list_hdl = SymbolListHDL()
     naive_summary_multiple(symbol_list_hdl.symbol_list, date_list)

@@ -27,6 +27,14 @@ import paho.mqtt.publish as s_publish
 
 
 def simple_publish(topic, payload, auth=None, host='localhost', port=1883):
+    """
+    Publish a mqtt msg without creating and maintaining a MQTTHdl.
+    :param topic:   MQTT Topic
+    :param payload: Message payload
+    :param auth:    {'username':"<username>", 'password':"<password>"}
+    :param host:    MQTT Broker host
+    :param port:    MQTT Broker port
+    """
     s_publish.single(topic, payload=payload, qos=0, retain=False, hostname=host,
                      port=port, client_id="", keepalive=60, will=None, auth=auth,
                      tls=None, protocol=mqtt.MQTTv31)
@@ -34,8 +42,20 @@ def simple_publish(topic, payload, auth=None, host='localhost', port=1883):
 
 # noinspection PyUnusedLocal
 class MQTTHdl:
+    """
+    A class to handle MQTT subscribe as well as msg publish
+    """
     def __init__(self, mqtt_on_connect, mqtt_on_message, topic_sub=None, topic_pub='', client_title='Default',
                  hostname='localhost', port=1883):
+        """
+        :param mqtt_on_connect: callback function.
+        :param mqtt_on_message: callback function.
+        :param topic_sub: topic(s) this instance should subscribe. can be a string or list of strings.
+        :param topic_pub: topic this instance should publish to.
+        :param client_title:    see MQTT documents.
+        :param hostname:        MQTT Broker host.
+        :param port:            MQTT Broker port.
+        """
         if topic_sub is None:
             topic_sub = []
         self.client = mqtt.Client()
@@ -73,6 +93,12 @@ class MQTTHdl:
                 return
 
     def publish(self, msg, qos=0, topic=''):
+        """
+        Publish a MQTT msg through this instance.
+        :param msg:     msg payload.
+        :param qos:     see MQTT documents.
+        :param topic:   Publish to which topic.
+        """
         if topic == '':
             topic = self.mqtt_topic_pub
         (result, mid) = self.client.publish(topic, msg, qos)
@@ -89,13 +115,25 @@ class MQTTHdl:
         pass
 
     def mqtt_sub_thread_cancel(self):
+        """
+        Stop subscribe thread
+        """
         self.client.loop_stop(force=True)
 
     def mqtt_sub_thread_start(self):
+        """
+        Start a thread to subscribe topic
+        """
         threading.Thread(target=self.client.loop_start).start()
 
     def mqtt_disconnect(self):
+        """
+        Disconnect from Broker
+        """
         self.client.disconnect()
 
     def mqtt_reconnect(self):
+        """
+        Reconnect to MQTT Broker
+        """
         self.client.connect(self.host, self.port, 60)

@@ -13,13 +13,22 @@ from tools.io import logging
 
 # noinspection PyMethodMayBeStatic
 class ScriptHdl:
+    """
+    maintain a script content, header, col info.
+    """
     def __init__(self, path):
+        """
+        :param path: script path, string
+        """
         self.col_desc = {}
         self.content = self.load_script(path)
         self.header = self.parse_script_head()
         self.name = os.path.split(path)[-1]
 
     def parse_script_head(self):
+        """
+        generate script header dict, add variable translations to system.
+        """
         script = self.content
         parallel_level = ''  # FOLDER/SINGLE
         input_dir_file = ''
@@ -49,6 +58,10 @@ class ScriptHdl:
                 "output_dir_file": output_dir_file, "output_cols": output_cols}
 
     def load_script(self, path):
+        """
+        :param path: string
+        :return:    list of tokens, which is list of list of strings.
+        """
         script_path = self._validate_script_path(path)
         raw_script = load_text(script_path)
         script = []
@@ -62,6 +75,11 @@ class ScriptHdl:
         return script
 
     def _validate_script_path(self, script_path):
+        """
+        properly check whether script exists, and search for program's script space, return a valid path
+        :param script_path: string
+        :return:            path
+        """
         if os.path.isfile(script_path):
             return script_path
 
@@ -74,6 +92,9 @@ class ScriptHdl:
 
 # noinspection PyMethodMayBeStatic
 class WorkSheetHdl:
+    """
+    maintain a pd.DataFrame.
+    """
     def __init__(self, input_data, out_path, output_cols, col_desc):
         self.name = 'data'
         self.out_path = out_path
@@ -82,6 +103,10 @@ class WorkSheetHdl:
         self.col_desc = col_desc if self.data is not None else None
 
     def load_data_as_pd(self, input_data):
+        """
+        :param input_data: can be a DataFrame or string represents a path
+        :return:
+        """
         if type(input_data) == pd.DataFrame:
             data = input_data
         elif type(input_data) == str:
@@ -95,6 +120,10 @@ class WorkSheetHdl:
         return data
 
     def save_data(self, index=False):
+        """
+        :param index:  boolean, whether to save DataFrame index.
+        :return:        if self.out_path is "STD", will return DataFrame instead of save to file.
+        """
         # round data_frame
         if (self.col_desc is not None) & (type(self.col_desc) == dict):
             col_list = self.data.columns.tolist() if self.data is not None else None
@@ -110,11 +139,19 @@ class WorkSheetHdl:
 
 
 class ScriptExecHdl:
+    """
+    Hdl to execuate script
+    """
     def __init__(self, script_path):
+        """
+        :param script_path: string
+        """
         self.script_hdl = ScriptHdl(script_path)
-        pass
 
     def exec_script(self):
+        """
+        execuate script, whether do it parallel or not is specified in header.
+        """
         if self.script_hdl.header['parallel_level'] == 'FOLDER':
             data_file_list = os.listdir(self.script_hdl.header['input_dir_file'])
             input_dir = self.script_hdl.header['input_dir_file'].rstrip('/')
@@ -138,6 +175,12 @@ class ScriptExecHdl:
 
 
 def execute_script_on_single_input(input_data, out_path, script_hdl):
+    """
+    execuate a script on single data sheet.
+    :param input_data:  can be path, string, or DataFrame
+    :param out_path:    string
+    :param script_hdl:  instance of ScriptHdl
+    """
     work_sheet = WorkSheetHdl(input_data, out_path, script_hdl.header['output_cols'], script_hdl.col_desc)
     try:
         for (idx, line) in enumerate(script_hdl.content):
@@ -236,18 +279,36 @@ def execute_script_on_single_input(input_data, out_path, script_hdl):
 
 
 def parse_lambda(line):
+    """
+    generate a pandas lambda function string like:
+        lambda x: x**2
+    :param line:    tokens, [] of string
+    :return:        lambda function, string
+    """
     line = ['lambda'] + line[1:]
     return ' '.join(line)
 
 
 # CMDEXPORT ( SCRIPT {script_path}) exec_script
 def exec_script(script_path):
+    """
+    Export this function to Control Framework, a control command like:
+        SCRIPT ma
+    can be added to .ctrl batch file to save some work.
+    Execuate a script. ".txt" extension name should not be specified.
+    :param script_path: path to script without ".txt"
+    """
     s_hdl = ScriptExecHdl(script_path)
     s_hdl.exec_script()
 
 
 # noinspection PyBroadException
 def is_num(target):
+    """
+    check whether a string can be convert to a number.
+    :param target:  string
+    :return:        boolean
+    """
     try:
         float(target)
         return True

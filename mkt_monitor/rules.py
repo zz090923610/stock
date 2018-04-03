@@ -6,7 +6,14 @@ from tools.date_util.market_calendar_cn import MktDateTime, MktCalendar
 
 
 class Rule:
+    """
+    # TODO
+    """
     def __init__(self, cal: MktCalendar):
+        """
+        # TODO
+        :param cal:
+        """
         self.symbol = ''
         self.cal = cal
         self.name = ''
@@ -22,9 +29,18 @@ class Rule:
         self.create_date = ''
 
     def reset(self):
+        """
+        # TODO
+        :return:
+        """
         self.__init__(self.cal)
 
     def parse_line(self, line):
+        """
+        # TODO
+        :param line:
+        :return:
+        """
         if len(line) <= 1:
             return
         self.reset()
@@ -62,6 +78,10 @@ class Rule:
         self.calc_valid_until()
 
     def generate_line(self):
+        """
+        # TODO
+        :return:
+        """
         action_str = " ".join(["action:%s" % i for i in self.action])
         callback_str = " ".join(["callback:%s" % i for i in self.callback])
         line = " ".join(
@@ -71,6 +91,12 @@ class Rule:
         return line
 
     def calc_delta_t(self, t0, t):
+        """
+        # TODO
+        :param t0:
+        :param t:
+        :return:
+        """
         dt = t - t0
         if self.unit == "s":
             dt /= 1
@@ -96,6 +122,10 @@ class Rule:
 
     # noinspection PyUnusedLocal
     def calc_value_of_func_now(self):
+        """
+        # TODO
+        :return:
+        """
         t0 = self.t0
         t = MktDateTime(self.cal.now('dt'), self.cal)
         dt = self.calc_delta_t(t0, t)
@@ -107,6 +137,10 @@ class Rule:
         return {"var": res_var, "val": res_val, "timestamp": t}
 
     def calc_valid_until(self):
+        """
+        # TODO
+        :return:
+        """
         m = re.search('[0-9]+', self.valid)
         try:
             num = int(m.group())
@@ -127,6 +161,11 @@ class Rule:
         self.valid_until = "%s&15:00:00" % valid_until_date
 
     def check_val(self, val_now):
+        """
+        # TODO
+        :param val_now:
+        :return:
+        """
         # val_now should be in {"var":"",  "val":'', "timestamp": t} format
         t_now = self.cal.now('dt')
         if (self.status == "finished") | (self.status == 'pending'):

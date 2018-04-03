@@ -9,12 +9,23 @@ stock_monitor_rules_dir = path_expand("stock_feature")
 
 
 class MonitorAPI:
+    """
+    # TODO
+    """
     def __init__(self):
+        """
+        # TODO
+        """
         self.stock_feature_dict = {}
         self.cal = MktCalendar()
         self.removed_symbols = []
 
     def add_stock_feature(self, feature_str):
+        """
+        # TODO
+        :param feature_str:
+        :return:
+        """
         (symbol, line) = feature_str.split(" ", 1)
         if symbol not in self.stock_feature_dict.keys():
             feature = StockFeature(symbol, self.cal)
@@ -24,6 +35,12 @@ class MonitorAPI:
             self.stock_feature_dict[symbol].create_rule(line)
 
     def remove_stock_feature(self, symbol, rule_name):
+        """
+        # TODO
+        :param symbol:
+        :param rule_name:
+        :return:
+        """
         if symbol in self.stock_feature_dict.keys():
             if rule_name in self.stock_feature_dict[symbol].rules:
                 del self.stock_feature_dict[symbol].rules[rule_name]
@@ -32,6 +49,10 @@ class MonitorAPI:
                 self.removed_symbols.append(symbol)
 
     def load_stock_features(self):
+        """
+        # TODO
+        :return:
+        """
         symbol_observed_list = [i.split(".")[0] for i in os.listdir(stock_monitor_rules_dir)]
         for s in symbol_observed_list:
             feature = StockFeature(s, self.cal)
@@ -39,6 +60,10 @@ class MonitorAPI:
             self.stock_feature_dict[s] = feature
 
     def save_stock_features(self):
+        """
+        # TODO
+        :return:
+        """
         for f in self.stock_feature_dict.values():
             f.save_rules()
         for s in self.removed_symbols:
@@ -46,6 +71,10 @@ class MonitorAPI:
                 os.remove(os.path.join(stock_monitor_rules_dir, "%s.rules" % s))
 
     def generate_output(self):
+        """
+        # TODO
+        :return:
+        """
         final_str = ""
         for symbol in self.stock_feature_dict.keys():
             final_str += self.stock_feature_dict[symbol].generate_output()

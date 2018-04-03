@@ -11,6 +11,11 @@ m_api.load_stock_features()
 
 
 def fetch_real_time_quotes(symbol):
+    """
+    # TODO
+    :param symbol:
+    :return:
+    """
     ds = ts.get_realtime_quotes(symbol).loc[0]
     price = ds['price']
     timestamp = "%s&%s" % (ds['date'], ds['time'])
@@ -18,6 +23,10 @@ def fetch_real_time_quotes(symbol):
 
 
 def monitoring_cycle():
+    """
+    # TODO
+    :return:
+    """
     time_now = MktDateTime(m_api.cal.now('dt'), m_api.cal)
     if time_now.equiv_date:
         time.sleep(time_now.secs_to(time_now.datetime_r))

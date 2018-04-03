@@ -55,11 +55,21 @@ def load_text(path):
 
 
 def save_text(path, content):
+    """
+    Naive wrapper to save str content to text file.
+    :param path: output text file path, string
+    :param content: your string to save, string
+    """
     with open(path, "w", encoding='utf8') as f:
         f.write(content)
 
 
 def load_pickle(path):
+    """
+    load a pickle object from path
+    :param path:    string
+    :return:        Python object
+    """
     try:
         with open(path, 'rb') as f:
             import pickle
@@ -70,6 +80,12 @@ def load_pickle(path):
 
 
 def save_pickle(obj, path):
+    """
+    save a python object obj to path
+    :param obj:     Python object
+    :param path:    string
+    :return:
+    """
     try:
         with open(path, 'wb') as f:
             import pickle
