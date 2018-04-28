@@ -47,59 +47,57 @@ user_defined_data_root = "some/full/path/of/directory"
 ```
 Or you can skip this step, then Anomayl will use default data root path, which is ~/data/stock_data for Linux and $user/Documents/stock_data for windows.
 
-Then you are ready to roll. Please refer to below writeup for start your workload quickly:
-[fetching raw data]()
-[do candle stick shape analysis]()
-[automate everything]()
-[]()
+The final step is build command cache:
+```shell
+python3 -m overview -c
+```
+Something like this should be printed:
+```shell
+Updating command cache
+# CMDEXPORT ( MERGE {path_from} {path_to} {index} ) cmd_merge
+# CMDEXPORT ( SLICECOMBINE {input_path} {out_path} {date} {rename} ) slice_combine
+# CMDEXPORT ( RENAMECOL {file_path} ) rename_column_title
+# CMDEXPORT ( SCRIPT {script_path}) exec_script
+# CMDEXPORT ( NAIVESCORE TURNOVER {data} {date}) naive_score_turnover
+# CMDEXPORT ( NAIVESCORE AMOUNT {data} {date}) naive_score_amount
+# CMDEXPORT ( CONDFREQ TRAIN {model_name} {use_dir} {params[4:]} ) cond_freq_train
+# CMDEXPORT ( NAIVETICKSUMMARY {date} ) naive_summary_tick
+# CMDEXPORT ( FETCH TICK {date_or_dates} ) update_tick_quotes
+# CMDEXPORT ( FETCH OHCL {start_date} {end_date} ) update_day_level_quotes
+# CMDEXPORT ( FETCH SYMBOL ) update_symbol_list
+# CMDEXPORT ( ZIP {output_path} {input_path_list_str[2:]} ) zip_files
+# CMDEXPORT ( SEND FILE WECHAT {path} {to} ) send_file_wechat
+Found 13 commands
+```
+These are all available commands currently exported from all modules. We will see how to use them and how to customize them below. Just remember please build cache every time after you customize them.
+
+Then you are ready to roll. Please refer to below writeups to start your workload quickly:
+* [How to fetch raw OHCL/Tick data]()
+* [How to do candle stick shape analysis]()
+* [How to automate everything]()
+* [Difference between control batch file and pre-proc script file]()
+* [how to use your own models]()
 ## Project structure:
 ```
 stock
-├── analysis
+├── analysis: all analysis related codes should go here.
 │   ├── models
 │   ├── script_executor
-│   │   ├── merge_data.py
-│   │   ├── script_exec_hdl.py
-│   │   ├── slice.py
-│   │   └── TranslateHdl.py
 │   └── tick
-│       └── naive_summary.py
-├── cmd_core
-│   ├── cmd_parser.py
-│   ├── ctrl_script_hdl.py
-│   └── interactive_cmd_hdl.py
-├── configs
-│   └── conf.py
-├── ctrls
-│   └── your_own_workload.ctrl
-├── misc
-│   └── report_hdl.py
-├── mkt_monitor
-│   ├── alarm.py
-│   ├── daemon.py
-│   ├── monitorAPI.py
-│   ├── rules.py
-│   └── stock_feature.py
-├── overview.py
-├── scripts
-│   └── your_own_preprocessing_script.txt
-└── tools
+├── cmd_core: codes for exec control batch file and control commands.
+├── configs: settings go here.
+├── ctrls: your own control batch files should be stored here.
+├── misc: useful things which cannot find a better place to place.
+├── mkt_monitor: codes about realtime market monitoring, rules, actions.
+├── overview.py: the only python file doesn't depend on third-party codes even other codes within this project. Focusing 
+|                on resolving third-party software dependency, finding TODOs, building command cache by tracing marked
+|                comment marcos.
+├── scripts: your_own_preprocessing_script.txt should goes here.
+└── tools: important codes don't related to analysis and market monitoring.
     ├── communication
-    │   └── mqtt.py
-    ├── data
-    │   ├── file_hdl.py
-    │   ├── mkt_chn
-    │   │   ├── fetch_day_level_quotes_china.py
-    │   │   ├── fetch_symbol_list_china_a.py
-    │   │   ├── fetch_tick_quotes_china.py
-    │   │   └── symbol_list_china_hdl.py
-    │   └── path_hdl.py
-    ├── date_util
-    │   └── market_calendar_cn.py
-    └── io.py
+    ├── data: data related codes, data fetching, data IO, etc..
+    │   └── mkt_chn: operations for different market should be store in separate folders.
+    └── date_util: makret calendars for different markets should go here.
 ```
-## Extend system functionality by adding your own models:
-
-## Setup automated workload:
 
 ## API Documents:
