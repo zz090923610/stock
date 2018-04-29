@@ -72,11 +72,22 @@ Found 13 commands
 These are all available commands currently exported from all modules. We will see how to use them and how to customize them below. Just remember please build cache every time after you customize them.
 
 Then you are ready to roll. Please refer to below writeups to start your workload quickly:
-* [How to fetch raw OHCL/Tick data]()
-* [How to do candle stick shape analysis]()
-* [How to automate everything]()
-* [Difference between control batch file and pre-proc script file]()
-* [how to use your own models]()
+* [How to fetch raw OHCL/Tick data](https://github.com/zz090923610/stock/wiki/How-to-fetch-raw-OHCL-Tick-data)
+* [How to do candle stick shape analysis](https://github.com/zz090923610/stock/wiki/How-to-do-candle-stick-shape-analysis)
+* [How to automate everything](https://github.com/zz090923610/stock/wiki/How-to-automate-everything)
+* [Difference between control batch file and pre-proc script file](https://github.com/zz090923610/stock/wiki/Difference-between-control-batch-file-and-pre-proc-script-file)
+* [how to use your own models](https://github.com/zz090923610/stock/wiki/how-to-use-your-own-models)
+* [Comment Marco used by this project](https://github.com/zz090923610/stock/wiki/Comment-Marco-used-by-this-project)
+
+Or, you can run the demo by executing:
+```
+./minimal_demo.sh
+```
+To see detailed realtime log, open another terminal then execute:
+```
+mosquitto_sub -t "#"
+```
+
 ## Project structure:
 ```
 stock
