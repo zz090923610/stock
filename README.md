@@ -76,7 +76,6 @@ Then you are ready to roll. Please refer to below writeups to start your workloa
 * [How to do candle stick shape analysis](https://github.com/zz090923610/stock/wiki/How-to-do-candle-stick-shape-analysis)
 * [How to automate everything](https://github.com/zz090923610/stock/wiki/How-to-automate-everything)
 * [Difference between control batch file and pre-proc script file](https://github.com/zz090923610/stock/wiki/Difference-between-control-batch-file-and-pre-proc-script-file)
-* [how to use your own models](https://github.com/zz090923610/stock/wiki/how-to-use-your-own-models)
 * [Comment Marco used by this project](https://github.com/zz090923610/stock/wiki/Comment-Marco-used-by-this-project)
 
 Or, you can run the demo by executing:
