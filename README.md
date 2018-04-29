@@ -87,6 +87,8 @@ To see detailed realtime log, open another terminal then execute:
 ```
 mosquitto_sub -t "#"
 ```
+This demo generates a candle stick analysis report.
+
 
 ## Project structure:
 ```
