@@ -1,0 +1,27 @@
+SCRIPT ma
+SCRIPT candle_stick_shape_analysis
+MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow summary date
+SLICECOMBINE summary summary LASTCLOSEDTRADEDAY FALSE
+NAIVESCORE TURNOVER summary LASTCLOSEDTRADEDAY
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
