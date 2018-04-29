@@ -45,7 +45,7 @@ Please edit second line of ./configs/conf.py, pass some valid FULL path of the d
 ```python
 user_defined_data_root = "some/full/path/of/directory"
 ```
-Or you can skip this step, then Anomayl will use default data root path, which is ~/data/stock_data for Linux and $user/Documents/stock_data for windows.
+Or you can skip this step, then Anomaly will use default data root path, which is ~/data/stock_data for Linux and $user/Documents/stock_data for windows.
 
 The final step is build command cache:
 ```shell
