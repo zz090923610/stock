@@ -87,7 +87,7 @@ To see detailed realtime log, open another terminal then execute:
 ```
 mosquitto_sub -t "#"
 ```
-This demo generates a candle stick analysis report.
+This demo generates a candle stick analysis report, scoring all symbols, output should be saved at $data_root/naive_score/.
 
 
 ## Project structure:
