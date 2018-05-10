@@ -3,6 +3,11 @@
 
 
 def exec_ctrl_cmd(cmd):
+    if len(cmd) == 6:
+        if (cmd[0] == 'SINGLEMERGE') :
+            from analysis.script_executor.single_combine import cmd_single_merge
+            cmd_single_merge(cmd[1], cmd[2], cmd[3], cmd[4], cmd[5])
+            return
     if len(cmd) == 4:
         if (cmd[0] == 'MERGE') :
             from analysis.script_executor.merge_data import cmd_merge

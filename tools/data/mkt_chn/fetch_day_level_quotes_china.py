@@ -208,6 +208,97 @@ class DayLevelQuoteUpdaterTushareTXD:
         self.__del__()
 
 
+# noinspection PyBroadException
+class DayLevelQuoteUpdaterTushareNew:
+    # DEPENDENCY( tushare )
+    def __init__(self):
+        self.symbol_list_hdl = SymbolListHDL()
+        self.dir = path_expand('day_quotes/china')
+        directory_ensure(self.dir)
+        self.symbol_dict = SymbolListHDL()
+        self.symbol_dict.load()
+
+    # noinspection PyMethodMayBeStatic
+    def get_data_one_symbol(self, symbol, start, end, store_dir):
+        """
+        Fetch day level quotes for one symbol.
+        :param symbol:  Stock symbol, string of 6 digits.
+        :param start:   We want data start from this date, string of "YYYY-MM-DD" format
+        :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
+        :param store_dir: the DIRECTORY where our fetched data should be stored.
+        :return: None if no exception happens else return symbol
+        """
+        df = ts.get_k_data(symbol, start=start, end=end)
+        if df is None:
+            logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushare_%s failed' % symbol)
+            return symbol
+        df.sort_values(by='date', ascending=True, inplace=True)
+        symbol_str = self.symbol_dict.market_code_of_symbol(symbol)
+        name = self.symbol_dict.name_dict.get(symbol)
+        df['name'] = name
+        df['symbol'] = symbol_str
+        outstanding = int(float(self.symbol_dict.outstanding_dict[symbol]) * 1000000)
+        df['turnover'] = df['volume'] / outstanding
+        df['outstanding'] = outstanding * 100
+        df['prev_close_price'] = df['close'].shift(1)
+        df['price_change'] = df['close'] - df['prev_close_price']
+        df['p_change'] = df['price_change'] / df['prev_close_price']
+        df['amount'] = ((df['high'] + df['low']) / 3 + (df['open'] + df['close']) / 6) * df['volume'] * 100
+        df['ma5'] = df['close']
+        df['ma10'] = df['close']
+        df['ma20'] = df['close']
+
+        df['v_ma5'] = df['volume']
+        df['v_ma10'] = df['volume']
+        df['v_ma20'] = df['volume']
+
+        for loop in range(1, 20):
+            df['prev_close_%d' % loop] = df['close'].shift(loop)
+            df['ma5'] = df['ma5'] + df['prev_close_%d' % loop] if loop < 5 else df['ma5']
+            df['ma10'] = df['ma10'] + df['prev_close_%d' % loop] if loop < 10 else df['ma10']
+            df['ma20'] = df['ma20'] + df['prev_close_%d' % loop] if loop < 20 else df['ma20']
+
+            df['prev_volume_%d' % loop] = df['volume'].shift(loop)
+            df['v_ma5'] = df['v_ma5'] + df['prev_volume_%d' % loop] if loop < 5 else df['v_ma5']
+            df['v_ma10'] = df['v_ma10'] + df['prev_volume_%d' % loop] if loop < 10 else df['v_ma10']
+            df['v_ma20'] = df['v_ma20'] + df['prev_volume_%d' % loop] if loop < 20 else df['v_ma20']
+
+        df['ma5'] /= 5
+        df['ma10'] /= 10
+        df['ma20'] /= 20
+
+        df['v_ma5'] /= 5
+        df['v_ma10'] /= 10
+        df['v_ma20'] /= 20
+        df = df.round(
+            {'turnover': 3, 'price_change': 3, 'p_change': 3, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
+             'v_ma20': 1, 'amount': 2})
+        outcols = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount', 'price_change', 'p_change', 'turnover', 'ma5',
+                   'ma10', 'ma20', 'v_ma5', 'v_ma10', 'v_ma20', 'name', 'symbol', 'outstanding']
+        df[outcols].to_csv('%s/%s.csv' % (store_dir, symbol), index=False)
+        logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
+        return None
+
+    def get_data_all_symbols(self, start, end):
+        """
+        Fetch day level quotes for all symbols.
+        :param start:   We want data start from this date, string of "YYYY-MM-DD" format
+        :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
+        """
+        logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
+        failed_list = []
+        pool = Pool(16)
+        for i in self.symbol_list_hdl.symbol_list:
+            pool.apply_async(self.get_data_one_symbol, args=(i, start, end, self.dir), callback=failed_list.append)
+        pool.close()
+        pool.join()
+        # Use backup source to fetch failed symbols.
+        failed_list = [x for x in failed_list if x is not None]
+        logging(msg_source, "[ INFO ] %d_symbols_update_failed" % len(failed_list), method='all')
+        print(failed_list)
+        logging(msg_source, '[ INFO ] finished_fetching', method='all')
+
+
 class DayLevelQuoteUpdaterSinaLevel1:
     def __init__(self):
         pass
@@ -261,5 +352,5 @@ def update_day_level_quotes(start_date, end_date):
     """
     start_date = calendar.parse_date(start_date)
     end_date = calendar.parse_date(end_date)
-    a = DayLevelQuoteUpdaterTushare()
+    a = DayLevelQuoteUpdaterTushareNew()
     a.get_data_all_symbols(start=calendar.parse_date(start_date), end=calendar.parse_date(end_date))
