@@ -3,6 +3,7 @@
 
 
 def exec_ctrl_cmd(cmd):
+<<<<<<< HEAD
     if len(cmd) == 6:
         if (cmd[0] == 'SINGLEMERGE') :
             from analysis.script_executor.single_combine import cmd_single_merge
@@ -12,21 +13,17 @@ def exec_ctrl_cmd(cmd):
         if (cmd[0] == 'MERGE') :
             from analysis.script_executor.merge_data import cmd_merge
             cmd_merge(cmd[1], cmd[2], cmd[3])
+=======
+    if len(cmd) >= 3:
+        if (cmd[0] == 'ZIP') :
+            from misc.report_hdl import zip_files
+            zip_files(cmd[1], ' '.join(cmd[2:]))
+>>>>>>> d1d262b5524fb4de00fb97ace8ac8941134475ce
             return
     if len(cmd) == 5:
-        if (cmd[0] == 'SLICECOMBINE') :
-            from analysis.script_executor.slice import slice_combine
-            slice_combine(cmd[1], cmd[2], cmd[3], cmd[4])
-            return
-    if len(cmd) == 2:
-        if (cmd[0] == 'RENAMECOL') :
-            from analysis.script_executor.slice import rename_column_title
-            rename_column_title(cmd[1])
-            return
-    if len(cmd) == 2:
-        if (cmd[0] == 'SCRIPT') :
-            from analysis.script_executor.script_exec_hdl import exec_script
-            exec_script(cmd[1])
+        if (cmd[0] == 'SEND') &(cmd[1] == 'FILE')&(cmd[2] == 'WECHAT'):
+            from misc.report_hdl import send_file_wechat
+            send_file_wechat(cmd[3], cmd[4])
             return
     if len(cmd) == 4:
         if (cmd[0] == 'NAIVESCORE') &(cmd[1] == 'TURNOVER'):
@@ -48,6 +45,31 @@ def exec_ctrl_cmd(cmd):
             from analysis.tick.naive_summary import naive_summary_tick
             naive_summary_tick(cmd[1])
             return
+    if len(cmd) == 5:
+        if (cmd[0] == 'SLICECOMBINE') :
+            from analysis.script_executor.slice import slice_combine
+            slice_combine(cmd[1], cmd[2], cmd[3], cmd[4])
+            return
+    if len(cmd) == 2:
+        if (cmd[0] == 'RENAMECOL') :
+            from analysis.script_executor.slice import rename_column_title
+            rename_column_title(cmd[1])
+            return
+    if len(cmd) == 4:
+        if (cmd[0] == 'MERGE') :
+            from analysis.script_executor.merge_data import cmd_merge
+            cmd_merge(cmd[1], cmd[2], cmd[3])
+            return
+    if len(cmd) == 2:
+        if (cmd[0] == 'SCRIPT') :
+            from analysis.script_executor.script_exec_hdl import exec_script
+            exec_script(cmd[1])
+            return
+    if len(cmd) == 2:
+        if (cmd[0] == 'FETCH') &(cmd[1] == 'SYMBOL'):
+            from tools.data.mkt_chn.fetch_symbol_list_china_a import update_symbol_list
+            update_symbol_list()
+            return
     if len(cmd) == 3:
         if (cmd[0] == 'FETCH') &(cmd[1] == 'TICK'):
             from tools.data.mkt_chn.fetch_tick_quotes_china import update_tick_quotes
@@ -57,19 +79,4 @@ def exec_ctrl_cmd(cmd):
         if (cmd[0] == 'FETCH') &(cmd[1] == 'OHCL'):
             from tools.data.mkt_chn.fetch_day_level_quotes_china import update_day_level_quotes
             update_day_level_quotes(cmd[2], cmd[3])
-            return
-    if len(cmd) == 2:
-        if (cmd[0] == 'FETCH') &(cmd[1] == 'SYMBOL'):
-            from tools.data.mkt_chn.fetch_symbol_list_china_a import update_symbol_list
-            update_symbol_list()
-            return
-    if len(cmd) >= 3:
-        if (cmd[0] == 'ZIP') :
-            from misc.report_hdl import zip_files
-            zip_files(cmd[1], ' '.join(cmd[2:]))
-            return
-    if len(cmd) == 5:
-        if (cmd[0] == 'SEND') &(cmd[1] == 'FILE')&(cmd[2] == 'WECHAT'):
-            from misc.report_hdl import send_file_wechat
-            send_file_wechat(cmd[3], cmd[4])
             return
