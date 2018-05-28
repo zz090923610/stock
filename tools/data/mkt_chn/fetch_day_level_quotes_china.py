@@ -238,7 +238,7 @@ class DayLevelQuoteUpdaterTushareNew:
         df['name'] = name
         df['symbol'] = symbol_str
         outstanding = int(float(self.symbol_dict.outstanding_dict[symbol]) * 1000000)
-        df['turnover'] = df['volume'] / outstanding
+        df['turnover'] = df['volume'] / outstanding * 100
         df['outstanding'] = outstanding * 100
         df['prev_close_price'] = df['close'].shift(1)
         df['price_change'] = df['close'] - df['prev_close_price']
