@@ -5,8 +5,8 @@ import os
 import pickle
 import pandas as pd
 from tools.data.path_hdl import path_expand, directory_ensure, directory_exists
+from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import logging
-
 
 # This model calculates short term total return of all candlestick shapes.
 # total return for one specific shape is calculated as average of return if you purchase at such dates and sell in 20
@@ -14,6 +14,7 @@ from tools.io import logging
 
 # USEDIR( qa/candlestick_total_ret_input  )
 # REGDIR ( models/candlestick_total_ret )
+calendar = MktCalendar()
 
 
 def calc_total_ret_kernel(input_path, shapes):
@@ -42,7 +43,10 @@ class CandlestickTotalRetHdl:
             logging("CandlestickTotalRetHdl", "[ ERROR ]input dir %s not exist" % self.input_dir, method="all")
         self.storage_dir = path_expand("models/candlestick_total_ret")
         directory_ensure(self.storage_dir)
-        self.shapes = shapes.split(" ")
+        if shapes is not None:
+            self.shapes = shapes.split(" ")
+        else:
+            self.shapes = None
         self.ret_dict = {}
         self.cnt_dict = {}
         if self.input_dir:
@@ -80,7 +84,7 @@ class CandlestickTotalRetHdl:
                 self.ret_dict[s] /= self.cnt_dict[s]
             except ZeroDivisionError:
                 self.ret_dict[s] = 0
-            print("%s: %f"%(s, self.ret_dict[s]))
+            print("%s: %f" % (s, self.ret_dict[s]))
         self.save()
 
     def save(self):
@@ -98,5 +102,33 @@ class CandlestickTotalRetHdl:
 
 # CMDEXPORT ( CSTR TRAIN {shapes[2:]} ) CandlestickTotalRetTrain
 def CandlestickTotalRetTrain(shapes):
-    a=CandlestickTotalRetHdl(shapes)
+    a = CandlestickTotalRetHdl(shapes)
     a.train()
+
+
+# CMDEXPORT ( CSTR EVAL {data} {date}) exp_return_on_shape
+def exp_return_on_shape(data, date):
+    """
+    :param data:    string, specify which file to load by proving keyword data
+    :param date:    string, YYYY-MM-DD
+    """
+    out_dir = path_expand("exp_ret")
+    directory_ensure(out_dir)
+    date = calendar.parse_date(date)
+    path = os.path.join(path_expand("slice"), "%s_%s.csv" % (data, date))
+    model_hdl = CandlestickTotalRetHdl(None)
+    model_hdl.load()
+    shapes = model_hdl.ret_dict.keys()
+    raw_data = pd.read_csv(path)
+    result_list = raw_data.to_dict('records')
+    for l in result_list:
+        exp_ret = 0
+        for s in shapes:
+            if l[s] == True:
+                exp_ret += model_hdl.ret_dict[s]
+        l['exp_ret'] =(1 +  exp_ret) * ((l['AMOUNT_SCALAR'] - 1) / 5 + 1)
+    r = pd.DataFrame(result_list)
+    r = r.sort_values(by='exp_ret', ascending=False)
+    r.to_csv(os.path.join(out_dir, "%s_%s.csv" % ("exp_ret", date)), index=False,
+             columns=['name', 'symbol', 'exp_ret'])
+    logging("CSTR EVAL", "[ INFO ] applied %s %s" % (data, date))
