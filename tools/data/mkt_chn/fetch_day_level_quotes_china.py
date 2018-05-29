@@ -131,7 +131,7 @@ class DayLevelQuoteUpdaterTushareTXD:
     """
 
     def __init__(self):
-        self.ts_api = None
+        self.ts_api = ts.get_apis()
         self.symbol_list_hdl = SymbolListHDL()
         self.dir = path_expand('day_quotes/china')
         directory_ensure(self.dir)
@@ -142,38 +142,22 @@ class DayLevelQuoteUpdaterTushareTXD:
         """
         Need to disconnect from TXD server first.
         """
-        if self.ts_api:
+        try:
             self.ts_api[0].disconnect()
             self.ts_api[1].disconnect()
+        except Exception:
+            pass
 
     def get_data_one_symbol(self, symbol, start, end, store_dir):
-        retry_cnt = 0
-        while retry_cnt < 5:
-            if retry_cnt > 0:
-                try:
-                    self.__del__()
-                except Exception:
-                    pass
-            try:
-                self.__del__()
-                self._get_data_one_symbol(symbol, start, end, store_dir)
-                break
-            except OSError:
-                retry_cnt += 1
+        self._get_data_one_symbol(symbol, start, end, store_dir)
 
     # noinspection PyMethodMayBeStatic
     def _get_data_one_symbol(self, symbol, start, end, store_dir):
         from tushare.util.formula import MA
         from tushare.stock import cons as ct
-        if not self.ts_api:
-            self.ts_api = ts.get_apis()
-        df = None
-        for _ in range(5):
-            df = ts.bar(symbol, self.ts_api, start_date=calendar.calc_t(start, '-', 20), end_date=end, adj='qfq',
-                        ma=[5, 10, 20], factors=['tor'])
-            if df is not None:
-                break
-            sleep(1)
+        df = ts.bar(symbol, self.ts_api, start_date=calendar.calc_t(start, '-', 20), end_date=end, adj='qfq',
+                    ma=[5, 10, 20], factors=['tor'])
+
         if df is None:
             logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushareTXD_%s_failed' % symbol)
             return
@@ -228,11 +212,14 @@ class DayLevelQuoteUpdaterTushareNew:
         :param store_dir: the DIRECTORY where our fetched data should be stored.
         :return: None if no exception happens else return symbol
         """
-        df = ts.get_k_data(symbol, start=start, end=end)
+        df = ts.get_k_data(symbol, start=calendar.calc_t(start, '-', 20), end=end)
+        df2 = ts.get_k_data(symbol)
+        df = df.append(df2)
         if df is None:
             logging(msg_source, '[ ERROR ] DayLevelQuoteUpdaterTushare_%s failed' % symbol)
             return symbol
         df.sort_values(by='date', ascending=True, inplace=True)
+        df.drop_duplicates(subset='date', inplace=True)
         symbol_str = self.symbol_dict.market_code_of_symbol(symbol)
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
@@ -271,10 +258,12 @@ class DayLevelQuoteUpdaterTushareNew:
         df['v_ma10'] /= 10
         df['v_ma20'] /= 20
         df = df.round(
-            {'turnover': 3, 'price_change': 3, 'p_change': 3, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
+            {'turnover': 5, 'price_change': 3, 'p_change': 5, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
              'v_ma20': 1, 'amount': 2})
-        outcols = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount', 'price_change', 'p_change', 'turnover', 'ma5',
+        outcols = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount', 'price_change', 'p_change', 'turnover',
+                   'ma5',
                    'ma10', 'ma20', 'v_ma5', 'v_ma10', 'v_ma20', 'name', 'symbol', 'outstanding']
+        df = df[df['date'] >= start]
         df[outcols].to_csv('%s/%s.csv' % (store_dir, symbol), index=False)
         logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
         return None
