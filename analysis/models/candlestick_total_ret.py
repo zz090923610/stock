@@ -10,7 +10,21 @@ from tools.io import logging
 
 # This model calculates short term total return of all candlestick shapes.
 # total return for one specific shape is calculated as average of return if you purchase at such dates and sell in 20
-# days
+# days.
+
+# Train phase:
+# calc average return if you long for every time a shape appears.
+
+# Eval phase:
+# say we have same number of people as shapes where everybody represents a shape, they only long if their shapes appear.
+# we calculate the expect total return rate of all those people.
+
+
+# Related files:
+# analysis/models/candlestick_total_ret.py
+# ctrls/candlestick_total_ret_eval.ctrl
+# ctrls/candlestick_total_ret_train.ctrl
+# scripts/short_term_return_rate.txt
 
 # USEDIR( qa/candlestick_total_ret_input  )
 # REGDIR ( models/candlestick_total_ret )

@@ -1,5 +1,6 @@
 # Train
-
+FETCH SYMBOL
+FETCH OHCL 2016-01-01 LASTCLOSEDTRADEDAY
 SCRIPT ma
 SCRIPT candle_stick_shape_analysis
 SCRIPT short_term_return_rate
