@@ -1,0 +1,30 @@
+# TODO
+SCRIPT inflow
+MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow summary date
+SLICECOMBINE summary summary LASTCLOSEDTRADEDAY FALSE
+NAIVESCORE TURNOVER summary LASTCLOSEDTRADEDAY
+NAIVESCORE AMOUNT summary LASTCLOSEDTRADEDAY
+SINGLEMERGE naive_score/summary_turnover_{{LASTCLOSEDTRADEDAY}}.csv&slice/summary_{{LASTCLOSEDTRADEDAY}}.csv naive_score/summary_turnover_{{LASTCLOSEDTRADEDAY}}.csv symbol name&symbol&score&amount&turnover&outstanding score&False
+NAIVETICKSUMMARY LASTCLOSEDTRADEDAY
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

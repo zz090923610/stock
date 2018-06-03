@@ -1,0 +1,5 @@
+NAME data_fetching
+OWNER zz090923610
+ENCRYPT no
+DEPENDENCY NONE
+DESC fetching raw data from web.

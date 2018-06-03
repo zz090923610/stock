@@ -1,0 +1,5 @@
+NAME candle_stick_feature_extractor
+OWNER zz090923610
+ENCRYPT yes
+DEPENDENCY data_fetching
+DESC extract more than 80 types of candle stick shapes.

@@ -1,0 +1,7 @@
+PLEV	FOLDER
+FIN	day_quotes/china
+PLFDOUT qa/vol
+OUTCOLS date,
+COLDESC ma5,ma10,ma20 .2
+TRANSLATE symbol:代码, name:名称
+TRANSLATE date:日期, volume:成交量
