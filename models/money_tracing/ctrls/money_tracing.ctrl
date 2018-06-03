@@ -1,6 +1,6 @@
 SCRIPT inflow
-MERGE day_quotes/china&qa/inflow analysis_v2 date
-SLICECOMBINE analysis_v2 analysis_v2 LASTCLOSEDTRADEDAY TRUE
+MERGE day_quotes/china&qa/inflow inflow_tracing_input date
+SLICECOMBINE inflow_tracing_input inflow_tracing LASTCLOSEDTRADEDAY TRUE
 
 
 

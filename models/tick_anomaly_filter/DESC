@@ -1,5 +1,5 @@
 NAME tick_anomaly_filter
 OWNER zz090923610
 ENCRYPT yes
-DEPENDENCY data_fetching candle_stock_analysis_legacy
+DEPENDENCY data_fetching tick_data_summary
 DESC

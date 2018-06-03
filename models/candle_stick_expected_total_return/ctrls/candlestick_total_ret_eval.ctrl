@@ -48,5 +48,6 @@
 # SLICECOMBINE summary summary 2018-05-28 FALSE
 # CSTR EVAL summary 2018-05-28
 
-SLICECOMBINE summary summary LASTCLOSEDTRADEDAY FALSE
-CSTR EVAL summary LASTCLOSEDTRADEDAY
+MERGE day_quotes/china&qa/ma&qa/candle_stick_shape_analysis&qa/inflow cstr_input date
+SLICECOMBINE cstr_input cstr_input LASTCLOSEDTRADEDAY FALSE
+CSTR EVAL cstr_input LASTCLOSEDTRADEDAY

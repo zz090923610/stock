@@ -1,5 +1,5 @@
 NAME candle_stick_expected_total_return
 OWNER zz090923610
 ENCRYPT yes
-DEPENDENCY data_fetching candle_stick_feature_extractor
+DEPENDENCY data_fetching candle_stick_feature_extractor money_tracing
 DESC

@@ -18,21 +18,6 @@ def exec_ctrl_cmd(model_name, cmd):
             from models.candle_stick_expected_total_return.pythons.candlestick_total_ret import exp_return_on_shape
             exp_return_on_shape(cmd[2], cmd[3])
             return
-    if len(cmd) >= 5:
-        if (cmd[0] == 'CONDFREQ') &(cmd[1] == 'TRAIN'):
-            from models.candle_stock_analysis_legacy.pythons.conditional_frequency import cond_freq_train
-            cond_freq_train(cmd[2], cmd[3], ' '.join(cmd[4:]))
-            return
-    if len(cmd) == 4:
-        if (cmd[0] == 'NAIVESCORE') &(cmd[1] == 'TURNOVER'):
-            from models.candle_stock_analysis_legacy.pythons.naive_score import naive_score_turnover
-            naive_score_turnover(cmd[2], cmd[3])
-            return
-    if len(cmd) == 4:
-        if (cmd[0] == 'NAIVESCORE') &(cmd[1] == 'AMOUNT'):
-            from models.candle_stock_analysis_legacy.pythons.naive_score import naive_score_amount
-            naive_score_amount(cmd[2], cmd[3])
-            return
     if len(cmd) >= 3:
         if (cmd[0] == 'ZIP') :
             from tools.misc.report_hdl import zip_files

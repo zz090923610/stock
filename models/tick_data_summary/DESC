@@ -1,0 +1,5 @@
+NAME tick_data_summary
+OWNER zz090923610
+ENCRYPT yes
+DEPENDENCY data_fetching
+DESC
