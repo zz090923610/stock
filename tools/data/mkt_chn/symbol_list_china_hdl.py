@@ -84,6 +84,21 @@ class SymbolListHDL:
         except KeyError:
             return ''
 
+    def tushare_pro_symbol(self, symbol):
+        """
+        :param symbol: symbol, string
+        :return:    string, 000000.SH or 000000.SZ
+        """
+        try:
+            mkt = ''
+            if self.market_dict[symbol] == 'sse':
+                mkt = 'SH'
+            elif self.market_dict[symbol] == 'szse':
+                mkt = 'SZ'
+            return '%s.%s' % (symbol, mkt)
+        except KeyError:
+            return ''
+
     def market_of_symbol(self, symbol):
         """
         return exchange code on which the symbol is listed.

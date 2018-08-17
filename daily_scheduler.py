@@ -21,7 +21,7 @@ def daily_job():
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("04:00").do(daily_job)
+    schedule.every().day.at("07:00").do(daily_job)
     while True:
         schedule.run_pending()
         time.sleep(1)
