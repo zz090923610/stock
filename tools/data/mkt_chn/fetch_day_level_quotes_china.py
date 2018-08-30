@@ -155,7 +155,10 @@ class DayLevelQuoteUpdaterTusharePro:
         """
         logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
         for i in self.symbol_list_hdl.symbol_list:
-            self.get_data_one_symbol(i, start, end, self.dir)
+            try:
+                self.get_data_one_symbol(i, start, end, self.dir)
+            except Exception as e:
+                logging(msg_source, '[ ERROR ] on %s %s' % (i, e), method='all')
         logging(msg_source, '[ INFO ] finished_fetching', method='all')
 
 
