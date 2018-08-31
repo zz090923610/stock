@@ -2,6 +2,7 @@
 # DEP_APT( zip )
 
 import os
+import time
 
 from tools.data.path_hdl import path_expand
 from tools.date_util.market_calendar_cn import MktCalendar
@@ -43,4 +44,5 @@ def send_file_wechat(path, to):
     cmd = "wccmd -f %s %s" % (path_expand(calendar.expand_date_in_str(path)), to)
     logging("SEND FILE WECHAT", "[ INFO ] %s" % cmd, method='all')
     os.system(cmd)
+    time.sleep(10)
     # Should I take care of cmd result?
