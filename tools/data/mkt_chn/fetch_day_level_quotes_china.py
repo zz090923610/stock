@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 # WINDOWS_GUARANTEED
-
+import time
 from multiprocessing import Pool
 from time import sleep
 import pandas as pd
 import tushare as ts
 
+from configs.conf import TUSHARE_PRO_TOKEN
 from tools.data.path_hdl import path_expand, directory_ensure
 from tools.date_util.market_calendar_cn import MktCalendar
 from tools.io import *
@@ -40,7 +41,7 @@ calendar = MktCalendar()
 
 class DayLevelQuoteUpdaterTusharePro:
     def __init__(self):
-        self.token = '0fdcd7b67ed7779a7e8c47d37f9f5b751b1a45b2ce077f0afef899ca'
+        self.token = TUSHARE_PRO_TOKEN
         ts.set_token(self.token)
         self.pro = ts.pro_api()
         self.symbol_list_hdl = SymbolListHDL()
@@ -63,14 +64,14 @@ class DayLevelQuoteUpdaterTusharePro:
         :return: None if no exception happens else return symbol
         """
         fetch_start = calendar.calc_t(start, '-', 20)
-        df = self.pro.daily(ts_code=self.symbol_dict.tushare_pro_symbol(symbol), start_date=self.date_deli_trim(fetch_start),
+        df = self.pro.daily(ts_code=self.symbol_dict.tushare_pro_symbol(symbol),
+                            start_date=self.date_deli_trim(fetch_start),
                             end_date=self.date_deli_trim(end))
 
-
         df = df.reindex(index=df.index[::-1])
-        df=df.reset_index()
+        df = df.reset_index()
         df['date'] = df['trade_date'].apply(lambda x: x[:4] + '-' + x[4:6] + '-' + x[6:8])
-        df['symbol'] = df['ts_code'].apply(lambda x:   "%s%s" % (x.split('.')[1], x.split('.')[0]))
+        df['symbol'] = df['ts_code'].apply(lambda x: "%s%s" % (x.split('.')[1], x.split('.')[0]))
         df['volume'] = df['vol']
 
         outstanding = int(float(self.symbol_dict.outstanding_dict[symbol]) * 1000000)
@@ -80,9 +81,8 @@ class DayLevelQuoteUpdaterTusharePro:
         name = self.symbol_dict.name_dict.get(symbol)
         df['name'] = name
 
-        df['price_change'] = df['close'] -df['pre_close']
+        df['price_change'] = df['close'] - df['pre_close']
         df['p_change'] = df['price_change'] / df['close'] * 100
-
 
         df['ma5'] = df['close']
         df['ma10'] = df['close']
@@ -114,12 +114,11 @@ class DayLevelQuoteUpdaterTusharePro:
         factor = self.pro.adj_factor(ts_code=self.symbol_dict.tushare_pro_symbol(symbol), trade_date='')
         factor = factor.reindex(index=factor.index[::-1])
         factor['date'] = factor['trade_date'].apply(lambda x: x[:4] + '-' + x[4:6] + '-' + x[6:8])
-        factor = factor[factor['date']>= fetch_start]
+        factor = factor[factor['date'] >= fetch_start]
         factor = factor[factor['date'] <= end]
         factor_lastday = factor.tail(1)['adj_factor'].tolist()[0]
         factor = factor.reset_index()
         df = pd.concat([df, factor['adj_factor']], axis=1, sort=False)
-
 
         df['open'] = df['open'] * df['adj_factor'] / factor_lastday
         df['high'] = df['high'] * df['adj_factor'] / factor_lastday
@@ -137,8 +136,8 @@ class DayLevelQuoteUpdaterTusharePro:
         df['v_ma20'] = df['v_ma20'] / df['adj_factor'] * factor_lastday
 
         df = df.round(
-            {'open':2, 'high':2, 'close':2, 'low':2, 'volume': 0,
-                'turnover': 5, 'price_change': 3, 'p_change': 5, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
+            {'open': 2, 'high': 2, 'close': 2, 'low': 2, 'volume': 0,
+             'turnover': 5, 'price_change': 3, 'p_change': 5, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
              'v_ma20': 1, 'amount': 2})
         outcols = ['date', 'open', 'high', 'close', 'low', 'volume', 'amount', 'price_change', 'p_change', 'turnover',
                    'ma5',
@@ -146,6 +145,19 @@ class DayLevelQuoteUpdaterTusharePro:
         df = df[df['date'] >= start]
         df[outcols].to_csv('%s/%s.csv' % (store_dir, symbol), index=False)
         logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
+        return df
+
+    def check_availability(self, target_date):
+        logging(msg_source, '[ INFO ] Checking Data Source', method='all')
+        sz50 = ["600000", "600016", "600019", "600028", "600029", "600030", "600036", "600048", "600050", "600104"]
+        success_cnt = 0
+        for i in sz50:
+            res = self.get_data_one_symbol(i, target_date, target_date, '/tmp')
+            success_cnt += 1 if len(res[res['date'] == '2018-11-27']) else 0
+        if success_cnt > 3:
+            return True
+        else:
+            return False
 
     def get_data_all_symbols(self, start, end):
         """
@@ -154,13 +166,21 @@ class DayLevelQuoteUpdaterTusharePro:
         :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
         """
         logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
+        retry_cnt = 20
+        while retry_cnt:
+            if not self.check_availability(end):
+                logging(msg_source, '[ ERROR ] Data Source not updated', method='all')
+                retry_cnt -= 1
+                time.sleep(300)
+            else:
+                logging(msg_source, '[ INFO ] Data Source ready, now fetching', method='all')
+                break
         for i in self.symbol_list_hdl.symbol_list:
             try:
                 self.get_data_one_symbol(i, start, end, self.dir)
             except Exception as e:
                 logging(msg_source, '[ ERROR ] on %s %s' % (i, e), method='all')
         logging(msg_source, '[ INFO ] finished_fetching', method='all')
-
 
 
 class DayLevelQuoteUpdaterTushare:
