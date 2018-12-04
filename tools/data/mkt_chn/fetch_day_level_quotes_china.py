@@ -153,7 +153,7 @@ class DayLevelQuoteUpdaterTusharePro:
         success_cnt = 0
         for i in sz50:
             res = self.get_data_one_symbol(i, target_date, target_date, '/tmp')
-            success_cnt += 1 if len(res[res['date'] == '2018-11-27']) else 0
+            success_cnt += 1 if len(res[res['date'] == target_date]) else 0
         if success_cnt > 3:
             return True
         else:
@@ -166,7 +166,7 @@ class DayLevelQuoteUpdaterTusharePro:
         :param end:     We want data no later than this date. string of "YYYY-MM-DD" format
         """
         logging(msg_source, '[ INFO ] start_fetching_%d' % len(self.symbol_list_hdl.symbol_list), method='all')
-        retry_cnt = 20
+        retry_cnt = 200
         while retry_cnt:
             if not self.check_availability(end):
                 logging(msg_source, '[ ERROR ] Data Source not updated', method='all')
