@@ -171,7 +171,7 @@ class DayLevelQuoteUpdaterTusharePro:
             if not self.check_availability(end):
                 logging(msg_source, '[ ERROR ] Data Source not updated', method='all')
                 retry_cnt -= 1
-                time.sleep(300)
+                time.sleep(600)
             else:
                 logging(msg_source, '[ INFO ] Data Source ready, now fetching', method='all')
                 break
