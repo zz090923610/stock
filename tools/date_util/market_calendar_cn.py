@@ -7,9 +7,10 @@ import time
 from datetime import datetime
 import pandas as pd
 import pytz
-from tushare import trade_cal
+import tushare as ts
 import re
 
+from configs.conf import TUSHARE_PRO_TOKEN
 from tools.data.file_hdl import load_pickle, save_pickle
 from tools.data.path_hdl import path_expand, directory_ensure, file_exist
 from tools.io import logging
@@ -108,8 +109,14 @@ class MktCalendar:
         """
         Fetch market calendar from tushare source
         """
-        self.full_cal = trade_cal()
-        self.full_cal.rename(columns={'calendarDate': 'date', 'isOpen': 'mkt_open'}, inplace=True)
+        token = TUSHARE_PRO_TOKEN
+        ts.set_token(token)
+        pro = ts.pro_api()
+        self.full_cal = pro.query('trade_cal', start_date='19900101', end_date='20171231')
+        continue_cal = pro.query('trade_cal', start_date='20180101', end_date='20211231')
+        self.full_cal = pd.concat([self.full_cal, continue_cal])
+        self.full_cal.rename(columns={'cal_date': 'date', 'is_open': 'mkt_open'}, inplace=True)
+        self.full_cal['date'] = self.full_cal['date'].apply(lambda x: x[0:4] + "-" + x[4:6] + "-" + x[6:8])
         self.trade_cal = self.full_cal[self.full_cal['mkt_open'] == 1].reset_index().drop(['index'], axis=1)
 
         self.full_cal['index'] = self.full_cal.index  # add this column to get a universal fetching routine
@@ -353,6 +360,7 @@ class MktDateTime:
     """
     Important for mkt_monitor. calc how many seconds the market is open between two given time.
     """
+
     def __init__(self, datetime_specified, calendar: MktCalendar):
         """
         :param datetime_specified: string, YYYY-MM-DD&HH:mm:SS

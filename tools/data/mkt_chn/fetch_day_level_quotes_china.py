@@ -4,6 +4,7 @@ import time
 from multiprocessing import Pool
 from time import sleep
 import pandas as pd
+import requests
 import tushare as ts
 
 from configs.conf import TUSHARE_PRO_TOKEN
@@ -53,7 +54,7 @@ class DayLevelQuoteUpdaterTusharePro:
     def date_deli_trim(self, date_to_trim):
         return date_to_trim.replace('-', '')
 
-    def get_data_one_symbol(self, symbol, start, end, store_dir):
+    def get_data_one_symbol(self, symbol, start, end, store_dir, idx=None, all_num=None):
         # TODO
         """
         Fetch day level quotes for one symbol.
@@ -64,10 +65,24 @@ class DayLevelQuoteUpdaterTusharePro:
         :return: None if no exception happens else return symbol
         """
         fetch_start = calendar.calc_t(start, '-', 20)
-        df = self.pro.daily(ts_code=self.symbol_dict.tushare_pro_symbol(symbol),
+        cnt = 10
+        df = None
+        while cnt:
+
+            df = ts.pro_bar(pro_api=self.pro, ts_code=self.symbol_dict.tushare_pro_symbol(symbol),
                             start_date=self.date_deli_trim(fetch_start),
                             end_date=self.date_deli_trim(end))
-
+            if df is not None:
+                break
+            else:
+                cnt -= 1
+                logging(msg_source, '[ ERROR ] get_data_one_symbol(%s)' % symbol, method='all')
+                time.sleep(2)
+        # df = self.pro.daily(ts_code=self.symbol_dict.tushare_pro_symbol(symbol),
+        #                            start_date=self.date_deli_trim(fetch_start),
+        #                            end_date=self.date_deli_trim(end))
+        if df is None:
+            raise Exception
         df = df.reindex(index=df.index[::-1])
         df = df.reset_index()
         df['date'] = df['trade_date'].apply(lambda x: x[:4] + '-' + x[4:6] + '-' + x[6:8])
@@ -111,6 +126,7 @@ class DayLevelQuoteUpdaterTusharePro:
         df['v_ma10'] /= 10
         df['v_ma20'] /= 20
         # handle factor
+        """
         factor = self.pro.adj_factor(ts_code=self.symbol_dict.tushare_pro_symbol(symbol), trade_date='')
         factor = factor.reindex(index=factor.index[::-1])
         factor['date'] = factor['trade_date'].apply(lambda x: x[:4] + '-' + x[4:6] + '-' + x[6:8])
@@ -135,6 +151,7 @@ class DayLevelQuoteUpdaterTusharePro:
         df['v_ma10'] = df['v_ma10'] / df['adj_factor'] * factor_lastday
         df['v_ma20'] = df['v_ma20'] / df['adj_factor'] * factor_lastday
 
+        """
         df = df.round(
             {'open': 2, 'high': 2, 'close': 2, 'low': 2, 'volume': 0,
              'turnover': 5, 'price_change': 3, 'p_change': 5, 'ma5': 3, 'ma10': 3, 'ma20': 3, 'v_ma5': 1, 'v_ma10': 1,
@@ -144,7 +161,17 @@ class DayLevelQuoteUpdaterTusharePro:
                    'ma10', 'ma20', 'v_ma5', 'v_ma10', 'v_ma20', 'name', 'symbol', 'outstanding']
         df = df[df['date'] >= start]
         df[outcols].to_csv('%s/%s.csv' % (store_dir, symbol), index=False)
-        logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
+        if all_num is not None and idx is not None:
+            logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success(%d/%d)' % (symbol, idx, all_num))
+        else:
+            logging(msg_source, '[ INFO ] DayLevelQuoteUpdaterTushare_%s_success' % symbol)
+        return df
+
+
+    def get_all_data_one_day(self, date):
+        df = self.pro.daily(trade_date=self.date_deli_trim(date))
+        for idx, row in df.iterrows():
+            pass
         return df
 
     def check_availability(self, target_date):
@@ -175,9 +202,10 @@ class DayLevelQuoteUpdaterTusharePro:
             else:
                 logging(msg_source, '[ INFO ] Data Source ready, now fetching', method='all')
                 break
-        for i in self.symbol_list_hdl.symbol_list:
+        for idx, i in enumerate(self.symbol_list_hdl.symbol_list, 1):
             try:
-                self.get_data_one_symbol(i, start, end, self.dir)
+                self.get_data_one_symbol(i, start, end, self.dir, idx=idx,
+                                         all_num=len(self.symbol_list_hdl.symbol_list))
             except Exception as e:
                 logging(msg_source, '[ ERROR ] on %s %s' % (i, e), method='all')
         logging(msg_source, '[ INFO ] finished_fetching', method='all')

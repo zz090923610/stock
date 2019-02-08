@@ -9,5 +9,4 @@ python3 -m tools.ctrl_executor.ctrl_script_hdl models/candle_stick_feature_extra
 
 python3 -m tools.ctrl_executor.ctrl_script_hdl models/money_tracing/ctrls/money_tracing.ctrl
 python3 -m tools.ctrl_executor.ctrl_script_hdl models/candle_stick_expected_total_return/ctrls/candlestick_total_ret_eval.ctrl
-
 python3 -m tools.ctrl_executor.ctrl_script_hdl models/report_sending/ctrls/report.ctrl
