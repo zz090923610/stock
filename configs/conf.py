@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
-user_defined_data_root = None
+import json
+
+user_defined_data_root = "/home/zhangzhao/stock_data"
 PROGRAM_DATA_ROOT = None
 MODEL_BASE_DIR = os.path.join(os.getcwd(), 'models')
-TUSHARE_PRO_TOKEN = '0fdcd7b67ed7779a7e8c47d37f9f5b751b1a45b2ce077f0afef899ca'
+try:
+    with open(os.path.join(user_defined_data_root, "config.json")) as f:
+        CONFIGS = json.load(f)
+        TUSHARE_PRO_TOKEN = CONFIGS["tushare_pro_token"]
+except Exception as e:  # default values
+    raise
 if user_defined_data_root is not None:
     PROGRAM_DATA_ROOT = user_defined_data_root
 else:  # default data root dir( $user/Documents/stock_data for win and ~/data/stock_data for linux )
